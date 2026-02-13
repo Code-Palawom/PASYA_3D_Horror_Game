@@ -19,13 +19,15 @@ public class Player : MonoBehaviour {
     // Update is called once per frame
     void Update() {
         movement = new Vector3(moveInput.x, 0, moveInput.y);
-
+        controller.Move(movement * basePlayerSpeed * Time.deltaTime);
+        
         velocity.y += gravity * Time.deltaTime;
+        controller.Move(velocity * Time.deltaTime);
     }
 
     private void FixedUpdate() {
-        controller.Move(movement * basePlayerSpeed * Time.deltaTime);
-        controller.Move(velocity * Time.deltaTime);
+        // controller.Move(movement * basePlayerSpeed * Time.deltaTime);
+        // controller.Move(velocity * Time.deltaTime);
     }
 
     public void onMove(InputAction.CallbackContext context) {

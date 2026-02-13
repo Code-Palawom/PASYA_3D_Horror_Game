@@ -195,6 +195,22 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: b1fba9b6-0ffd-4a87-bed1-64c4746855b9
     m_ActionName: 'Movements/Move[/Keyboard/w,/Keyboard/s,/Keyboard/a,/Keyboard/d]'
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 219883037}
+        m_TargetAssemblyTypeName: Player, Assembly-CSharp
+        m_MethodName: onJump
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 813af6ff-3e62-474d-a3c5-5555b89e520a
+    m_ActionName: 'Movements/Jump[/Keyboard/space]'
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Movements
@@ -212,7 +228,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92ca616a33a68be4eb0171e8489d6d97, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Player
-  playerSpeed: 5
+  basePlayerSpeed: 5
+  jumpHeight: 2
+  gravity: -30
 --- !u!143 &219883038
 CharacterController:
   m_ObjectHideFlags: 0
