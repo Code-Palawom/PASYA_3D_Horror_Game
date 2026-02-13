@@ -4,7 +4,7 @@ using UnityEngine.InputSystem;
 public class Player : MonoBehaviour {
     [SerializeField] private Transform cameraTransform;
     [SerializeField] private bool shouldFaceMoveDirection = false;
-    [SerializeField] private float basePlayerSpeed = 5f;
+    [SerializeField] private float basePlayerSpeed = 4f;
     [SerializeField] private float jumpHeight = 2f;
     [SerializeField] private float gravity = -30f;
 
