@@ -8,6 +8,7 @@ public class Player : MonoBehaviour {
 
     private CharacterController controller;
     private Vector2 moveInput;
+    private Vector3 movement;
     private Vector3 velocity;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -17,10 +18,13 @@ public class Player : MonoBehaviour {
 
     // Update is called once per frame
     void Update() {
-        Vector3 move = new Vector3(moveInput.x, 0, moveInput.y);
-        controller.Move(move * basePlayerSpeed * Time.deltaTime);
+        movement = new Vector3(moveInput.x, 0, moveInput.y);
 
         velocity.y += gravity * Time.deltaTime;
+    }
+
+    private void FixedUpdate() {
+        controller.Move(movement * basePlayerSpeed * Time.deltaTime);
         controller.Move(velocity * Time.deltaTime);
     }
 
