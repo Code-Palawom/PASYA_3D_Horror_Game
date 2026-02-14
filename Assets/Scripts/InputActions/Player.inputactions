@@ -1,6 +1,6 @@
 {
     "version": 1,
-    "name": "PlayerControls",
+    "name": "Player",
     "maps": [
         {
             "name": "Movements",
@@ -19,6 +19,24 @@
                     "name": "Jump",
                     "type": "Button",
                     "id": "813af6ff-3e62-474d-a3c5-5555b89e520a",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Sprint",
+                    "type": "Button",
+                    "id": "07b66d2b-ee6a-4dd5-8e81-c8ea7f6f2645",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Crouch",
+                    "type": "Button",
+                    "id": "09a17a45-e547-41c2-88be-dfca8de09460",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -82,7 +100,7 @@
                     "isPartOfComposite": true
                 },
                 {
-                    "name": "2D Vector",
+                    "name": "ArrowKeys",
                     "id": "d791b92d-a94c-44c8-b9ea-9771c710e409",
                     "path": "2DVector",
                     "interactions": "",
@@ -144,6 +162,28 @@
                     "processors": "",
                     "groups": "",
                     "action": "Jump",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "1f474d68-20b7-4f73-9a5e-c4239184951f",
+                    "path": "<Keyboard>/leftCtrl",
+                    "interactions": "Hold",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Sprint",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "4d1d99e4-1e6a-4ab5-bb1a-3396a964ebf7",
+                    "path": "<Keyboard>/leftShift",
+                    "interactions": "Hold",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Crouch",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

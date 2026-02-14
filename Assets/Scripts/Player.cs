@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -5,17 +6,73 @@ public class Player : MonoBehaviour {
     [SerializeField] private Transform cameraTransform;
     [SerializeField] private bool shouldFaceMoveDirection = false;
     [SerializeField] private float basePlayerSpeed = 4f;
+    [SerializeField] private float sprintSpeed = 8f;
+    [SerializeField] private float crouchSpeed = 1.5f;
     [SerializeField] private float jumpHeight = 2f;
     [SerializeField] private float gravity = -30f;
 
+    private float playerSpeed;
+    private Boolean isSprinting = false;
+    private Boolean isCrouching = false;
+
     private CharacterController controller;
     private Vector2 moveInput;
-    private Vector3 movement;
     private Vector3 velocity;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start() {
         controller = GetComponent<CharacterController>();
+
+        playerSpeed = basePlayerSpeed;
+    }
+
+    public void onMove(InputAction.CallbackContext context) {
+        moveInput = context.ReadValue<Vector2>();
+        Debug.Log($"Move Input: {moveInput}");
+    }
+
+    public void onJump(InputAction.CallbackContext context) {
+        if(context.performed && controller.isGrounded) {
+            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            Debug.Log("Jump!");
+        }
+        Debug.Log($"Jumping {context.performed} - Is on ground: {controller.isGrounded}");
+    }
+
+    public void onSprint(InputAction.CallbackContext context) {
+        if(context.started) {
+            isSprinting = true;
+            if(isCrouching == false) {
+                playerSpeed = sprintSpeed;
+                
+            }
+            Debug.Log("Sprinting!");
+        }
+
+        if(context.canceled) {
+            if(isCrouching == false) {
+                playerSpeed = basePlayerSpeed;
+            }
+
+            isSprinting = false;
+            Debug.Log("Done sprinting!");
+        }
+    }
+
+    public void onCrouch(InputAction.CallbackContext context) {
+        if(context.started){
+            playerSpeed = crouchSpeed;
+            isCrouching = true;
+        }
+
+        if(context.canceled) {
+            playerSpeed = basePlayerSpeed;
+            isCrouching = false;
+
+            if(isSprinting) {
+                playerSpeed = sprintSpeed;
+            }
+        }
     }
 
     // Update is called once per frame
@@ -30,15 +87,12 @@ public class Player : MonoBehaviour {
         right.Normalize();
 
         Vector3 moveDirection = forward * moveInput.y + right * moveInput.x;
-        controller.Move(moveDirection * basePlayerSpeed * Time.deltaTime);
+        controller.Move(moveDirection * playerSpeed * Time.deltaTime);
 
         if(shouldFaceMoveDirection && moveDirection.sqrMagnitude > 0.001f) {
             Quaternion rotation = Quaternion.LookRotation(moveDirection, Vector3.up);
             transform.rotation = Quaternion.Slerp(transform.rotation, rotation, 10f * Time.deltaTime);
         }
-
-        // movement = new Vector3(moveInput.x, 0, moveInput.y);
-        // controller.Move(movement * basePlayerSpeed * Time.deltaTime);
         
         velocity.y += gravity * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
@@ -47,18 +101,5 @@ public class Player : MonoBehaviour {
     private void FixedUpdate() {
         // controller.Move(movement * basePlayerSpeed * Time.deltaTime);
         // controller.Move(velocity * Time.deltaTime);
-    }
-
-    public void onMove(InputAction.CallbackContext context) {
-        moveInput = context.ReadValue<Vector2>();
-        Debug.Log($"Move Input: {moveInput}");
-    }
-
-    public void onJump(InputAction.CallbackContext context) {
-        if(context.performed && controller.isGrounded) {
-            velocity.y = Mathf.Sqrt(jumpHeight * -2f * gravity);
-            Debug.Log("Jump!");
-        }
-        Debug.Log($"Jumping {context.performed} - Is on ground: {controller.isGrounded}");
     }
 }
