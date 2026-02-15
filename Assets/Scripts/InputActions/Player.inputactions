@@ -188,6 +188,34 @@
                     "isPartOfComposite": false
                 }
             ]
+        },
+        {
+            "name": "POV",
+            "id": "a3bac1af-501f-4478-b0cd-5ad03c97c557",
+            "actions": [
+                {
+                    "name": "SwitchPOV",
+                    "type": "Button",
+                    "id": "3bdb06b4-1177-433b-8887-d273aecd863f",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "00af0ef2-e7a2-4f8b-990f-c89d2259fb5b",
+                    "path": "<Keyboard>/f5",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "SwitchPOV",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
         }
     ],
     "controlSchemes": []

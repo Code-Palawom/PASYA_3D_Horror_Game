@@ -244,6 +244,22 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: 09a17a45-e547-41c2-88be-dfca8de09460
     m_ActionName: 'Movements/Crouch[/Keyboard/leftShift]'
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 219883037}
+        m_TargetAssemblyTypeName: Player, Assembly-CSharp
+        m_MethodName: OnSwitchPOV
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 3bdb06b4-1177-433b-8887-d273aecd863f
+    m_ActionName: 'POV/SwitchPOV[/Keyboard/f5]'
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Movements
@@ -261,13 +277,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 92ca616a33a68be4eb0171e8489d6d97, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Player
-  cameraTransform: {fileID: 2045570330}
+  cameraTransform: {fileID: 330585546}
   shouldFaceMoveDirection: 1
   basePlayerSpeed: 4
   sprintSpeed: 8
   crouchSpeed: 1.5
   jumpHeight: 2
   gravity: -30
+  thirdPersonPOV: {fileID: 2045570329}
+  firstPersonPOV: {fileID: 2114297704}
 --- !u!143 &219883038
 CharacterController:
   m_ObjectHideFlags: 0
@@ -468,7 +486,7 @@ MonoBehaviour:
     Enabled: 0
     DefaultMode: 2
   DefaultBlend:
-    Style: 1
+    Style: 0
     Time: 2
     CustomCurve:
       serializedVersion: 2
@@ -1277,6 +1295,7 @@ GameObject:
   - component: {fileID: 2114297704}
   - component: {fileID: 2114297703}
   - component: {fileID: 2114297702}
+  - component: {fileID: 2114297705}
   - component: {fileID: 2114297701}
   m_Layer: 0
   m_Name: FirstPersonPOV
@@ -1431,6 +1450,23 @@ MonoBehaviour:
       BarrelClipping: 0.25
       Anamorphism: 0
   BlendHint: 0
+--- !u!114 &2114297705
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2114297699}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68bb026fafb42b14791938953eaace77, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineBasicMultiChannelPerlin
+  NoiseProfile: {fileID: 11400000, guid: 46965f9cbaf525742a6da4c2172a99cd, type: 2}
+  PivotOffset: {x: 0, y: 0, z: 0}
+  AmplitudeGain: 1
+  FrequencyGain: 0.5
+  m_NoiseOffsets: {x: 481.76022, y: -683.55493, z: 271.71945}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
