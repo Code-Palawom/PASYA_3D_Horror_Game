@@ -92,6 +92,7 @@ public class Player : MonoBehaviour {
             firstPersonPOV.Priority = 0;
             thirdPersonPOV.Priority = 10;
         }
+
         Debug.Log($"POV Switch is First Person: {isFirstPerson}");
     }
 
@@ -112,6 +113,7 @@ public class Player : MonoBehaviour {
         if(shouldFaceMoveDirection && !isFirstPerson && moveDirection.sqrMagnitude > 0.001f) {
             Quaternion rotation = Quaternion.LookRotation(moveDirection, Vector3.up);
             transform.rotation = Quaternion.Slerp(transform.rotation, rotation, 10f * Time.deltaTime);
+            //Debug.Log($"Third Person Rotation: {rotation}");
         }
 
         if(isFirstPerson) {
@@ -120,6 +122,7 @@ public class Player : MonoBehaviour {
             if(camForward.sqrMagnitude > 0.01f) {
                 Quaternion rotation = Quaternion.LookRotation(camForward, Vector3.up);
                 transform.rotation = Quaternion.Slerp(transform.rotation, rotation, 10f * Time.deltaTime);
+                //Debug.Log($"First Person Rotation: {rotation}");
             }
         }
 
