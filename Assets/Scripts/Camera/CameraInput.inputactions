@@ -1,0 +1,35 @@
+{
+    "version": 1,
+    "name": "CameraInput",
+    "maps": [
+        {
+            "name": "Mouse",
+            "id": "d327d887-f050-4446-8b83-ad93c3d9a3a7",
+            "actions": [
+                {
+                    "name": "MouseScroll",
+                    "type": "Value",
+                    "id": "b7db91e8-8dc7-44c4-adea-216a44034723",
+                    "expectedControlType": "Vector2",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "78b59f52-8591-46f0-8e80-073cacb26601",
+                    "path": "<Mouse>/scroll",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "MouseScroll",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

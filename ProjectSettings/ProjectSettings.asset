@@ -4,7 +4,7 @@
 PlayerSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 28
-  productGUID: 3cd78bf28c8e4f543a3f470c7750473a
+  productGUID: ca322893316c3904a80ec9ed196933b7
   AndroidProfiler: 0
   AndroidFilterTouchesWhenObscured: 0
   AndroidEnableSustainedPerformanceMode: 0
@@ -924,10 +924,10 @@ PlayerSettings:
   captureStartupLogs: {}
   activeInputHandler: 1
   windowsGamepadBackendHint: 0
-  cloudProjectId: 82189b57-7692-4713-bb84-3ffb74bcb075
+  cloudProjectId: 2f41ef1e-7cbd-4aae-a982-006b679c12eb
   framebufferDepthMemorylessMode: 0
   qualitySettingsNames: []
-  projectName: PASYA - 3D Horror Game
+  projectName: PASYA
   organizationId: aylexcode
   cloudEnabled: 0
   legacyClampBlendShapeWeights: 0
