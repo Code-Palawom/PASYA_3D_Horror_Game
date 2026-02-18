@@ -2173,6 +2173,38 @@ MonoBehaviour:
         m_CallState: 2
     m_ActionId: b9fa07f4-559a-4432-b570-c51357a78f2b
     m_ActionName: 'Camera/SwitchPOV[/Mouse/scroll]'
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1526255518}
+        m_TargetAssemblyTypeName: PlayerController, Assembly-CSharp
+        m_MethodName: OnSprint
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 1ec9b013-7940-4816-90c1-5d617b108c1e
+    m_ActionName: 'Movements/Sprint[/Keyboard/leftCtrl]'
+  - m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1526255518}
+        m_TargetAssemblyTypeName: PlayerController, Assembly-CSharp
+        m_MethodName: OnCrouch
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+    m_ActionId: 09b60794-8aff-45b4-8bb7-921c7b07f2af
+    m_ActionName: 'Movements/Crouch[/Keyboard/leftShift]'
   m_NeverAutoSwitchControlSchemes: 0
   m_DefaultControlScheme: 
   m_DefaultActionMap: Movements
@@ -2190,8 +2222,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e9ce7e3b7ac356f48a808ff2d486c8cb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
-  orientation: {fileID: 330585546}
-  moveSpeed: 5
+  cameraOrientation: {fileID: 330585546}
+  baseMoveSpeed: 5
+  crouchSpeed: 2
+  sprintSpeed: 9
   jumpForce: 5
   firstPersonPOV: {fileID: 911763374}
   thirdPersonPOV: {fileID: 2037816}
