@@ -11,6 +11,9 @@ public class PlayerController : MonoBehaviour {
     [SerializeField] private CinemachineCamera firstPersonPOV;
     [SerializeField] private CinemachineCamera thirdPersonPOV;
 
+    [SerializeField] private AudioClip jumpSound;
+    [SerializeField] private AudioSource AudioSource;
+
     private bool isFirstPersonPOV = true;
 
     private PlayerInput playerInput;
@@ -33,6 +36,7 @@ public class PlayerController : MonoBehaviour {
 
     public void OnJump(InputAction.CallbackContext context) {
         rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
+        AudioSource.PlayOneShot(jumpSound);
     }
 
     public void OnSwitchPOV(InputAction.CallbackContext context) {
