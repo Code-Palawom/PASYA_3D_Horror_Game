@@ -53,6 +53,7 @@ public class PlayerController : MonoBehaviour {
 
     // Update is called once per frame
     void Update() {
+        // Movements for First Person POV
         if(isFirstPersonPOV) {
             Vector3 cameraForward = orientation.forward;
             cameraForward.y = 0f;
@@ -65,6 +66,7 @@ public class PlayerController : MonoBehaviour {
     }
 
     void FixedUpdate() {
+        // Movements General
         Vector3 move = transform.forward * moveInput.y + transform.right * moveInput.x;
         rb.AddForce(move.normalized * moveSpeed * 10f, ForceMode.Force);
 
@@ -74,6 +76,22 @@ public class PlayerController : MonoBehaviour {
 
             Quaternion newRotation = Quaternion.LookRotation(cameraForward);
             rb.MoveRotation(Quaternion.Slerp(transform.rotation, newRotation, 10f * Time.deltaTime));
+
+            // Borkoloy nga move
+            //Vector3 forward = orientation.forward;
+            //Vector3 right = orientation.right;
+
+            //forward.y = 0;
+            //right.y = 0;
+
+            //forward.Normalize();
+            //right.Normalize();
+
+            //Vector3 cameraForward = forward * moveInput.y + right * moveInput.x;
+            //cameraForward.y = 0f;
+
+            //Quaternion newRotation = Quaternion.LookRotation(cameraForward, Vector3.up);
+            //rb.MoveRotation(Quaternion.Slerp(transform.rotation, newRotation, 10f * Time.deltaTime));
         }
     }
 }
