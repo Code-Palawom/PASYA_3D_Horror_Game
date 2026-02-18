@@ -2226,7 +2226,7 @@ MonoBehaviour:
   baseMoveSpeed: 5
   crouchSpeed: 2
   sprintSpeed: 9
-  jumpForce: 5
+  jumpForce: 13
   firstPersonPOV: {fileID: 911763374}
   thirdPersonPOV: {fileID: 2037816}
   jumpSound: {fileID: 8300000, guid: 937c1fa2ffb25344392795efb3bf5cc5, type: 3}

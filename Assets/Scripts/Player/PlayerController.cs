@@ -9,7 +9,7 @@ public class PlayerController : MonoBehaviour {
     [SerializeField] private float baseMoveSpeed = 5f;
     [SerializeField] private float crouchSpeed = 2f;
     [SerializeField] private float sprintSpeed = 9f;
-    [SerializeField] private float jumpForce = 5f;
+    [SerializeField] private float jumpForce = 13f;
     [SerializeField] private CinemachineCamera firstPersonPOV;
     [SerializeField] private CinemachineCamera thirdPersonPOV;
 
@@ -17,6 +17,7 @@ public class PlayerController : MonoBehaviour {
     [SerializeField] private AudioSource AudioSource;
 
     private bool isFirstPersonPOV = true;
+    private bool isGrounded = true;
 
     private PlayerInput playerInput;
 
@@ -63,24 +64,45 @@ public class PlayerController : MonoBehaviour {
     }
 
     public void OnJump(InputAction.CallbackContext context) {
-        rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
-        AudioSource.PlayOneShot(jumpSound);
-
-        Debug.Log("Jumped");
+        if(context.performed) {
+            float distance = GetComponent<CapsuleCollider>().bounds.extents.y;
+        
+            if(Physics.Raycast(transform.position, Vector3.down, distance + 0.1f) || isGrounded) {
+                rb.AddForce(transform.up * jumpForce, ForceMode.Impulse);
+                AudioSource.PlayOneShot(jumpSound);
+                Debug.Log("Jumped");
+            }else{
+                Debug.Log("Can't jump not grounded");
+            }
+        }
     }
 
     public void OnSwitchPOV(InputAction.CallbackContext context) {
-        isFirstPersonPOV = !isFirstPersonPOV;
+        if(context.performed) {
+            isFirstPersonPOV = !isFirstPersonPOV;
 
-        if(isFirstPersonPOV) {
-            firstPersonPOV.Priority = 10;
-            thirdPersonPOV.Priority = 0;
-        }else{
-            firstPersonPOV.Priority = 0;
-            thirdPersonPOV.Priority = 10;
+            if(isFirstPersonPOV) {
+                firstPersonPOV.Priority = 10;
+                thirdPersonPOV.Priority = 0;
+            }else{
+                firstPersonPOV.Priority = 0;
+                thirdPersonPOV.Priority = 10;
+            }
+
+            Debug.Log($"POV Switched; is First Person {isFirstPersonPOV}");
         }
+    }
 
-        Debug.Log($"POV Switched; is First Person {isFirstPersonPOV}");
+    // Checks for collisions
+    private void OnCollisionStay(Collision collision) {
+        if(Vector3.Dot(collision.contacts[0].normal, Vector3.up) > 0.7f){
+            isGrounded = true;
+        }
+    }
+
+    void OnCollisionExit(Collision collision) {
+        isGrounded = false;
+        Debug.Log("Not grounded");
     }
 
     // Update is called once per frame
