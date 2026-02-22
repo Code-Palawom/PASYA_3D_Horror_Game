@@ -7,6 +7,7 @@ using UnityEngine.InputSystem;
 public class PlayerController : MonoBehaviour {
     [SerializeField] private Transform cameraOrientation;
     [SerializeField] private float baseMoveSpeed = 5f;
+    [SerializeField] private bool shouldFaceMove = true;
     [SerializeField] private float crouchSpeed = 2f;
     [SerializeField] private float sprintSpeed = 9f;
     [SerializeField] private float jumpForce = 13f;
@@ -124,31 +125,32 @@ public class PlayerController : MonoBehaviour {
         if(isFirstPersonPOV) {
             rb.AddForce(move.normalized * moveSpeed * 10f, ForceMode.Force);
         }else if(!isFirstPersonPOV && move.sqrMagnitude > 0.001f) {
-            // Move character but only rotate to front camera direction
-            //Vector3 cameraForward = cameraOrientation.forward;
-            //cameraForward.y = 0f;
+            if(shouldFaceMove){
+                //Move and rotate character based from inputs, basically face move
+                Vector3 forward = cameraOrientation.forward;
+                Vector3 right = cameraOrientation.right;
 
-            //Quaternion newRotation = Quaternion.LookRotation(cameraForward);
-            //rb.MoveRotation(Quaternion.Slerp(transform.rotation, newRotation, 10f * Time.deltaTime));
-            //Vector3 move = transform.forward * moveInput.y + transform.right * moveInput.x;
-            //rb.AddForce(move.normalized * moveSpeed * 10f, ForceMode.Force);
+                forward.y = 0;
+                right.y = 0;
 
-            // Move and rotate character based from inputs
-            Vector3 forward = cameraOrientation.forward;
-            Vector3 right = cameraOrientation.right;
+                forward.Normalize();
+                right.Normalize();
 
-            forward.y = 0;
-            right.y = 0;
+                Vector3 cameraForward = forward * moveInput.y + right * moveInput.x;
+                cameraForward.y = 0f;
 
-            forward.Normalize();
-            right.Normalize();
+                Quaternion newRotation = Quaternion.LookRotation(cameraForward, Vector3.up);
+                rb.MoveRotation(Quaternion.Slerp(transform.rotation, newRotation, 10f * Time.deltaTime));
+                rb.AddForce(cameraForward.normalized * moveSpeed * 10f, ForceMode.Force);
+            }else{
+                // Move character but only rotate to front camera direction
+                Vector3 cameraForward = cameraOrientation.forward;
+                cameraForward.y = 0f;
 
-            Vector3 cameraForward = forward * moveInput.y + right * moveInput.x;
-            cameraForward.y = 0f;
-
-            Quaternion newRotation = Quaternion.LookRotation(cameraForward, Vector3.up);
-            rb.MoveRotation(Quaternion.Slerp(transform.rotation, newRotation, 10f * Time.deltaTime));
-            rb.AddForce(cameraForward.normalized * moveSpeed * 10f, ForceMode.Force);
+                Quaternion newRotation = Quaternion.LookRotation(cameraForward);
+                rb.MoveRotation(Quaternion.Slerp(transform.rotation, newRotation, 10f * Time.deltaTime));
+                rb.AddForce(move.normalized * moveSpeed * 10f, ForceMode.Force);
+            }
         }
     }
 }
