@@ -107,11 +107,11 @@ public class PlayerController : MonoBehaviour {
 
     // Update is called once per frame
     void Update() {
-        // Movements for First Person POV
+        // RB Rotation for First Person POV
         if(isFirstPersonPOV) {
             Vector3 cameraForward = cameraOrientation.forward;
             cameraForward.y = 0f;
-
+            
             if(cameraForward != Vector3.zero) {
                 Quaternion newRotation = Quaternion.LookRotation(cameraForward);
                 rb.MoveRotation(newRotation);
@@ -120,32 +120,35 @@ public class PlayerController : MonoBehaviour {
     }
 
     void FixedUpdate() {
-        // Movements General
         Vector3 move = transform.forward * moveInput.y + transform.right * moveInput.x;
-        rb.AddForce(move.normalized * moveSpeed * 10f, ForceMode.Force);
-
-        if(!isFirstPersonPOV && move.sqrMagnitude > 0.001f) {
-            Vector3 cameraForward = cameraOrientation.forward;
-            cameraForward.y = 0f;
-
-            Quaternion newRotation = Quaternion.LookRotation(cameraForward);
-            rb.MoveRotation(Quaternion.Slerp(transform.rotation, newRotation, 10f * Time.deltaTime));
-
-            // Borkoloy nga move
-            //Vector3 forward = cameraOrientation.forward;
-            //Vector3 right = cameraOrientation.right;
-
-            //forward.y = 0;
-            //right.y = 0;
-
-            //forward.Normalize();
-            //right.Normalize();
-
-            //Vector3 cameraForward = forward * moveInput.y + right * moveInput.x;
+        if(isFirstPersonPOV) {
+            rb.AddForce(move.normalized * moveSpeed * 10f, ForceMode.Force);
+        }else if(!isFirstPersonPOV && move.sqrMagnitude > 0.001f) {
+            // Move character but only rotate to front camera direction
+            //Vector3 cameraForward = cameraOrientation.forward;
             //cameraForward.y = 0f;
 
-            //Quaternion newRotation = Quaternion.LookRotation(cameraForward, Vector3.up);
+            //Quaternion newRotation = Quaternion.LookRotation(cameraForward);
             //rb.MoveRotation(Quaternion.Slerp(transform.rotation, newRotation, 10f * Time.deltaTime));
+            //Vector3 move = transform.forward * moveInput.y + transform.right * moveInput.x;
+            //rb.AddForce(move.normalized * moveSpeed * 10f, ForceMode.Force);
+
+            // Move and rotate character based from inputs
+            Vector3 forward = cameraOrientation.forward;
+            Vector3 right = cameraOrientation.right;
+
+            forward.y = 0;
+            right.y = 0;
+
+            forward.Normalize();
+            right.Normalize();
+
+            Vector3 cameraForward = forward * moveInput.y + right * moveInput.x;
+            cameraForward.y = 0f;
+
+            Quaternion newRotation = Quaternion.LookRotation(cameraForward, Vector3.up);
+            rb.MoveRotation(Quaternion.Slerp(transform.rotation, newRotation, 10f * Time.deltaTime));
+            rb.AddForce(cameraForward.normalized * moveSpeed * 10f, ForceMode.Force);
         }
     }
 }
