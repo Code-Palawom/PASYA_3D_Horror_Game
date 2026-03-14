@@ -12,6 +12,7 @@ public class Player : MonoBehaviour {
     [SerializeField] private float crouchSpeed = 1.5f;
     [SerializeField] private float jumpHeight = 2f;
     [SerializeField] private float gravity = -30f;
+    [SerializeField] private float movingThreshold = 0.01f;
 
     [SerializeField] private CinemachineCamera thirdPersonPOV;
     [SerializeField] private CinemachineCamera firstPersonPOV;
@@ -19,7 +20,7 @@ public class Player : MonoBehaviour {
 
     private float playerSpeed;
     private float verticalVelocity = 0f;
-    private Boolean isSprinting = false;
+    private Boolean isRunning = false;
     private Boolean isCrouching = false;
 
     private CharacterController controller;
@@ -57,14 +58,12 @@ public class Player : MonoBehaviour {
 
     public void onSprint(InputAction.CallbackContext context) {
         if(context.started) {
-            isSprinting = true;
+            isRunning = true;
             if(isCrouching == false) {
                 playerSpeed = sprintSpeed;
                 
             }
             Debug.Log("Sprinting!");
-
-            playerState.SetPlayerMovementState(PlayerMovementState.Sprinting);
         }
 
         if(context.canceled) {
@@ -72,9 +71,8 @@ public class Player : MonoBehaviour {
                 playerSpeed = basePlayerSpeed;
             }
 
-            isSprinting = false;
+            isRunning = false;
             Debug.Log("Done sprinting!");
-            playerState.SetPlayerMovementState(PlayerMovementState.Idling);
         }
     }
 
@@ -88,7 +86,7 @@ public class Player : MonoBehaviour {
             playerSpeed = basePlayerSpeed;
             isCrouching = false;
 
-            if(isSprinting) {
+            if(isRunning) {
                 playerSpeed = sprintSpeed;
             }
         }
@@ -107,9 +105,29 @@ public class Player : MonoBehaviour {
         Debug.Log($"POV Switch is First Person: {isFirstPerson}");
     }
 
+    private void UpdateMovementState() {
+        bool isMovementInput = moveInput != Vector2.zero;
+        bool isMovingLiterally = IsMovingLiterally();
+
+        PlayerMovementState lateralState = isRunning ? PlayerMovementState.Running : isMovingLiterally || isMovementInput ? PlayerMovementState.Walking : PlayerMovementState.Idling;
+        playerState.SetPlayerMovementState(lateralState);
+        print($"velocity {controller.velocity.y}");
+        if(!controller.isGrounded && controller.velocity.y > 0f) {
+            playerState.SetPlayerMovementState(PlayerMovementState.Jumping);
+        } else if(!controller.isGrounded && controller.velocity.y <= 0f) {
+            playerState.SetPlayerMovementState(PlayerMovementState.Falling);
+        }
+    }
+
+    private bool IsMovingLiterally() {
+        Vector3 lateralVelocity = new Vector3(controller.velocity.x, 0f, controller.velocity.y);
+
+        return lateralVelocity.magnitude > movingThreshold;
+    }
+
     // Update is called once per frame
     void Update() {
-        playerAnimation.UpdateAnimationState(moveInput);
+        playerAnimation.UpdateAnimationState(moveInput, controller.isGrounded);
 
         Vector3 forward = cameraTransform.forward;
         Vector3 right = cameraTransform.right;
@@ -144,6 +162,8 @@ public class Player : MonoBehaviour {
 
         velocity = new Vector3(moveDirection.x * playerSpeed, verticalVelocity, moveDirection.z * playerSpeed);
         controller.Move(velocity * Time.deltaTime);
+
+        UpdateMovementState();
     }
 
     private void FixedUpdate() {
