@@ -9,7 +9,7 @@ public class CameraControls : MonoBehaviour {
     [SerializeField] private float maxDistance = 15f;
     [SerializeField] private float minDistance = 3f;
 
-    private CameraInput controls;
+    private PlayerControls controls;
     private CinemachineCamera cam;
     private CinemachineOrbitalFollow orbitalFollow;
     private Vector2 scrollDelta;
@@ -19,9 +19,9 @@ public class CameraControls : MonoBehaviour {
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start() {
-        controls = new CameraInput();
+        controls = new PlayerControls();
         controls.Enable();
-        controls.Mouse.Scroll.performed += HandleMouseScroll;
+        controls.Camera.Zoom.performed += HandleMouseScroll;
 
         Cursor.lockState = CursorLockMode.Locked;
 
