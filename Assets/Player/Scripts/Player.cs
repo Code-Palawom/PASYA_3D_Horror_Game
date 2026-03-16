@@ -41,6 +41,8 @@ public class Player : MonoBehaviour {
         playerAnimation = GetComponent<PlayerAnimation>();
 
         playerSpeed = basePlayerSpeed;
+
+        setCharacter(isFirstPerson);
     }
 
     public void onMove(InputAction.CallbackContext context) {
@@ -102,6 +104,8 @@ public class Player : MonoBehaviour {
             thirdPersonPOV.Priority = 10;
         }
 
+        setCharacter(isFirstPerson);
+
         Debug.Log($"POV Switch is First Person: {isFirstPerson}");
     }
 
@@ -123,6 +127,20 @@ public class Player : MonoBehaviour {
         Vector3 lateralVelocity = new Vector3(controller.velocity.x, 0f, controller.velocity.y);
 
         return lateralVelocity.magnitude > movingThreshold;
+    }
+
+    private void setCharacter(bool mode) {
+        var renderers = GetComponentsInChildren<SkinnedMeshRenderer>();
+
+        if(mode) {
+            foreach (var r in renderers) {
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
+            }
+        }else{
+            foreach (var r in renderers) {
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+            }
+        }
     }
 
     // Update is called once per frame
