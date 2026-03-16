@@ -374,7 +374,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Player
   cameraTransform: {fileID: 330585546}
   shouldFaceMoveDirection: 1
-  onlyLookForward: 1
+  onlyLookForward: 0
   basePlayerSpeed: 2
   sprintSpeed: 5
   crouchSpeed: 1
