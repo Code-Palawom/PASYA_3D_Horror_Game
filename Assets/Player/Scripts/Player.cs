@@ -22,6 +22,7 @@ public class Player : MonoBehaviour {
     private float verticalVelocity = 0f;
     private Boolean isRunning = false;
     private Boolean isCrouching = false;
+    private Boolean isWalkingBackwards = false;
 
     private CharacterController controller;
     private Vector2 moveInput;
@@ -115,7 +116,7 @@ public class Player : MonoBehaviour {
 
         PlayerMovementState lateralState = isRunning ? PlayerMovementState.Running : isMovingLiterally || isMovementInput ? PlayerMovementState.Walking : PlayerMovementState.Idling;
         playerState.SetPlayerMovementState(lateralState);
-        print($"velocity {controller.velocity.y}");
+        //print($"velocity {controller.velocity.y}");
         if(!controller.isGrounded && controller.velocity.y > 0f) {
             playerState.SetPlayerMovementState(PlayerMovementState.Jumping);
         } else if(!controller.isGrounded && controller.velocity.y <= 0f) {
@@ -157,9 +158,10 @@ public class Player : MonoBehaviour {
         right.Normalize();
 
         Vector3 moveDirection = forward * moveInput.y + right * moveInput.x;
-
         if(shouldFaceMoveDirection && !isFirstPerson && moveDirection.sqrMagnitude > 0.001f) {
-            Quaternion rotation = Quaternion.LookRotation(onlyLookForward ? forward : moveDirection, Vector3.up);
+            Vector3 faceDirection = moveDirection;
+            if(moveInput.y < 0) faceDirection = forward;
+            Quaternion rotation = Quaternion.LookRotation(onlyLookForward ? forward :  faceDirection, Vector3.up);
             transform.rotation = Quaternion.Slerp(transform.rotation, rotation, 10f * Time.deltaTime);
             //Debug.Log($"Third Person Rotation: {rotation}");
         }
@@ -173,6 +175,12 @@ public class Player : MonoBehaviour {
                 transform.rotation = Quaternion.Slerp(transform.rotation, rotation, 10f * Time.deltaTime);
                 //Debug.Log($"First Person Rotation: {rotation}");
             }
+        }
+        
+        if(moveInput.y < 0) {
+            playerSpeed = crouchSpeed;
+        }else if(!isRunning){
+            playerSpeed = basePlayerSpeed;
         }
 
         if(controller.isGrounded && verticalVelocity < 0) verticalVelocity = 0;
