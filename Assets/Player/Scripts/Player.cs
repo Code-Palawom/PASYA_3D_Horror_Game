@@ -13,6 +13,9 @@ public class Player : MonoBehaviour {
     [SerializeField] private float jumpHeight = 2f;
     [SerializeField] private float gravity = -30f;
     [SerializeField] private float movingThreshold = 0.01f;
+    [SerializeField] private float crouchHeight = 1.4f;
+    [SerializeField] private Vector3 crouchCenter = new Vector3(0, -0.3f, 0);
+    [SerializeField] private float crouchTransitionSpeed = 2f;
 
     [SerializeField] private CinemachineCamera thirdPersonPOV;
     [SerializeField] private CinemachineCamera firstPersonPOV;
@@ -22,7 +25,9 @@ public class Player : MonoBehaviour {
     private float verticalVelocity = 0f;
     private Boolean isRunning = false;
     private Boolean isCrouching = false;
-    private Boolean isWalkingBackwards = false;
+
+    private float standHeight;
+    private Vector3 standCenter;
 
     private CharacterController controller;
     private Vector2 moveInput;
@@ -42,6 +47,8 @@ public class Player : MonoBehaviour {
         playerAnimation = GetComponent<PlayerAnimation>();
 
         playerSpeed = basePlayerSpeed;
+        standCenter = controller.center;
+        standHeight = controller.height;
 
         setCharacter(isFirstPerson);
     }
@@ -122,6 +129,23 @@ public class Player : MonoBehaviour {
         } else if(!controller.isGrounded && controller.velocity.y <= 0f) {
             playerState.SetPlayerMovementState(PlayerMovementState.Falling);
         }
+
+        if(isCrouching) {
+            playerState.SetPlayerMovementState(PlayerMovementState.Crouching);
+        }
+    }
+
+    private void updateControllerCollider() {
+        Vector3 targetCenter = standCenter;
+        float targetHeight = standHeight;
+
+        if(isCrouching) {
+            targetCenter = crouchCenter;
+            targetHeight = crouchHeight;
+        }
+
+        controller.height = Mathf.Lerp(controller.height, targetHeight, crouchTransitionSpeed * Time.deltaTime);
+        controller.center = Vector3.Lerp(controller.center, targetCenter, crouchTransitionSpeed * Time.deltaTime);
     }
 
     private bool IsMovingLiterally() {
@@ -179,7 +203,7 @@ public class Player : MonoBehaviour {
         
         if(moveInput.y < 0) {
             playerSpeed = crouchSpeed;
-        }else if(!isRunning){
+        }else if(!isRunning && !isCrouching){
             playerSpeed = basePlayerSpeed;
         }
 
@@ -190,6 +214,7 @@ public class Player : MonoBehaviour {
         controller.Move(velocity * Time.deltaTime);
 
         UpdateMovementState();
+        updateControllerCollider();
     }
 
     private void FixedUpdate() {

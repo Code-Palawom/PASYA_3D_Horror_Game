@@ -13,6 +13,7 @@ public class PlayerAnimation : MonoBehaviour {
     private static int isGroundedHash = Animator.StringToHash("isGrounded");
     private static int isJumpingHash = Animator.StringToHash("isJumping");
     private static int isFallingHash = Animator.StringToHash("isFalling");
+    private static int isCrouchingHash = Animator.StringToHash("isCrouching");
 
     Vector3 currentBlendInput = Vector3.zero;
 
@@ -27,6 +28,7 @@ public class PlayerAnimation : MonoBehaviour {
         bool isSprinting = playerState.CurrentPlayerMovementState == PlayerMovementState.Sprinting;
         bool isJumping = playerState.CurrentPlayerMovementState == PlayerMovementState.Jumping;
         bool isFalling = playerState.CurrentPlayerMovementState == PlayerMovementState.Falling;
+        bool isCrouching = playerState.CurrentPlayerMovementState == PlayerMovementState.Crouching;
 
         Vector2 moveInput = isRunning ? playerInput * 1.5f : playerInput;
         currentBlendInput = Vector3.Lerp(currentBlendInput, moveInput, motionBlendSpeed * Time.deltaTime);
@@ -34,6 +36,7 @@ public class PlayerAnimation : MonoBehaviour {
         animator.SetBool(isGroundedHash, isGrounded);
         animator.SetBool(isFallingHash, isFalling);
         animator.SetBool(isJumpingHash, isJumping);
+         animator.SetBool(isCrouchingHash, isCrouching);
 
         animator.SetFloat(inputXHash, currentBlendInput.x);
         animator.SetFloat(inputYHash, currentBlendInput.y);

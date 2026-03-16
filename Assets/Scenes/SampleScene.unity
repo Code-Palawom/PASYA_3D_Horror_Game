@@ -381,6 +381,9 @@ MonoBehaviour:
   jumpHeight: 1.15
   gravity: -30
   movingThreshold: 0.01
+  crouchHeight: 1.4
+  crouchCenter: {x: 0, y: -0.25, z: 0}
+  crouchTransitionSpeed: 5
   thirdPersonPOV: {fileID: 2045570329}
   firstPersonPOV: {fileID: 2114297704}
 --- !u!143 &219883038

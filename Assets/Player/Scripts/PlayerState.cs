@@ -17,4 +17,5 @@ public enum PlayerMovementState {
     Jumping = 4,
     Falling = 5,
     Strafing = 6,
+    Crouching = 7,
 }
