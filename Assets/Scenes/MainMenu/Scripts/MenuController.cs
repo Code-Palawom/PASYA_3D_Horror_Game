@@ -8,12 +8,17 @@ public class MenuController : MonoBehaviour {
     private void Start() {
         levelLoader = gameObject.AddComponent<LevelLoader>();
     }
-    public void ExitButton() {
-        print("EXIT");
-        Application.Quit();
-    }
 
     public void Play() {
         StartCoroutine(levelLoader.LoadLevel(transition, "Map1"));
+    }
+
+    public void SettingsButton() {
+        Debug.Log("Pressed Settings!");
+    }
+
+    public void ExitButton() {
+        print("EXIT");
+        Application.Quit();
     }
 }
