@@ -7524,7 +7524,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MenuHoverAnimation
   animator: {fileID: 231020916}
-  animationSpeed: 10
+  duration: 0.5
 --- !u!1 &264418360
 GameObject:
   m_ObjectHideFlags: 0
@@ -33324,7 +33324,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MenuHoverAnimation
   animator: {fileID: 646267037}
-  animationSpeed: 10
+  duration: 0.5
 --- !u!1 &854936816
 GameObject:
   m_ObjectHideFlags: 0
@@ -115468,7 +115468,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MenuHoverAnimation
   animator: {fileID: 361017308}
-  animationSpeed: 10
+  duration: 0.5
 --- !u!1 &2046905985
 GameObject:
   m_ObjectHideFlags: 0
