@@ -10,17 +10,11 @@ public class FogRed : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
     [SerializeField] private Color fogColorOnHover;
     [SerializeField] private float duration = 1f;
 
-    [SerializeField] private TextMeshProUGUI text;
-    [SerializeField] private Color textColor;
-    [SerializeField] private Color textColorOnHover;
-
     public void OnPointerEnter(PointerEventData eventData) {
-        text.color = textColorOnHover;
         StartCoroutine(ChangeColorOverTime(fogColor, fogColorOnHover, duration));
     }
 
     public void OnPointerExit(PointerEventData eventData) {
-        text.color = textColor;
         StartCoroutine(ChangeColorOverTime(fogColorOnHover, fogColor, duration));
     }
 

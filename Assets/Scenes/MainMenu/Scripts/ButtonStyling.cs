@@ -1,21 +1,27 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(Button))]
 public class ButtonStyling : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler {
-    private Image imageComponent;
-    public Color textBgColor;
+    [SerializeField] private TextMeshProUGUI text;
+    [SerializeField] private Color textColor;
+    [SerializeField] private Color textColorOnHover;
+
+    private FontStyles textNormal;
 
     void Start() {
-        imageComponent = GetComponent<Image>();
+        textNormal = text.fontStyle;
     }
 
     public void OnPointerEnter(PointerEventData eventData) {
-        imageComponent.color = textBgColor;
+        text.color = textColorOnHover;
+        text.fontStyle = FontStyles.Bold;
     }
 
     public void OnPointerExit(PointerEventData eventData) {
-        imageComponent.color = new Color(textBgColor.r, textBgColor.g, textBgColor.b, 0f);
+        text.color = textColor;
+        text.fontStyle = textNormal;
     }
 }
