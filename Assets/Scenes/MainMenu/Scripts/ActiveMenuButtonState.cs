@@ -6,6 +6,7 @@ public class ActiveMenuButtonState : MonoBehaviour {
     [SerializeField] private MenuHoverAnimation menuHoverAnimation2;
     [SerializeField] private MenuHoverAnimation menuHoverAnimation3;
     [SerializeField] private MenuHoverAnimation menuHoverAnimation4;
+    [SerializeField] private MenuHoverAnimation menuHoverAnimation5;
 
     private FogRed fogRed;
 
@@ -21,8 +22,9 @@ public class ActiveMenuButtonState : MonoBehaviour {
         menuHoverAnimation2.SlideOut(activeMenu);
         menuHoverAnimation3.SlideOut(activeMenu);
         menuHoverAnimation4.SlideOut(activeMenu);
+        menuHoverAnimation5.SlideOut(activeMenu);
 
-        if(activeMenu == 4 && !isFogRed){
+        if(activeMenu == 5 && !isFogRed){
             isFogRed = true;
             fogRed.ApplyRedFog();
         }else{
