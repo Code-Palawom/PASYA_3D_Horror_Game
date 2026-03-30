@@ -1,7 +1,5 @@
 using Unity.Cinemachine;
 using UnityEngine;
-using UnityEngine.SceneManagement;
-using UnityEngine.TextCore.Text;
 
 public class MenuController : MonoBehaviour {
     private LevelLoader levelLoader;
@@ -26,6 +24,9 @@ public class MenuController : MonoBehaviour {
     [SerializeField] private ActiveMenu shoesButton;
     [SerializeField] private ActiveMenu applyButton;
     [SerializeField] private ActiveMenu cancelButton;
+
+    [Header("Character Selections")]
+    [SerializeField] private ActiveMenu characterSelection;
 
     [Header("Panels")]
     [SerializeField] private PlayPanel play;
@@ -58,6 +59,7 @@ public class MenuController : MonoBehaviour {
         aboutButton.HideBtn();
         exitButton.HideBtn();
 
+        characterSelection.ShowBtn();
         cosmeticsButton.ShowBtn();
         headButton.ShowBtn();
         bodyButton.ShowBtn();
@@ -85,6 +87,7 @@ public class MenuController : MonoBehaviour {
         applyButton.HideBtn();
         cancelButton.HideBtn();
 
+        characterSelection.HideBtn();
         playButton.ShowBtn();
         multiplayerButton.ShowBtn();
         characterButton.ShowBtn();
