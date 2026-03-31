@@ -1,4 +1,5 @@
 using Unity.Cinemachine;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class MenuController : MonoBehaviour {
@@ -34,16 +35,21 @@ public class MenuController : MonoBehaviour {
     [SerializeField] private CanvasGroup character;
     [SerializeField] private AboutPanel about;
 
+    [Header("Sounds")]
+    [SerializeField] private AudioSource buttonClickSound;
+
     private void Start() {
         levelLoader = gameObject.AddComponent<LevelLoader>();
     }
 
     public void Play() {
+        buttonClickSound.Play();
         play.OpenPlayPanel();
         StartCoroutine(levelLoader.LoadLevel(transition, "Map1"));
     }
 
     public void OpenCharacterPanel() {
+        buttonClickSound.Play();
         cam.Priority = 0;
         characterCam.Priority = 10;
 
@@ -71,6 +77,7 @@ public class MenuController : MonoBehaviour {
     }
 
     public void CloseCharacterPanel() {
+        buttonClickSound.Play();
         cam.Priority = 10;
         characterCam.Priority = 0;
 
@@ -98,22 +105,27 @@ public class MenuController : MonoBehaviour {
     }
 
     public void OpenSettingsPanel() {
+        buttonClickSound.Play();
         Debug.Log("Pressed Settings!");
     }
 
     public void CloseSettingsPanel() {
+        buttonClickSound.Play();
         Debug.Log("Pressed Settings!");
     }
 
     public void OpenAboutPanel() {
+        buttonClickSound.Play();
         about.OpenAboutPanel();
     }
 
     public void CloseAboutPanel() {
+        buttonClickSound.Play();
         about.CloseAboutPanel();
     }
 
     public void ExitButton() {
+        buttonClickSound.Play();
         print("EXIT");
         Application.Quit();
     }
