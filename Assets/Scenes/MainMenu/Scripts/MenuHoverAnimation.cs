@@ -12,6 +12,8 @@ public class MenuHoverAnimation : MonoBehaviour, IPointerEnterHandler {
     [SerializeField] private Color textColor;
     [SerializeField] private Color textColorOnHover;
 
+    [SerializeField] private AudioSource audioSource;
+
     private static int slide = Animator.StringToHash("Slide");
 
     private FontStyles textNormal;
@@ -48,6 +50,7 @@ public class MenuHoverAnimation : MonoBehaviour, IPointerEnterHandler {
         target = 1f;
         DecorateText();
         activeAnimation = StartCoroutine(StartAnimation());
+        audioSource.Play();
     }
 
     private void StopCurrentAnimation() {
