@@ -1,18 +1,20 @@
 using UnityEngine;
 
 public class ChangeOutfit : MonoBehaviour {
-    private SkinnedMeshRenderer skinnedMeshRenderer;
+    private new Renderer renderer;
 
     private void Start() {
-        skinnedMeshRenderer = GetComponent<SkinnedMeshRenderer>();
+        renderer = GetComponent<Renderer>();
     }
 
-    public void SwapMaterial(int index, Material material) {
-        Material[] currentMaterials = skinnedMeshRenderer.materials;
+    public void SwapMaterial(string type, Material material) {
+        Material[] currentMaterials = renderer.sharedMaterials;
 
-        if(index <  currentMaterials.Length) {
-            currentMaterials[index] = material;
-            skinnedMeshRenderer.materials = currentMaterials;
-        }
+        currentMaterials[currentMaterials.Length - 1] = material;
+        renderer.sharedMaterials = currentMaterials;
+        //if(index <  currentMaterials.Length) {
+        //    currentMaterials[index] = material;
+        //    skinnedMeshRenderer.materials = currentMaterials;
+        //}
     }
 }

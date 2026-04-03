@@ -4720,6 +4720,28 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 49f166b9804d0a3499e6d196b46432b5, type: 3}
+--- !u!1 &159040842 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: -4819223349682164798, guid: c4e31ca856f1e2c4f8baf8eb7c7fbbe7, type: 3}
+  m_PrefabInstance: {fileID: 712312670}
+  m_PrefabAsset: {fileID: 0}
+--- !u!137 &159040844 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -1206874426333947015, guid: c4e31ca856f1e2c4f8baf8eb7c7fbbe7, type: 3}
+  m_PrefabInstance: {fileID: 712312670}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &159040845
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 159040842}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e26edc80b8c06754da197c78ff2fe0de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChangeOutfit
 --- !u!1 &178257912
 GameObject:
   m_ObjectHideFlags: 0
@@ -6156,6 +6178,66 @@ MonoBehaviour:
   m_SelectedFaces: 
   m_SelectedEdges: []
   m_SelectedVertices: 
+--- !u!1 &180044151
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 180044153}
+  - component: {fileID: 180044152}
+  - component: {fileID: 180044154}
+  m_Layer: 0
+  m_Name: GameManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &180044152
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 180044151}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b7d548e0a74b2a4d86d4d30288b30dc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SaveManager
+--- !u!4 &180044153
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 180044151}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 1.92813, y: 1.5, z: 0.92918986}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &180044154
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 180044151}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 57a62ffa8b385964091a4dad255ce2ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterManager
+  saveManager: {fileID: 180044152}
+  currentData: {fileID: 11400000, guid: e73a26246359cad409e113d6e39053c2, type: 2}
+  character: {fileID: 1604301109}
 --- !u!1 &207999690
 GameObject:
   m_ObjectHideFlags: 0
@@ -17576,13 +17658,13 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 404632652}
-        m_TargetAssemblyTypeName: OutfitHandler, Assembly-CSharp
-        m_MethodName: ChangeOutfit
-        m_Mode: 1
+      - m_Target: {fileID: 180044154}
+        m_TargetAssemblyTypeName: CharacterManager, Assembly-CSharp
+        m_MethodName: TryBodyMaterial
+        m_Mode: 2
         m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_ObjectArgument: {fileID: 2100000, guid: c5881095d223ea64eaee69693412f6a5, type: 2}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Material, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -17638,9 +17720,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cf0f3c3c0f4ef5940839b0222a2bdf8a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::OutfitHandler
-  changeOutfit: {fileID: 8854515843601590461}
+  changeOutfit: {fileID: 159040845}
+  type: tshirt
   material: {fileID: 2100000, guid: 68a28e8d45be2bc458387c8031168835, type: 2}
-  outfits: 1
 --- !u!1001 &413597010
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -36316,6 +36398,88 @@ Mesh:
       - serializedVersion: 1
         m_IndexStart: 0
         m_IndexCount: 0
+--- !u!1001 &712312670
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: -8679921383154817045, guid: c4e31ca856f1e2c4f8baf8eb7c7fbbe7, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1.3
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: c4e31ca856f1e2c4f8baf8eb7c7fbbe7, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1.3
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: c4e31ca856f1e2c4f8baf8eb7c7fbbe7, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1.3
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: c4e31ca856f1e2c4f8baf8eb7c7fbbe7, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 4.852042
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: c4e31ca856f1e2c4f8baf8eb7c7fbbe7, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.00500084
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: c4e31ca856f1e2c4f8baf8eb7c7fbbe7, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 5.118762
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: c4e31ca856f1e2c4f8baf8eb7c7fbbe7, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: c4e31ca856f1e2c4f8baf8eb7c7fbbe7, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: c4e31ca856f1e2c4f8baf8eb7c7fbbe7, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: c4e31ca856f1e2c4f8baf8eb7c7fbbe7, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: c4e31ca856f1e2c4f8baf8eb7c7fbbe7, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: c4e31ca856f1e2c4f8baf8eb7c7fbbe7, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 180
+      objectReference: {fileID: 0}
+    - target: {fileID: -8679921383154817045, guid: c4e31ca856f1e2c4f8baf8eb7c7fbbe7, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: c4e31ca856f1e2c4f8baf8eb7c7fbbe7, type: 3}
+      propertyPath: m_Name
+      value: Character
+      objectReference: {fileID: 0}
+    - target: {fileID: 5866666021909216657, guid: c4e31ca856f1e2c4f8baf8eb7c7fbbe7, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: 92d438d8279d1bf408f2dc1b143b3ae1, type: 2}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: c4e31ca856f1e2c4f8baf8eb7c7fbbe7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1604301109}
+    - targetCorrespondingSourceObject: {fileID: -4819223349682164798, guid: c4e31ca856f1e2c4f8baf8eb7c7fbbe7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 159040845}
+    - targetCorrespondingSourceObject: {fileID: 6829485909940997511, guid: c4e31ca856f1e2c4f8baf8eb7c7fbbe7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2127200180}
+  m_SourcePrefab: {fileID: 100100000, guid: c4e31ca856f1e2c4f8baf8eb7c7fbbe7, type: 3}
 --- !u!43 &763454571
 Mesh:
   m_ObjectHideFlags: 0
@@ -36842,7 +37006,7 @@ GameObject:
   - component: {fileID: 803316801}
   - component: {fileID: 803316800}
   m_Layer: 5
-  m_Name: Head
+  m_Name: Hair
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -84450,10 +84614,10 @@ RectTransform:
   - {fileID: 2040531822}
   m_Father: {fileID: 1590153721}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0.5}
-  m_AnchorMax: {x: 0, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 340, y: 0}
-  m_SizeDelta: {x: 1920, y: 1080}
+  m_SizeDelta: {x: 1920, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1004408553
 MonoBehaviour:
@@ -89084,7 +89248,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Head
+  m_text: Hair
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 1eeca0b94d9b3aa46bed356535b15964, type: 2}
   m_sharedMaterial: {fileID: -7270849631102747758, guid: 1eeca0b94d9b3aa46bed356535b15964, type: 2}
@@ -92868,10 +93032,10 @@ RectTransform:
   - {fileID: 1795839779}
   m_Father: {fileID: 1590153721}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0.5}
-  m_AnchorMax: {x: 0, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 960, y: 0}
-  m_SizeDelta: {x: 1920, y: 1080}
+  m_SizeDelta: {x: 1920, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1371483740
 MonoBehaviour:
@@ -105888,6 +106052,26 @@ Mesh:
       - serializedVersion: 1
         m_IndexStart: 0
         m_IndexCount: 0
+--- !u!1 &1604301105 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: c4e31ca856f1e2c4f8baf8eb7c7fbbe7, type: 3}
+  m_PrefabInstance: {fileID: 712312670}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1604301109
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1604301105}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 405ac200d6f09a34b8ce5e6303fe362a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChangeCharacterHandler
+  currentData: {fileID: 11400000, guid: e73a26246359cad409e113d6e39053c2, type: 2}
+  hairRenderer: {fileID: 2127200179}
+  bodyRenderer: {fileID: 159040844}
 --- !u!1 &1607589221
 GameObject:
   m_ObjectHideFlags: 0
@@ -108304,9 +108488,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cf0f3c3c0f4ef5940839b0222a2bdf8a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::OutfitHandler
-  changeOutfit: {fileID: 8854515843601590461}
+  changeOutfit: {fileID: 2127200180}
+  type: hair
   material: {fileID: 2100000, guid: f5ce6eeb91b76804ca120a9a65e5261f, type: 2}
-  outfits: 3
 --- !u!114 &1662031301
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -108390,13 +108574,13 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 1662031300}
-        m_TargetAssemblyTypeName: OutfitHandler, Assembly-CSharp
-        m_MethodName: ChangeOutfit
-        m_Mode: 1
+      - m_Target: {fileID: 180044154}
+        m_TargetAssemblyTypeName: CharacterManager, Assembly-CSharp
+        m_MethodName: TryHairMaterial
+        m_Mode: 2
         m_Arguments:
-          m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_ObjectArgument: {fileID: 2100000, guid: f5ce6eeb91b76804ca120a9a65e5261f, type: 2}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Material, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
@@ -112051,10 +112235,10 @@ RectTransform:
   - {fileID: 1607589222}
   m_Father: {fileID: 1371483738}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0.5}
-  m_AnchorMax: {x: 0, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 1270, y: 1080}
+  m_SizeDelta: {x: 1270, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1800460657
 MonoBehaviour:
@@ -119200,10 +119384,10 @@ RectTransform:
   - {fileID: 1271307124}
   m_Father: {fileID: 1371483738}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 0.5}
-  m_AnchorMax: {x: 1, y: 0.5}
+  m_AnchorMin: {x: 1, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 360, y: 0}
-  m_SizeDelta: {x: 600, y: 1080}
+  m_SizeDelta: {x: 600, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1946992760
 MonoBehaviour:
@@ -124250,7 +124434,7 @@ GameObject:
   - component: {fileID: 2019196233}
   - component: {fileID: 2019196232}
   m_Layer: 5
-  m_Name: Head
+  m_Name: Hair
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -129368,6 +129552,28 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 49f166b9804d0a3499e6d196b46432b5, type: 3}
+--- !u!1 &2127200177 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6829485909940997511, guid: c4e31ca856f1e2c4f8baf8eb7c7fbbe7, type: 3}
+  m_PrefabInstance: {fileID: 712312670}
+  m_PrefabAsset: {fileID: 0}
+--- !u!137 &2127200179 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 4320098735860348617, guid: c4e31ca856f1e2c4f8baf8eb7c7fbbe7, type: 3}
+  m_PrefabInstance: {fileID: 712312670}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2127200180
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2127200177}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e26edc80b8c06754da197c78ff2fe0de, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChangeOutfit
 --- !u!43 &2142946655
 Mesh:
   m_ObjectHideFlags: 0
@@ -129546,66 +129752,6 @@ Mesh:
       - serializedVersion: 1
         m_IndexStart: 0
         m_IndexCount: 0
---- !u!1001 &1948975953915839168
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 7588292609635201077, guid: 9636a1a0e8db7dd4cb285961fb848dc0, type: 3}
-      propertyPath: m_Name
-      value: Character
-      objectReference: {fileID: 0}
-    - target: {fileID: 8343859594058476588, guid: 9636a1a0e8db7dd4cb285961fb848dc0, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 4.852042
-      objectReference: {fileID: 0}
-    - target: {fileID: 8343859594058476588, guid: 9636a1a0e8db7dd4cb285961fb848dc0, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.005000848
-      objectReference: {fileID: 0}
-    - target: {fileID: 8343859594058476588, guid: 9636a1a0e8db7dd4cb285961fb848dc0, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 5.118762
-      objectReference: {fileID: 0}
-    - target: {fileID: 8343859594058476588, guid: 9636a1a0e8db7dd4cb285961fb848dc0, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8343859594058476588, guid: 9636a1a0e8db7dd4cb285961fb848dc0, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8343859594058476588, guid: 9636a1a0e8db7dd4cb285961fb848dc0, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 8343859594058476588, guid: 9636a1a0e8db7dd4cb285961fb848dc0, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8343859594058476588, guid: 9636a1a0e8db7dd4cb285961fb848dc0, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 8343859594058476588, guid: 9636a1a0e8db7dd4cb285961fb848dc0, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 180
-      objectReference: {fileID: 0}
-    - target: {fileID: 8343859594058476588, guid: 9636a1a0e8db7dd4cb285961fb848dc0, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 6909298123080364949, guid: 9636a1a0e8db7dd4cb285961fb848dc0, type: 3}
-      insertIndex: 1
-      addedObject: {fileID: 8854515843601590461}
-  m_SourcePrefab: {fileID: 100100000, guid: 9636a1a0e8db7dd4cb285961fb848dc0, type: 3}
 --- !u!1001 &2607676165781860115
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -129800,23 +129946,6 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 49f166b9804d0a3499e6d196b46432b5, type: 3}
---- !u!1 &8178690902472351889 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 6909298123080364949, guid: 9636a1a0e8db7dd4cb285961fb848dc0, type: 3}
-  m_PrefabInstance: {fileID: 1948975953915839168}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &8854515843601590461
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8178690902472351889}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e26edc80b8c06754da197c78ff2fe0de, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ChangeOutfit
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -129827,9 +129956,10 @@ SceneRoots:
   - {fileID: 879701324}
   - {fileID: 1107937903}
   - {fileID: 1590153721}
-  - {fileID: 1948975953915839168}
+  - {fileID: 712312670}
   - {fileID: 1517549571}
   - {fileID: 2213648}
+  - {fileID: 180044153}
   - {fileID: 1034908531}
   - {fileID: 905175089}
   - {fileID: 1955168351}
