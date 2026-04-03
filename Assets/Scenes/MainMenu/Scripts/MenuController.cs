@@ -38,6 +38,10 @@ public class MenuController : MonoBehaviour {
     [Header("Sounds")]
     [SerializeField] private AudioSource buttonClickSound;
 
+    [Header("Character Manager")]
+    [SerializeField] private CharacterData characterData;
+    [SerializeField] private CharacterManager characterManager;
+
     private void Start() {
         levelLoader = gameObject.AddComponent<LevelLoader>();
     }
@@ -58,6 +62,8 @@ public class MenuController : MonoBehaviour {
         character.interactable = true;
         character.blocksRaycasts = true;
 
+        characterManager.CustomizeCharacter();
+
         playButton.HideBtn();
         multiplayerButton.HideBtn();
         characterButton.HideBtn();
@@ -76,7 +82,7 @@ public class MenuController : MonoBehaviour {
         Debug.Log("Pressed Character!");
     }
 
-    public void CloseCharacterPanel() {
+    public void CloseCharacterPanel(bool saveCharacter) {
         buttonClickSound.Play();
         cam.Priority = 10;
         characterCam.Priority = 0;
@@ -85,6 +91,12 @@ public class MenuController : MonoBehaviour {
         main.blocksRaycasts = true;
         character.interactable = false;
         character.blocksRaycasts = false;
+
+        if(saveCharacter) {
+            characterManager.SetCharacter();
+        }else{
+            characterManager.RevertCharacter();
+        }
 
         cosmeticsButton.HideBtn();
         headButton.HideBtn();

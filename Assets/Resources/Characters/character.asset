@@ -14,5 +14,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterData
   hairMesh: {fileID: -5017437812508297076, guid: c4e31ca856f1e2c4f8baf8eb7c7fbbe7, type: 3}
   bodyMesh: {fileID: -8545447256379345787, guid: c4e31ca856f1e2c4f8baf8eb7c7fbbe7, type: 3}
-  hairMaterial: {fileID: -972631315819378086, guid: c4e31ca856f1e2c4f8baf8eb7c7fbbe7, type: 3}
-  bodyMaterial: {fileID: 5414641606959420560, guid: c4e31ca856f1e2c4f8baf8eb7c7fbbe7, type: 3}
+  hairMaterial: {fileID: 2100000, guid: a5697f7c4fe0d77499a008fd0ede67ac, type: 2}
+  bodyMaterial: {fileID: 2100000, guid: c5881095d223ea64eaee69693412f6a5, type: 2}
