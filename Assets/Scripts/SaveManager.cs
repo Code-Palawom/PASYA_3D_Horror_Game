@@ -3,7 +3,7 @@ using System.IO;
 
 public class SaveManager : MonoBehaviour {
     private string savePath;
-    private string key = "1234S";
+    private string key = "QWERTY";
 
     void Awake() {
         savePath = Path.Combine(Application.persistentDataPath, "player_save.dat");

@@ -1,16 +1,51 @@
+using TMPro;
 using UnityEngine;
 
 public class CustomizationController : MonoBehaviour {
-    [SerializeField] private ActiveSelection head;
-    [SerializeField] private ActiveSelection body;
+    [SerializeField] private Color textColorOnActive;
 
-    public void OpenBodySelection() {
-        head.HideSelection();
-        body.ShowSelection();
+    [SerializeField] private ActiveSelection hair;
+    [SerializeField] private TextMeshProUGUI hairText;
+
+    [SerializeField] private ActiveSelection body;
+    [SerializeField] private TextMeshProUGUI bodyText;
+
+    private FontStyles textNormal;
+    private Color textColor;
+
+    private void Start() {
+        textNormal = hairText.fontStyle;
+        textColor = hairText.color;
     }
 
-    public void OpenHeadSelection() {
-        head.ShowSelection();
+    public void OpenHairSelection() {
+        hair.ShowSelection();
         body.HideSelection();
+
+        setActiveCustomization(hairText);
+    }
+
+    public void OpenBodySelection() {
+        hair.HideSelection();
+        body.ShowSelection();
+
+        setActiveCustomization(bodyText);
+    }
+
+    public void setActiveCustomization(TextMeshProUGUI text) {
+        UndecorateText(hairText);
+        UndecorateText(bodyText);
+
+        DecorateText(text);
+    }
+
+    private void DecorateText(TextMeshProUGUI text) {
+        text.color = textColorOnActive;
+        text.fontStyle = FontStyles.Bold;
+    }
+
+    private void UndecorateText(TextMeshProUGUI text) {
+        text.color = textColor;
+        text.fontStyle = textNormal;
     }
 }
