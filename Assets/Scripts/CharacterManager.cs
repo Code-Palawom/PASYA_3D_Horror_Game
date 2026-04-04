@@ -10,6 +10,13 @@ public class CharacterManager : MonoBehaviour {
     private CharacterData saveData;
     private CharacterData backupCharacterData;
 
+    [Header("Cosmetics")]
+    [SerializeField] private Mesh cosmeticMeshWatch;
+    [SerializeField] private Material[] cosmeticMaterialWatch;
+
+    private Mesh cosmeticMesh;
+    private Material[] cosmeticMaterial;
+
     private Material hair;
     private Material body;
 
@@ -31,6 +38,12 @@ public class CharacterManager : MonoBehaviour {
         backupCharacterData.name = saveData.name;
     }
 
+    public void TryCosmetic(string uid) {
+        GetCosmetics(uid);
+
+        character.ApplyCharacter(saveData);
+    }
+
     public void TryHairMaterial(Material material) {
         saveData.hairMaterial = material;
         hair = material;
@@ -46,6 +59,8 @@ public class CharacterManager : MonoBehaviour {
     public void SetCharacter() {
         Debug.Log("Character Saved!");
 
+        currentData.cosmeticMesh = cosmeticMesh;
+        currentData.cosmeticMaterial = cosmeticMaterial;
         if(hair != null) currentData.hairMaterial = hair;
         if(body != null) currentData.bodyMaterial = body;
     }
@@ -56,6 +71,23 @@ public class CharacterManager : MonoBehaviour {
         backupCharacterData.name = saveData.name;
 
         character.ApplyCharacter(saveData);
+    }
+
+    private void GetCosmetics(string uid) {
+        switch(uid) {
+            case "watch":
+                cosmeticMesh = cosmeticMeshWatch;
+                cosmeticMaterial = cosmeticMaterialWatch;
+                saveData.cosmeticMesh = cosmeticMeshWatch;
+                saveData.cosmeticMaterial = cosmeticMaterialWatch;
+                break;
+            default:
+                cosmeticMesh = null;
+                cosmeticMaterial = null;
+                saveData.cosmeticMesh = null;
+                saveData.cosmeticMaterial = null;
+                break;
+        }
     }
 
     private void OnDestroy() {
