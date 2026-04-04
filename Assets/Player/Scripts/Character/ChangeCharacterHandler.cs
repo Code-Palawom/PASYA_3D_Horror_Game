@@ -1,8 +1,6 @@
 using UnityEngine;
 
 public class ChangeCharacterHandler : MonoBehaviour {
-    public CharacterData currentData;
-
     [Header("Mesh")]
     public SkinnedMeshRenderer hairRenderer;
     public SkinnedMeshRenderer bodyRenderer;
@@ -13,8 +11,8 @@ public class ChangeCharacterHandler : MonoBehaviour {
         //anim = GetComponent<Animator>();
     }
 
-    public void ApplyCharacter() {
-        if (currentData == null) return;
+    public void ApplyCharacter(CharacterData currentData) {
+        if(currentData == null) return;
 
         UpdatePart(hairRenderer, currentData.hairMesh, currentData.hairMaterial);
         UpdatePart(bodyRenderer, currentData.bodyMesh, currentData.bodyMaterial);
@@ -23,9 +21,9 @@ public class ChangeCharacterHandler : MonoBehaviour {
     }
 
     private void UpdatePart(SkinnedMeshRenderer renderer, Mesh mesh, Material material) {
-        if (renderer == null) return;
+        if(renderer == null) return;
 
-        if (mesh == null) {
+        if(mesh == null){
             renderer.gameObject.SetActive(false);
             return;
         }
