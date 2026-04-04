@@ -19,6 +19,7 @@ public class MenuController : MonoBehaviour {
     [SerializeField] private ActiveMenu exitButton;
 
     [SerializeField] private ActiveMenu cosmeticsButton;
+    [SerializeField] private ActiveMenu genderButton;
     [SerializeField] private ActiveMenu headButton;
     [SerializeField] private ActiveMenu bodyButton;
     [SerializeField] private ActiveMenu pantsButton;
@@ -73,6 +74,7 @@ public class MenuController : MonoBehaviour {
 
         characterSelection.ShowBtn();
         cosmeticsButton.ShowBtn();
+        genderButton.ShowBtn();
         headButton.ShowBtn();
         bodyButton.ShowBtn();
         pantsButton.ShowBtn();
@@ -99,6 +101,7 @@ public class MenuController : MonoBehaviour {
         }
 
         cosmeticsButton.HideBtn();
+        genderButton.HideBtn();
         headButton.HideBtn();
         bodyButton.HideBtn();
         pantsButton.HideBtn();

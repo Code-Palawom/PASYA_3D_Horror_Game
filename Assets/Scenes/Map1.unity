@@ -22561,7 +22561,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 219883037}
         m_TargetAssemblyTypeName: Player, Assembly-CSharp
-        m_MethodName: onMove
+        m_MethodName: OnMove
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -22577,7 +22577,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 219883037}
         m_TargetAssemblyTypeName: Player, Assembly-CSharp
-        m_MethodName: onJump
+        m_MethodName: OnJump
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -22593,7 +22593,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 219883037}
         m_TargetAssemblyTypeName: Player, Assembly-CSharp
-        m_MethodName: onSprint
+        m_MethodName: OnSprint
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -22609,7 +22609,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 219883037}
         m_TargetAssemblyTypeName: Player, Assembly-CSharp
-        m_MethodName: onCrouch
+        m_MethodName: OnCrouch
         m_Mode: 0
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

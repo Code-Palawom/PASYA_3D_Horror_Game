@@ -1,7 +1,7 @@
 using UnityEngine;
 
 public class ChangeCharacterHandler : MonoBehaviour {
-    [Header("Mesh")]
+    [Header("Renderers")]
     public SkinnedMeshRenderer hairRenderer;
     public SkinnedMeshRenderer bodyRenderer;
 

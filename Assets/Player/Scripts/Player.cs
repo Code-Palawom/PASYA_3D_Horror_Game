@@ -50,15 +50,15 @@ public class Player : MonoBehaviour {
         standCenter = controller.center;
         standHeight = controller.height;
 
-        setCharacter(isFirstPerson);
+        SetCharacter(isFirstPerson);
     }
 
-    public void onMove(InputAction.CallbackContext context) {
+    public void OnMove(InputAction.CallbackContext context) {
         moveInput = context.ReadValue<Vector2>();
         Debug.Log($"Move Input: {moveInput}");
     }
 
-    public void onJump(InputAction.CallbackContext context) {
+    public void OnJump(InputAction.CallbackContext context) {
         if(context.performed && controller.isGrounded) {
             verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
             Debug.Log("Jump!");
@@ -66,7 +66,9 @@ public class Player : MonoBehaviour {
         Debug.Log($"Jumping {context.performed} - Is on ground: {controller.isGrounded}");
     }
 
-    public void onSprint(InputAction.CallbackContext context) {
+    public void OnSprint(InputAction.CallbackContext context) {
+        if(moveInput.y == -1) return;
+
         if(context.started) {
             isRunning = true;
             if(isCrouching == false) {
@@ -86,7 +88,7 @@ public class Player : MonoBehaviour {
         }
     }
 
-    public void onCrouch(InputAction.CallbackContext context) {
+    public void OnCrouch(InputAction.CallbackContext context) {
         if(context.started){
             playerSpeed = crouchSpeed;
             isCrouching = true;
@@ -112,7 +114,7 @@ public class Player : MonoBehaviour {
             thirdPersonPOV.Priority = 10;
         }
 
-        setCharacter(isFirstPerson);
+        SetCharacter(isFirstPerson);
 
         Debug.Log($"POV Switch is First Person: {isFirstPerson}");
     }
@@ -135,7 +137,7 @@ public class Player : MonoBehaviour {
         }
     }
 
-    private void updateControllerCollider() {
+    private void UpdateControllerCollider() {
         Vector3 targetCenter = standCenter;
         float targetHeight = standHeight;
 
@@ -154,7 +156,7 @@ public class Player : MonoBehaviour {
         return lateralVelocity.magnitude > movingThreshold;
     }
 
-    private void setCharacter(bool mode) {
+    private void SetCharacter(bool mode) {
         var renderers = GetComponentsInChildren<SkinnedMeshRenderer>();
 
         if(mode) {
@@ -214,7 +216,7 @@ public class Player : MonoBehaviour {
         controller.Move(velocity * Time.deltaTime);
 
         UpdateMovementState();
-        updateControllerCollider();
+        UpdateControllerCollider();
     }
 
     private void FixedUpdate() {
