@@ -10,15 +10,14 @@ public class CharacterManager : MonoBehaviour {
     private CharacterData saveData;
     private CharacterData backupCharacterData;
 
-    [Header("Cosmetics")]
-    [SerializeField] private Mesh cosmeticMeshWatch;
-    [SerializeField] private Material[] cosmeticMaterialWatch;
-
-    private Mesh cosmeticMesh;
-    private Material[] cosmeticMaterial;
-
-    private Material hair;
-    private Material body;
+    private Mesh rightHandCosmeticMesh;
+    private Material[] rightHandCosmeticMaterial;
+    private Material skin;
+    private Material[] hair;
+    private Material[] head;
+    private Material[] body;
+    private Material[] pants;
+    private Material[] shoes;
 
     void Start() {
         string savedName = saveManager.Load();
@@ -29,7 +28,7 @@ public class CharacterManager : MonoBehaviour {
             saveData = Instantiate(data);
             saveData.name = data.name;
 
-            character.ApplyCharacter(saveData);
+            character.ApplyCharacter(saveData, false);
         }
     }
 
@@ -38,31 +37,67 @@ public class CharacterManager : MonoBehaviour {
         backupCharacterData.name = saveData.name;
     }
 
-    public void TryCosmetic(string uid) {
-        GetCosmetics(uid);
+    public void TryCosmetic(Mesh mesh, Material[] materials) {
+        saveData.rightHandCosmeticMesh = mesh;
+        saveData.rightHandCosmeticMaterial = materials;
 
-        character.ApplyCharacter(saveData);
+        character.ApplyCharacter(saveData, true);
     }
 
-    public void TryHairMaterial(Material material) {
+    public void TryGender() { }
+
+    public void TrySkinMaterial(Material material) {
+        saveData.skinMaterial = material;
+        saveData.headMaterial[0] = material;
+        saveData.headMaterial[1] = material;
+        saveData.headMaterial[5] = material;
+        skin = material;
+
+        character.ApplyCharacter(saveData, true);
+    }
+
+    public void TryHairMaterial(Material[] material) {
         saveData.hairMaterial = material;
         hair = material;
-        character.ApplyCharacter(saveData);
+        character.ApplyCharacter(saveData, true);
     }
 
-    public void TryBodyMaterial(Material material) {
+    public void TryHeadMaterial(Mesh mesh, Material[] material) {
+        saveData.headMesh = mesh;
+        saveData.headMaterial = material;
+
+        character.ApplyCharacter(saveData, true);
+    }
+
+    public void TryBodyMaterial(Material[] material) {
         saveData.bodyMaterial = material;
         body = material;
-        character.ApplyCharacter(saveData);
+        character.ApplyCharacter(saveData, true);
+    }
+
+    public void TryPantsMaterial(Material[] material) {
+        saveData.pantsMaterial = material;
+        pants = material;
+        character.ApplyCharacter(saveData, true);
+    }
+
+    public void TryShoesMaterial(Material[] material) {
+        saveData.shoesMaterial = material;
+        shoes = material;
+        character.ApplyCharacter(saveData, true);
     }
 
     public void SetCharacter() {
         Debug.Log("Character Saved!");
 
-        currentData.cosmeticMesh = cosmeticMesh;
-        currentData.cosmeticMaterial = cosmeticMaterial;
+        currentData.rightHandCosmeticMesh = rightHandCosmeticMesh;
+        currentData.rightHandCosmeticMaterial = rightHandCosmeticMaterial;
+        if(skin != null) currentData.skinMaterial = skin;
         if(hair != null) currentData.hairMaterial = hair;
+        if(head != null) currentData.headMaterial = head;
         if(body != null) currentData.bodyMaterial = body;
+        if(pants != null) currentData.pantsMaterial = pants;
+        if(shoes != null) currentData.shoesMaterial = shoes;
     }
 
     public void RevertCharacter() {
@@ -70,24 +105,7 @@ public class CharacterManager : MonoBehaviour {
         backupCharacterData = Instantiate(saveData);
         backupCharacterData.name = saveData.name;
 
-        character.ApplyCharacter(saveData);
-    }
-
-    private void GetCosmetics(string uid) {
-        switch(uid) {
-            case "watch":
-                cosmeticMesh = cosmeticMeshWatch;
-                cosmeticMaterial = cosmeticMaterialWatch;
-                saveData.cosmeticMesh = cosmeticMeshWatch;
-                saveData.cosmeticMaterial = cosmeticMaterialWatch;
-                break;
-            default:
-                cosmeticMesh = null;
-                cosmeticMaterial = null;
-                saveData.cosmeticMesh = null;
-                saveData.cosmeticMaterial = null;
-                break;
-        }
+        character.ApplyCharacter(saveData, true);
     }
 
     private void OnDestroy() {

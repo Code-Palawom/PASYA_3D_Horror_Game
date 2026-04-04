@@ -6,6 +6,8 @@ public class MenuController : MonoBehaviour {
     private LevelLoader levelLoader;
     public Animator transition;
 
+    private MMCharacterAnimation characterAnimation;
+    
     [Header("Cameras")]
     [SerializeField] private CinemachineCamera cam;
     [SerializeField] private CinemachineCamera characterCam;
@@ -20,6 +22,8 @@ public class MenuController : MonoBehaviour {
 
     [SerializeField] private ActiveMenu cosmeticsButton;
     [SerializeField] private ActiveMenu genderButton;
+    [SerializeField] private ActiveMenu skinButton;
+    [SerializeField] private ActiveMenu hairButton;
     [SerializeField] private ActiveMenu headButton;
     [SerializeField] private ActiveMenu bodyButton;
     [SerializeField] private ActiveMenu pantsButton;
@@ -45,6 +49,7 @@ public class MenuController : MonoBehaviour {
 
     private void Start() {
         levelLoader = gameObject.AddComponent<LevelLoader>();
+        characterAnimation = GetComponent<MMCharacterAnimation>();
     }
 
     public void Play() {
@@ -64,6 +69,7 @@ public class MenuController : MonoBehaviour {
         character.blocksRaycasts = true;
 
         characterManager.CustomizeCharacter();
+        characterAnimation.SetAnimationState("standing");
 
         playButton.HideBtn();
         multiplayerButton.HideBtn();
@@ -75,7 +81,9 @@ public class MenuController : MonoBehaviour {
         characterSelection.ShowBtn();
         cosmeticsButton.ShowBtn();
         genderButton.ShowBtn();
+        skinButton.ShowBtn();
         headButton.ShowBtn();
+        hairButton.ShowBtn();
         bodyButton.ShowBtn();
         pantsButton.ShowBtn();
         shoesButton.ShowBtn();
@@ -100,9 +108,13 @@ public class MenuController : MonoBehaviour {
             characterManager.RevertCharacter();
         }
 
+        characterAnimation.SetAnimationState("idle");
+
         cosmeticsButton.HideBtn();
         genderButton.HideBtn();
+        skinButton.HideBtn();
         headButton.HideBtn();
+        hairButton.HideBtn();
         bodyButton.HideBtn();
         pantsButton.HideBtn();
         shoesButton.HideBtn();

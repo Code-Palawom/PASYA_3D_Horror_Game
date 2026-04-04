@@ -12,11 +12,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f54658fff0771cc4580841f9a654f84f, type: 3}
   m_Name: character
   m_EditorClassIdentifier: Assembly-CSharp::CharacterData
-  cosmeticMesh: {fileID: -1978514511154977101, guid: 4d8a5733f321d014393194e21272769d, type: 3}
-  hairMesh: {fileID: -5017437812508297076, guid: 4d8a5733f321d014393194e21272769d, type: 3}
-  bodyMesh: {fileID: -8545447256379345787, guid: 4d8a5733f321d014393194e21272769d, type: 3}
-  hairMaterial: {fileID: 2100000, guid: a5697f7c4fe0d77499a008fd0ede67ac, type: 2}
-  bodyMaterial: {fileID: 2100000, guid: c5881095d223ea64eaee69693412f6a5, type: 2}
-  cosmeticMaterial:
-  - {fileID: 7202895373918562887, guid: 4d8a5733f321d014393194e21272769d, type: 3}
-  - {fileID: -5004044949739458277, guid: 4d8a5733f321d014393194e21272769d, type: 3}
+  rightHandCosmeticMesh: {fileID: 0}
+  headMesh: {fileID: -7070831255929112694, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
+  hairMesh: {fileID: -5017437812508297076, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
+  bodyMesh: {fileID: -8545447256379345787, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
+  armsMesh: {fileID: 7954577337513133825, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
+  legsMesh: {fileID: -4650390976156102637, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
+  pantsMesh: {fileID: -5768860637884414165, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
+  shoesMesh: {fileID: 5433102353385186542, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
+  rightHandCosmeticMaterial: []
+  skinMaterial: {fileID: 2100000, guid: 0435b1fb060c17c4ca6f487ffd88cd42, type: 2}
+  hairMaterial:
+  - {fileID: 2100000, guid: 8cb6d421601960048937c1fdd739a0b7, type: 2}
+  headMaterial:
+  - {fileID: 9171952328373019990, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
+  - {fileID: -2886261885951862949, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
+  - {fileID: 7420331253886010339, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
+  - {fileID: 1280446133571650962, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
+  - {fileID: 7613012251463365022, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
+  - {fileID: -7421800713997745752, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
+  - {fileID: -4740866918696808673, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
+  - {fileID: 5195831374844971781, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
+  bodyMaterial:
+  - {fileID: 2100000, guid: df5ee92ce268e2a4eb2993c3e312e17f, type: 2}
+  pantsMaterial:
+  - {fileID: 2100000, guid: 49ddc0015b32d614982e805da81f687c, type: 2}
+  shoesMaterial:
+  - {fileID: 2100000, guid: ba77208a39f69894ebcd4bbcb3edb5db, type: 2}
