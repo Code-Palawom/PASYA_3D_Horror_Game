@@ -3,7 +3,7 @@ using System.IO;
 
 public class SaveManager : MonoBehaviour {
     private string savePath;
-    private string key = "pasya123";
+    private string key = "QWERTY";
 
     void Awake() {
         savePath = Path.Combine(Application.persistentDataPath, "player_save.dat");
@@ -18,8 +18,13 @@ public class SaveManager : MonoBehaviour {
     public string Load() {
         if (!File.Exists(savePath)) return null;
         string encryptedJson = File.ReadAllText(savePath);
-        SaveData data = JsonUtility.FromJson<SaveData>(EncryptDecrypt(encryptedJson));
-        return data.selectedCharacter;
+
+        try{
+            SaveData data = JsonUtility.FromJson<SaveData>(EncryptDecrypt(encryptedJson));
+            return data.selectedCharacter;
+        }catch{
+            return null;
+        }
     }
 
     private string EncryptDecrypt(string text) {
