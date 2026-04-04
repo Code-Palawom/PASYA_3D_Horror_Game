@@ -51592,6 +51592,11 @@ MonoBehaviour:
   m_SelectedFaces: 
   m_SelectedEdges: []
   m_SelectedVertices: 
+--- !u!137 &511827911 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 1950684312130052236, guid: 4d8a5733f321d014393194e21272769d, type: 3}
+  m_PrefabInstance: {fileID: 988196104}
+  m_PrefabAsset: {fileID: 0}
 --- !u!43 &516163763
 Mesh:
   m_ObjectHideFlags: 0
@@ -60439,6 +60444,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 405ac200d6f09a34b8ce5e6303fe362a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChangeCharacterHandler
+  cosmeticRenderer: {fileID: 511827911}
   hairRenderer: {fileID: 1772013867}
   bodyRenderer: {fileID: 530705672}
 --- !u!1 &631428819
@@ -66127,6 +66133,8 @@ MonoBehaviour:
   saveManager: {fileID: 664443818}
   character: {fileID: 624398507}
   currentData: {fileID: 11400000, guid: e73a26246359cad409e113d6e39053c2, type: 2}
+  cosmeticMeshWatch: {fileID: 0}
+  cosmeticMaterialWatch: []
 --- !u!114 &664443818
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -101128,6 +101136,10 @@ PrefabInstance:
       propertyPath: m_Controller
       value: 
       objectReference: {fileID: 9100000, guid: af93379fa5344fc4ba7c763ad280d7f0, type: 2}
+    - target: {fileID: 6888545687472818788, guid: 4d8a5733f321d014393194e21272769d, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
