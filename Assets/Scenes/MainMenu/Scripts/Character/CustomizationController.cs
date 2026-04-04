@@ -4,6 +4,9 @@ using UnityEngine;
 public class CustomizationController : MonoBehaviour {
     [SerializeField] private Color textColorOnActive;
 
+    [SerializeField] private ActiveSelection cosmetics;
+    [SerializeField] private TextMeshProUGUI cosmeticsText;
+
     [SerializeField] private ActiveSelection hair;
     [SerializeField] private TextMeshProUGUI hairText;
 
@@ -18,7 +21,16 @@ public class CustomizationController : MonoBehaviour {
         textColor = hairText.color;
     }
 
+    public void OpenCosmeticsSelection() {
+        cosmetics.ShowSelection();
+        hair.HideSelection();
+        body.HideSelection();
+
+        setActiveCustomization(cosmeticsText);
+    }
+
     public void OpenHairSelection() {
+        cosmetics.HideSelection();
         hair.ShowSelection();
         body.HideSelection();
 
@@ -26,6 +38,7 @@ public class CustomizationController : MonoBehaviour {
     }
 
     public void OpenBodySelection() {
+        cosmetics.HideSelection();
         hair.HideSelection();
         body.ShowSelection();
 
@@ -33,6 +46,7 @@ public class CustomizationController : MonoBehaviour {
     }
 
     public void setActiveCustomization(TextMeshProUGUI text) {
+        UndecorateText(cosmeticsText);
         UndecorateText(hairText);
         UndecorateText(bodyText);
 

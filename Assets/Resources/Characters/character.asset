@@ -12,7 +12,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f54658fff0771cc4580841f9a654f84f, type: 3}
   m_Name: character
   m_EditorClassIdentifier: Assembly-CSharp::CharacterData
-  hairMesh: {fileID: -5017437812508297076, guid: c4e31ca856f1e2c4f8baf8eb7c7fbbe7, type: 3}
-  bodyMesh: {fileID: -8545447256379345787, guid: c4e31ca856f1e2c4f8baf8eb7c7fbbe7, type: 3}
+  cosmeticMesh: {fileID: -1978514511154977101, guid: 4d8a5733f321d014393194e21272769d, type: 3}
+  hairMesh: {fileID: -5017437812508297076, guid: 4d8a5733f321d014393194e21272769d, type: 3}
+  bodyMesh: {fileID: -8545447256379345787, guid: 4d8a5733f321d014393194e21272769d, type: 3}
   hairMaterial: {fileID: 2100000, guid: a5697f7c4fe0d77499a008fd0ede67ac, type: 2}
   bodyMaterial: {fileID: 2100000, guid: c5881095d223ea64eaee69693412f6a5, type: 2}
+  cosmeticMaterial:
+  - {fileID: 7202895373918562887, guid: 4d8a5733f321d014393194e21272769d, type: 3}
+  - {fileID: -5004044949739458277, guid: 4d8a5733f321d014393194e21272769d, type: 3}

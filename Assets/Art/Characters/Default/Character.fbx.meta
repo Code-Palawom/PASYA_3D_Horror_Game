@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: c4e31ca856f1e2c4f8baf8eb7c7fbbe7
+guid: 4d8a5733f321d014393194e21272769d
 ModelImporter:
   serializedVersion: 24200
   internalIDToNameTable: []
@@ -529,13 +529,13 @@ ModelImporter:
         length: 0
         modified: 0
     skeleton:
-    - name: Character(Clone)
+    - name: Idle_Customization_Watch(Clone)
       parentName: 
       position: {x: 0, y: 0, z: 0}
       rotation: {x: 0, y: 0, z: 0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: Armature
-      parentName: Character(Clone)
+      parentName: Idle_Customization_Watch(Clone)
       position: {x: -0, y: 0, z: 0}
       rotation: {x: -0.000000037748947, y: 0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
@@ -865,57 +865,57 @@ ModelImporter:
       rotation: {x: 0, y: -0, z: -0, w: 1}
       scale: {x: 1, y: 1, z: 1}
     - name: body
-      parentName: Character(Clone)
+      parentName: Idle_Customization_Watch(Clone)
       position: {x: -0, y: 0, z: 0}
       rotation: {x: -0.70710695, y: 0, z: 0, w: 0.7071066}
       scale: {x: 66.99999, y: 66.99999, z: 66.99999}
     - name: hair
-      parentName: Character(Clone)
+      parentName: Idle_Customization_Watch(Clone)
       position: {x: -0, y: 0, z: 0}
       rotation: {x: -0.70710695, y: 0, z: 0, w: 0.7071066}
       scale: {x: 66.99999, y: 66.99999, z: 66.99999}
     - name: hand_left
-      parentName: Character(Clone)
+      parentName: Idle_Customization_Watch(Clone)
       position: {x: -0, y: 0, z: 0}
       rotation: {x: -0.70710695, y: 0, z: 0, w: 0.7071066}
       scale: {x: 66.99999, y: 66.99999, z: 66.99999}
     - name: hand_right
-      parentName: Character(Clone)
+      parentName: Idle_Customization_Watch(Clone)
       position: {x: -0, y: 0, z: 0}
       rotation: {x: -0.70710695, y: 0, z: 0, w: 0.7071066}
       scale: {x: 66.99999, y: 66.99999, z: 66.99999}
     - name: head
-      parentName: Character(Clone)
+      parentName: Idle_Customization_Watch(Clone)
       position: {x: -0, y: 0, z: 0}
       rotation: {x: -0.70710695, y: 0, z: 0, w: 0.7071066}
       scale: {x: 66.99999, y: 66.99999, z: 66.99999}
     - name: leg_left
-      parentName: Character(Clone)
+      parentName: Idle_Customization_Watch(Clone)
       position: {x: -0, y: 0, z: 0}
       rotation: {x: -0.70710695, y: 0, z: 0, w: 0.7071066}
       scale: {x: 66.99999, y: 66.99999, z: 66.99999}
     - name: leg_right
-      parentName: Character(Clone)
+      parentName: Idle_Customization_Watch(Clone)
+      position: {x: -0, y: 0, z: 0}
+      rotation: {x: -0.70710695, y: 0, z: 0, w: 0.7071066}
+      scale: {x: 66.99999, y: 66.99999, z: 66.99999}
+    - name: right_hand_cosmetic
+      parentName: Idle_Customization_Watch(Clone)
       position: {x: -0, y: 0, z: 0}
       rotation: {x: -0.70710695, y: 0, z: 0, w: 0.7071066}
       scale: {x: 66.99999, y: 66.99999, z: 66.99999}
     - name: shoe_left
-      parentName: Character(Clone)
+      parentName: Idle_Customization_Watch(Clone)
       position: {x: -0, y: 0, z: 0}
       rotation: {x: -0.70710695, y: 0, z: 0, w: 0.7071066}
       scale: {x: 66.99999, y: 66.99999, z: 66.99999}
     - name: shoe_right
-      parentName: Character(Clone)
+      parentName: Idle_Customization_Watch(Clone)
       position: {x: -0, y: 0, z: 0}
       rotation: {x: -0.70710695, y: 0, z: 0, w: 0.7071066}
       scale: {x: 66.99999, y: 66.99999, z: 66.99999}
-    - name: shorts_left
-      parentName: Character(Clone)
-      position: {x: -0, y: 0, z: 0}
-      rotation: {x: -0.70710695, y: 0, z: 0, w: 0.7071066}
-      scale: {x: 66.99999, y: 66.99999, z: 66.99999}
-    - name: shorts_right
-      parentName: Character(Clone)
+    - name: shorts
+      parentName: Idle_Customization_Watch(Clone)
       position: {x: -0, y: 0, z: 0}
       rotation: {x: -0.70710695, y: 0, z: 0, w: 0.7071066}
       scale: {x: 66.99999, y: 66.99999, z: 66.99999}
