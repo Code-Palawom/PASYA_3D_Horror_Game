@@ -6137,14 +6137,13 @@ GameObject:
   - component: {fileID: 207939339}
   - component: {fileID: 207939338}
   - component: {fileID: 207939337}
-  - component: {fileID: 207939336}
   m_Layer: 5
   m_Name: None
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &207939335
 RectTransform:
   m_ObjectHideFlags: 0
@@ -6165,18 +6164,6 @@ RectTransform:
   m_AnchoredPosition: {x: 75, y: 0}
   m_SizeDelta: {x: 32, y: 32}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &207939336
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 207939334}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cf0f3c3c0f4ef5940839b0222a2bdf8a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::OutfitHandler
 --- !u!114 &207939337
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8706,7 +8693,6 @@ GameObject:
   - component: {fileID: 264150581}
   - component: {fileID: 264150580}
   - component: {fileID: 264150579}
-  - component: {fileID: 264150578}
   - component: {fileID: 264150577}
   m_Layer: 5
   m_Name: Tan
@@ -8750,18 +8736,6 @@ MonoBehaviour:
   mesh: {fileID: 0}
   material:
   - {fileID: 2100000, guid: 2b325f2b39408c14996425a6eda0d000, type: 2}
---- !u!114 &264150578
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 264150575}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cf0f3c3c0f4ef5940839b0222a2bdf8a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::OutfitHandler
 --- !u!114 &264150579
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17607,7 +17581,6 @@ GameObject:
   - component: {fileID: 366729995}
   - component: {fileID: 366729994}
   - component: {fileID: 366729993}
-  - component: {fileID: 366729992}
   - component: {fileID: 366729991}
   m_Layer: 5
   m_Name: DarkBrown
@@ -17651,18 +17624,6 @@ MonoBehaviour:
   mesh: {fileID: 0}
   material:
   - {fileID: 2100000, guid: 0b6a288a4debea246b7f3f7e9d3941bf, type: 2}
---- !u!114 &366729992
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 366729989}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cf0f3c3c0f4ef5940839b0222a2bdf8a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::OutfitHandler
 --- !u!114 &366729993
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -17866,7 +17827,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ActiveMenu
   menuAnimator: {fileID: 380225099}
   duration: 1
-  delay: 0.6
+  delay: 0.48
   currentAnimation: 0
   targetAnimation: 0
 --- !u!95 &380225099
@@ -18313,7 +18274,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ActiveMenu
   menuAnimator: {fileID: 389583738}
   duration: 1
-  delay: 1.05
+  delay: 0.84
   currentAnimation: 0
   targetAnimation: 0
 --- !u!95 &389583738
@@ -33609,7 +33570,6 @@ GameObject:
   - component: {fileID: 632390619}
   - component: {fileID: 632390618}
   - component: {fileID: 632390617}
-  - component: {fileID: 632390616}
   - component: {fileID: 632390615}
   m_Layer: 5
   m_Name: DarkGray
@@ -33653,18 +33613,6 @@ MonoBehaviour:
   mesh: {fileID: 0}
   material:
   - {fileID: 2100000, guid: 00518b6d4e2a06141a807cb46d6f9408, type: 2}
---- !u!114 &632390616
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 632390613}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cf0f3c3c0f4ef5940839b0222a2bdf8a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::OutfitHandler
 --- !u!114 &632390617
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -36926,6 +36874,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 561ad752a5fefd943992e002a54e2fbf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ActiveSelection
+  showDefault: 0
 --- !u!225 &660925942
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -37346,7 +37295,6 @@ GameObject:
   - component: {fileID: 711201251}
   - component: {fileID: 711201250}
   - component: {fileID: 711201249}
-  - component: {fileID: 711201248}
   - component: {fileID: 711201247}
   m_Layer: 5
   m_Name: Orange
@@ -37390,18 +37338,6 @@ MonoBehaviour:
   mesh: {fileID: 0}
   material:
   - {fileID: 2100000, guid: 73e7e90be8e01ff46bcc0088fd580c10, type: 2}
---- !u!114 &711201248
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 711201245}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cf0f3c3c0f4ef5940839b0222a2bdf8a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::OutfitHandler
 --- !u!114 &711201249
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -37543,18 +37479,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 6888545687472818788, guid: 4d8a5733f321d014393194e21272769d, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5866666021909216657, guid: c4e31ca856f1e2c4f8baf8eb7c7fbbe7, type: 3}
-      propertyPath: m_Controller
-      value: 
-      objectReference: {fileID: 9100000, guid: 92d438d8279d1bf408f2dc1b143b3ae1, type: 2}
-    - target: {fileID: 5866666021909216657, guid: 56d7179c5bde2c447b2665c87a79d1ac, type: 3}
-      propertyPath: m_Controller
-      value: 
-      objectReference: {fileID: 9100000, guid: 92d438d8279d1bf408f2dc1b143b3ae1, type: 2}
     - target: {fileID: -8679921383154817045, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
       propertyPath: m_LocalScale.x
       value: 1.3
@@ -37615,6 +37539,18 @@ PrefabInstance:
       propertyPath: m_Controller
       value: 
       objectReference: {fileID: 9100000, guid: 92d438d8279d1bf408f2dc1b143b3ae1, type: 2}
+    - target: {fileID: 6888545687472818788, guid: 4d8a5733f321d014393194e21272769d, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5866666021909216657, guid: c4e31ca856f1e2c4f8baf8eb7c7fbbe7, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: 92d438d8279d1bf408f2dc1b143b3ae1, type: 2}
+    - target: {fileID: 5866666021909216657, guid: 56d7179c5bde2c447b2665c87a79d1ac, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: 92d438d8279d1bf408f2dc1b143b3ae1, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -37625,6 +37561,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1604301113}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1604301115}
     - targetCorrespondingSourceObject: {fileID: -4819223349682164798, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
       insertIndex: -1
       addedObject: {fileID: 159040845}
@@ -38328,7 +38267,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ActiveMenu
   menuAnimator: {fileID: 803316801}
   duration: 1
-  delay: 0.45
+  delay: 0.36
   currentAnimation: 0
   targetAnimation: 0
 --- !u!95 &803316801
@@ -42150,7 +42089,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 866970870}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
   m_Name: 
@@ -44210,6 +44149,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 561ad752a5fefd943992e002a54e2fbf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ActiveSelection
+  showDefault: 0
 --- !u!225 &871930084
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -44579,7 +44519,6 @@ GameObject:
   - component: {fileID: 894870887}
   - component: {fileID: 894870886}
   - component: {fileID: 894870885}
-  - component: {fileID: 894870884}
   - component: {fileID: 894870883}
   m_Layer: 5
   m_Name: Green
@@ -44623,18 +44562,6 @@ MonoBehaviour:
   mesh: {fileID: 0}
   material:
   - {fileID: 2100000, guid: e1324ee4798f7fc48b538a78025fbb62, type: 2}
---- !u!114 &894870884
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 894870881}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cf0f3c3c0f4ef5940839b0222a2bdf8a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::OutfitHandler
 --- !u!114 &894870885
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -80714,6 +80641,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 561ad752a5fefd943992e002a54e2fbf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ActiveSelection
+  showDefault: 0
 --- !u!225 &907497580
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -81092,7 +81020,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ActiveMenu
   menuAnimator: {fileID: 936740587}
   duration: 1
-  delay: 0.75
+  delay: 0.6
   currentAnimation: 0
   targetAnimation: 0
 --- !u!95 &936740587
@@ -81281,7 +81209,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ActiveMenu
   menuAnimator: {fileID: 948689843}
   duration: 1
-  delay: 0.9
+  delay: 0.72
   currentAnimation: 0
   targetAnimation: 0
 --- !u!95 &948689843
@@ -87647,7 +87575,6 @@ GameObject:
   - component: {fileID: 1084748674}
   - component: {fileID: 1084748673}
   - component: {fileID: 1084748672}
-  - component: {fileID: 1084748671}
   - component: {fileID: 1084748670}
   m_Layer: 5
   m_Name: Red
@@ -87691,18 +87618,6 @@ MonoBehaviour:
   mesh: {fileID: 0}
   material:
   - {fileID: 2100000, guid: 0a5818854fc9aae4c89daa6e603c2453, type: 2}
---- !u!114 &1084748671
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1084748668}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cf0f3c3c0f4ef5940839b0222a2bdf8a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::OutfitHandler
 --- !u!114 &1084748672
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -87850,7 +87765,6 @@ GameObject:
   - component: {fileID: 1089300702}
   - component: {fileID: 1089300701}
   - component: {fileID: 1089300700}
-  - component: {fileID: 1089300699}
   - component: {fileID: 1089300705}
   m_Layer: 5
   m_Name: Default
@@ -87878,18 +87792,6 @@ RectTransform:
   m_AnchoredPosition: {x: 75, y: 0}
   m_SizeDelta: {x: 32, y: 32}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1089300699
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1089300697}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cf0f3c3c0f4ef5940839b0222a2bdf8a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::OutfitHandler
 --- !u!114 &1089300700
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -88836,6 +88738,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 561ad752a5fefd943992e002a54e2fbf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ActiveSelection
+  showDefault: 0
 --- !u!225 &1147423502
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -93484,7 +93387,6 @@ GameObject:
   - component: {fileID: 1254615122}
   - component: {fileID: 1254615121}
   - component: {fileID: 1254615120}
-  - component: {fileID: 1254615119}
   - component: {fileID: 1254615118}
   m_Layer: 5
   m_Name: Default
@@ -93528,18 +93430,6 @@ MonoBehaviour:
   mesh: {fileID: 0}
   material:
   - {fileID: 2100000, guid: ba77208a39f69894ebcd4bbcb3edb5db, type: 2}
---- !u!114 &1254615119
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1254615116}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cf0f3c3c0f4ef5940839b0222a2bdf8a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::OutfitHandler
 --- !u!114 &1254615120
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -93810,6 +93700,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 561ad752a5fefd943992e002a54e2fbf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ActiveSelection
+  showDefault: 0
 --- !u!1 &1282635474
 GameObject:
   m_ObjectHideFlags: 0
@@ -94180,7 +94071,6 @@ GameObject:
   - component: {fileID: 1293936580}
   - component: {fileID: 1293936579}
   - component: {fileID: 1293936578}
-  - component: {fileID: 1293936577}
   - component: {fileID: 1293936576}
   m_Layer: 5
   m_Name: DarkBrown
@@ -94224,18 +94114,6 @@ MonoBehaviour:
   mesh: {fileID: 0}
   material:
   - {fileID: 2100000, guid: b80d457c680ee8641b852859d9e843d3, type: 2}
---- !u!114 &1293936577
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1293936574}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cf0f3c3c0f4ef5940839b0222a2bdf8a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::OutfitHandler
 --- !u!114 &1293936578
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -95768,7 +95646,6 @@ GameObject:
   - component: {fileID: 1361213322}
   - component: {fileID: 1361213321}
   - component: {fileID: 1361213320}
-  - component: {fileID: 1361213319}
   - component: {fileID: 1361213318}
   m_Layer: 5
   m_Name: Gray
@@ -95812,18 +95689,6 @@ MonoBehaviour:
   mesh: {fileID: 0}
   material:
   - {fileID: 2100000, guid: 8433409fc16979a49880e8ae59d84749, type: 2}
---- !u!114 &1361213319
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1361213316}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cf0f3c3c0f4ef5940839b0222a2bdf8a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::OutfitHandler
 --- !u!114 &1361213320
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -96555,7 +96420,6 @@ GameObject:
   - component: {fileID: 1381847816}
   - component: {fileID: 1381847815}
   - component: {fileID: 1381847814}
-  - component: {fileID: 1381847813}
   - component: {fileID: 1381847812}
   m_Layer: 5
   m_Name: Blue
@@ -96599,18 +96463,6 @@ MonoBehaviour:
   mesh: {fileID: 0}
   material:
   - {fileID: 2100000, guid: 03f41a5340ab82f40b5468742e46f16b, type: 2}
---- !u!114 &1381847813
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1381847810}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cf0f3c3c0f4ef5940839b0222a2bdf8a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::OutfitHandler
 --- !u!114 &1381847814
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -98508,7 +98360,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ActiveMenu
   menuAnimator: {fileID: 1389208279}
   duration: 1
-  delay: 1.2
+  delay: 0.96
   currentAnimation: 0
   targetAnimation: 0
 --- !u!95 &1389208279
@@ -102353,7 +102205,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ActiveMenu
   menuAnimator: {fileID: 1475389256}
   duration: 1
-  delay: 0.3
+  delay: 0.24
   currentAnimation: 0
   targetAnimation: 0
 --- !u!95 &1475389256
@@ -102746,7 +102598,6 @@ GameObject:
   - component: {fileID: 1486609188}
   - component: {fileID: 1486609187}
   - component: {fileID: 1486609186}
-  - component: {fileID: 1486609185}
   - component: {fileID: 1486609184}
   m_Layer: 5
   m_Name: Green
@@ -102790,18 +102641,6 @@ MonoBehaviour:
   mesh: {fileID: 0}
   material:
   - {fileID: 2100000, guid: df5ee92ce268e2a4eb2993c3e312e17f, type: 2}
---- !u!114 &1486609185
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1486609182}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cf0f3c3c0f4ef5940839b0222a2bdf8a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::OutfitHandler
 --- !u!114 &1486609186
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -109371,6 +109210,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 561ad752a5fefd943992e002a54e2fbf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ActiveSelection
+  showDefault: 1
 --- !u!225 &1576156406
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -110096,7 +109936,6 @@ GameObject:
   - component: {fileID: 1603048164}
   - component: {fileID: 1603048163}
   - component: {fileID: 1603048162}
-  - component: {fileID: 1603048161}
   - component: {fileID: 1603048167}
   m_Layer: 5
   m_Name: None
@@ -110125,18 +109964,6 @@ RectTransform:
   m_AnchoredPosition: {x: 75, y: 0}
   m_SizeDelta: {x: 32, y: 32}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1603048161
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1603048159}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cf0f3c3c0f4ef5940839b0222a2bdf8a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::OutfitHandler
 --- !u!114 &1603048162
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -110323,6 +110150,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MMCharacterAnimation
   animator: {fileID: 712312673}
+--- !u!114 &1604301115
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1604301105}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2b51467e04262014090f3f4e372ab891, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::MMCharacterRandomAnimation
+  minTime: 15
+  maxTime: 45
 --- !u!1 &1607589221
 GameObject:
   m_ObjectHideFlags: 0
@@ -110473,7 +110314,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ActiveMenu
   menuAnimator: {fileID: 1607589228}
   duration: 1
-  delay: 1.35
+  delay: 1.08
   currentAnimation: 0
   targetAnimation: 0
 --- !u!95 &1607589228
@@ -110582,7 +110423,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ActiveMenu
   menuAnimator: {fileID: 1614599282}
   duration: 1
-  delay: 0.15
+  delay: 0.12
   currentAnimation: 0
   targetAnimation: 0
 --- !u!95 &1614599282
@@ -112232,7 +112073,6 @@ GameObject:
   - component: {fileID: 1626631460}
   - component: {fileID: 1626631459}
   - component: {fileID: 1626631458}
-  - component: {fileID: 1626631457}
   - component: {fileID: 1626631463}
   m_Layer: 5
   m_Name: Black
@@ -112261,18 +112101,6 @@ RectTransform:
   m_AnchoredPosition: {x: 75, y: 0}
   m_SizeDelta: {x: 32, y: 32}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1626631457
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1626631455}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cf0f3c3c0f4ef5940839b0222a2bdf8a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::OutfitHandler
 --- !u!114 &1626631458
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -112792,7 +112620,6 @@ GameObject:
   - component: {fileID: 1641669865}
   - component: {fileID: 1641669864}
   - component: {fileID: 1641669863}
-  - component: {fileID: 1641669862}
   - component: {fileID: 1641669861}
   m_Layer: 5
   m_Name: Brown
@@ -112836,18 +112663,6 @@ MonoBehaviour:
   mesh: {fileID: 0}
   material:
   - {fileID: 2100000, guid: 77b095c5e87e7894b82300d4191bf984, type: 2}
---- !u!114 &1641669862
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1641669859}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cf0f3c3c0f4ef5940839b0222a2bdf8a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::OutfitHandler
 --- !u!114 &1641669863
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -113310,7 +113125,6 @@ GameObject:
   - component: {fileID: 1662031303}
   - component: {fileID: 1662031302}
   - component: {fileID: 1662031301}
-  - component: {fileID: 1662031300}
   - component: {fileID: 1662031306}
   m_Layer: 5
   m_Name: Mlue
@@ -113339,18 +113153,6 @@ RectTransform:
   m_AnchoredPosition: {x: 150, y: 0}
   m_SizeDelta: {x: 32, y: 32}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1662031300
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1662031298}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cf0f3c3c0f4ef5940839b0222a2bdf8a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::OutfitHandler
 --- !u!114 &1662031301
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -113514,7 +113316,6 @@ GameObject:
   - component: {fileID: 1665427847}
   - component: {fileID: 1665427846}
   - component: {fileID: 1665427845}
-  - component: {fileID: 1665427844}
   - component: {fileID: 1665427843}
   m_Layer: 5
   m_Name: Default
@@ -113558,18 +113359,6 @@ MonoBehaviour:
   mesh: {fileID: 0}
   material:
   - {fileID: 2100000, guid: 49ddc0015b32d614982e805da81f687c, type: 2}
---- !u!114 &1665427844
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1665427841}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cf0f3c3c0f4ef5940839b0222a2bdf8a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::OutfitHandler
 --- !u!114 &1665427845
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -116692,7 +116481,6 @@ GameObject:
   - component: {fileID: 1727020401}
   - component: {fileID: 1727020400}
   - component: {fileID: 1727020399}
-  - component: {fileID: 1727020398}
   - component: {fileID: 1727020397}
   m_Layer: 5
   m_Name: Red
@@ -116736,18 +116524,6 @@ MonoBehaviour:
   mesh: {fileID: 0}
   material:
   - {fileID: 2100000, guid: 0e32e8259f5275c45ab9150c63c5da1b, type: 2}
---- !u!114 &1727020398
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1727020395}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cf0f3c3c0f4ef5940839b0222a2bdf8a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::OutfitHandler
 --- !u!114 &1727020399
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -117078,7 +116854,6 @@ GameObject:
   - component: {fileID: 1750399164}
   - component: {fileID: 1750399163}
   - component: {fileID: 1750399162}
-  - component: {fileID: 1750399161}
   - component: {fileID: 1750399167}
   m_Layer: 5
   m_Name: Watch
@@ -117107,18 +116882,6 @@ RectTransform:
   m_AnchoredPosition: {x: 150, y: 0}
   m_SizeDelta: {x: 32, y: 32}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1750399161
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1750399159}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cf0f3c3c0f4ef5940839b0222a2bdf8a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::OutfitHandler
 --- !u!114 &1750399162
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -123153,6 +122916,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 561ad752a5fefd943992e002a54e2fbf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ActiveSelection
+  showDefault: 0
 --- !u!225 &1861730292
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -126424,7 +126188,6 @@ GameObject:
   - component: {fileID: 1961431193}
   - component: {fileID: 1961431192}
   - component: {fileID: 1961431191}
-  - component: {fileID: 1961431190}
   - component: {fileID: 1961431189}
   m_Layer: 5
   m_Name: Blue
@@ -126468,18 +126231,6 @@ MonoBehaviour:
   mesh: {fileID: 0}
   material:
   - {fileID: 2100000, guid: e8b29d65f56b69c4a901cddea2c6f046, type: 2}
---- !u!114 &1961431190
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1961431187}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cf0f3c3c0f4ef5940839b0222a2bdf8a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::OutfitHandler
 --- !u!114 &1961431191
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -130426,6 +130177,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 561ad752a5fefd943992e002a54e2fbf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ActiveSelection
+  showDefault: 0
 --- !u!225 &2019196233
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -130490,7 +130242,6 @@ GameObject:
   - component: {fileID: 2034900780}
   - component: {fileID: 2034900779}
   - component: {fileID: 2034900778}
-  - component: {fileID: 2034900777}
   - component: {fileID: 2034900776}
   m_Layer: 5
   m_Name: LightBrown
@@ -130534,18 +130285,6 @@ MonoBehaviour:
   mesh: {fileID: 0}
   material:
   - {fileID: 2100000, guid: 3130310b5a38d9945ad14665a62fa677, type: 2}
---- !u!114 &2034900777
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2034900774}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cf0f3c3c0f4ef5940839b0222a2bdf8a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::OutfitHandler
 --- !u!114 &2034900778
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -132603,7 +132342,6 @@ GameObject:
   - component: {fileID: 2053869178}
   - component: {fileID: 2053869177}
   - component: {fileID: 2053869176}
-  - component: {fileID: 2053869175}
   - component: {fileID: 2053869174}
   m_Layer: 5
   m_Name: Default
@@ -132654,18 +132392,6 @@ MonoBehaviour:
   - {fileID: -7421800713997745752, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
   - {fileID: -4740866918696808673, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
   - {fileID: 5195831374844971781, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
---- !u!114 &2053869175
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2053869172}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: cf0f3c3c0f4ef5940839b0222a2bdf8a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::OutfitHandler
 --- !u!114 &2053869176
 MonoBehaviour:
   m_ObjectHideFlags: 0

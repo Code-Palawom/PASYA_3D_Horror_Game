@@ -4,10 +4,14 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 
 public class ActiveSelection : MonoBehaviour {
+    [SerializeField] private bool showDefault;
+
     private CanvasGroup selection;
 
     private void Start() {
         selection = GetComponent<CanvasGroup>();
+
+        if(showDefault) ShowSelection();
     }
 
     public void ShowSelection() {

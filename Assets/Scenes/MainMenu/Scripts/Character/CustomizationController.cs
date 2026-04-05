@@ -37,38 +37,38 @@ public class CustomizationController : MonoBehaviour {
     }
 
     public void OpenCosmeticsSelection() {
-        setActiveCustomization("cosmetics", cosmeticsText);
+        SetActiveCustomization("cosmetics", cosmeticsText);
     }
 
     public void OpenGenderSelection() {
-        setActiveCustomization("gender", genderText);
+        SetActiveCustomization("gender", genderText);
     }
 
     public void OpenSkinSelection() {
-        setActiveCustomization("skin", skinText);
+        SetActiveCustomization("skin", skinText);
     }
 
     public void OpenHairSelection() {
-        setActiveCustomization("hair", hairText);
+        SetActiveCustomization("hair", hairText);
     }
 
     public void OpenHeadSelection() {
-        setActiveCustomization("head", headText);
+        SetActiveCustomization("head", headText);
     }
 
     public void OpenBodySelection() {
-        setActiveCustomization("body", bodyText);
+        SetActiveCustomization("body", bodyText);
     }
 
     public void OpenPantsSelection() {
-        setActiveCustomization("pants", pantsText);
+        SetActiveCustomization("pants", pantsText);
     }
 
     public void OpenShoesSelection() {
-        setActiveCustomization("shoes", shoesText);
+        SetActiveCustomization("shoes", shoesText);
     }
 
-    public void setActiveCustomization(string panel, TextMeshProUGUI text) {
+    public void SetActiveCustomization(string panel, TextMeshProUGUI text) {
         cosmetics.HideSelection(); if(panel == "cosmetics") cosmetics.ShowSelection();
         gender.HideSelection(); if(panel == "gender") gender.ShowSelection();
         skin.HideSelection(); if(panel == "skin") skin.ShowSelection();

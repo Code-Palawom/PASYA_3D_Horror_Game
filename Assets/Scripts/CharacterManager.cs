@@ -41,6 +41,8 @@ public class CharacterManager : MonoBehaviour {
         saveData.rightHandCosmeticMesh = mesh;
         saveData.rightHandCosmeticMaterial = materials;
 
+        rightHandCosmeticMesh = mesh;
+        rightHandCosmeticMaterial = materials;
         character.ApplyCharacter(saveData, true);
     }
 
@@ -51,13 +53,14 @@ public class CharacterManager : MonoBehaviour {
         saveData.headMaterial[0] = material;
         saveData.headMaterial[1] = material;
         saveData.headMaterial[5] = material;
-        skin = material;
 
+        skin = material;
         character.ApplyCharacter(saveData, true);
     }
 
     public void TryHairMaterial(Material[] material) {
         saveData.hairMaterial = material;
+
         hair = material;
         character.ApplyCharacter(saveData, true);
     }
@@ -66,23 +69,27 @@ public class CharacterManager : MonoBehaviour {
         saveData.headMesh = mesh;
         saveData.headMaterial = material;
 
+        head = material;
         character.ApplyCharacter(saveData, true);
     }
 
     public void TryBodyMaterial(Material[] material) {
         saveData.bodyMaterial = material;
+
         body = material;
         character.ApplyCharacter(saveData, true);
     }
 
     public void TryPantsMaterial(Material[] material) {
         saveData.pantsMaterial = material;
+
         pants = material;
         character.ApplyCharacter(saveData, true);
     }
 
     public void TryShoesMaterial(Material[] material) {
         saveData.shoesMaterial = material;
+
         shoes = material;
         character.ApplyCharacter(saveData, true);
     }
@@ -90,8 +97,13 @@ public class CharacterManager : MonoBehaviour {
     public void SetCharacter() {
         Debug.Log("Character Saved!");
 
-        currentData.rightHandCosmeticMesh = rightHandCosmeticMesh;
-        currentData.rightHandCosmeticMaterial = rightHandCosmeticMaterial;
+        if(rightHandCosmeticMesh != null && rightHandCosmeticMaterial != null){
+            currentData.rightHandCosmeticMesh = rightHandCosmeticMesh;
+            currentData.rightHandCosmeticMaterial = rightHandCosmeticMaterial;
+        }else{
+            currentData.rightHandCosmeticMesh = null;
+            currentData.rightHandCosmeticMaterial = null;
+        }
         if(skin != null) currentData.skinMaterial = skin;
         if(hair != null) currentData.hairMaterial = hair;
         if(head != null) currentData.headMaterial = head;
