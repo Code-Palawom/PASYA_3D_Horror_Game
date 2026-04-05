@@ -1,10 +1,14 @@
+using System.Collections.Generic;
 using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.InputSystem.XInput;
+using UnityEngine.InputSystem;
+using UnityEngine.InputSystem.EnhancedTouch;
+using Touch = UnityEngine.InputSystem.EnhancedTouch.Touch;
 
 public class LookAround : MonoBehaviour {
     private CinemachineInputAxisController inputController;
+    private HashSet<int> uiFingers = new HashSet<int>();
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start() {
@@ -17,27 +21,46 @@ public class LookAround : MonoBehaviour {
     }
 
     private void HandleRotationBlocking() {
-        if (inputController == null) return;
+        if(inputController == null) return;
 
-        bool isFingerLooking = false;
+        bool isAnyValidFingerLooking = false;
+        var activeTouches = Touch.activeTouches; 
 
-        if(Input.touchCount > 0){
-            for (int i = 0; i < Input.touchCount; i++) {
-                Touch touch = Input.GetTouch(i);
-
-                if (!EventSystem.current.IsPointerOverGameObject(touch.fingerId)) {
-                    if (touch.phase == UnityEngine.TouchPhase.Moved || touch.phase == UnityEngine.TouchPhase.Stationary) {
-                        isFingerLooking = true;
-                        break; 
-                    }
+        for(int i = 0; i < activeTouches.Count; i++){
+            Touch t = activeTouches[i];
+            if(t.phase == UnityEngine.InputSystem.TouchPhase.Began){
+                if (EventSystem.current.IsPointerOverGameObject(t.touchId)){
+                    uiFingers.Add(t.touchId);
+                    //Debug.Log($"Finger {t.touchId} started on UI. Ignoring.");
                 }
             }
-        }else{
-            if (!EventSystem.current.IsPointerOverGameObject()) {
-                isFingerLooking = true; 
+
+            if(t.phase == UnityEngine.InputSystem.TouchPhase.Ended || t.phase == UnityEngine.InputSystem.TouchPhase.Canceled){
+                uiFingers.Remove(t.touchId);
+                continue;
+            }
+
+            if(!uiFingers.Contains(t.touchId)){
+                if (t.phase == UnityEngine.InputSystem.TouchPhase.Moved || t.phase == UnityEngine.InputSystem.TouchPhase.Stationary) {
+                    isAnyValidFingerLooking = true;
+                }
             }
         }
 
-        inputController.enabled = isFingerLooking;
+        if(Input.touchCount == 0 && Mouse.current != null){
+            if(Mouse.current.leftButton.isPressed && !EventSystem.current.IsPointerOverGameObject()){
+                isAnyValidFingerLooking = true;
+            }
+        }
+
+        inputController.enabled = isAnyValidFingerLooking;
+    }
+
+    void OnEnable() {
+        EnhancedTouchSupport.Enable();
+    }
+
+    void OnDisable() {
+        EnhancedTouchSupport.Disable();
     }
 }
