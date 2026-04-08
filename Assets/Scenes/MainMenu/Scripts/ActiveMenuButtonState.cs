@@ -24,9 +24,11 @@ public class ActiveMenuButtonState : MonoBehaviour {
         menuHoverAnimation4.SlideOut(activeMenu);
         menuHoverAnimation5.SlideOut(activeMenu);
 
-        if(activeMenu == 5 && !isFogRed){
-            isFogRed = true;
-            fogRed.ApplyRedFog();
+        if(activeMenu == 5){
+            if(!isFogRed){
+                isFogRed = true;
+                fogRed.ApplyRedFog();
+            }
         }else{
             if(isFogRed){
                 isFogRed = false;
