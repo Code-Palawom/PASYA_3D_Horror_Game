@@ -12,14 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f54658fff0771cc4580841f9a654f84f, type: 3}
   m_Name: character
   m_EditorClassIdentifier: Assembly-CSharp::CharacterData
-  rightHandCosmeticMesh: {fileID: 0}
-  headMesh: {fileID: -7070831255929112694, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
-  hairMesh: {fileID: -5017437812508297076, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
-  bodyMesh: {fileID: -8545447256379345787, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
-  armsMesh: {fileID: 7954577337513133825, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
-  legsMesh: {fileID: -4650390976156102637, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
-  pantsMesh: {fileID: -5768860637884414165, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
-  shoesMesh: {fileID: 5433102353385186542, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
+  rightHandCosmeticMesh: {fileID: -1978514511154977101, guid: 5059ff0dbdf20314381aeb9ba1e43389, type: 3}
+  headMesh: {fileID: -7070831255929112694, guid: 5059ff0dbdf20314381aeb9ba1e43389, type: 3}
+  hairMesh: {fileID: -5017437812508297076, guid: 5059ff0dbdf20314381aeb9ba1e43389, type: 3}
+  bodyMesh: {fileID: -8545447256379345787, guid: 5059ff0dbdf20314381aeb9ba1e43389, type: 3}
+  armsMesh: {fileID: 7954577337513133825, guid: 5059ff0dbdf20314381aeb9ba1e43389, type: 3}
+  legsMesh: {fileID: -4650390976156102637, guid: 5059ff0dbdf20314381aeb9ba1e43389, type: 3}
+  pantsMesh: {fileID: -5768860637884414165, guid: 5059ff0dbdf20314381aeb9ba1e43389, type: 3}
+  shoesMesh: {fileID: 5433102353385186542, guid: 5059ff0dbdf20314381aeb9ba1e43389, type: 3}
   rightHandCosmeticMaterial: []
   skinMaterial: {fileID: 2100000, guid: 0435b1fb060c17c4ca6f487ffd88cd42, type: 2}
   hairMaterial:

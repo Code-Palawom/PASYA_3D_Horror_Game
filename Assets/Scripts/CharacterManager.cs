@@ -10,6 +10,8 @@ public class CharacterManager : MonoBehaviour {
     private CharacterData saveData;
     private CharacterData backupCharacterData;
 
+    private string gender;
+
     private Mesh rightHandCosmeticMesh;
     private Material[] rightHandCosmeticMaterial;
     private Material skin;
@@ -20,13 +22,13 @@ public class CharacterManager : MonoBehaviour {
     private Material[] shoes;
 
     void Start() {
-        string savedName = saveManager.Load();
+        gender = saveManager.GetOneData("gender");
 
         CharacterData data = Resources.Load<CharacterData>("Characters/character");
         
         if(data != null){
             saveData = Instantiate(data);
-            saveData.name = data.name;
+            //saveData.name = data.name;
 
             character.ApplyCharacter(saveData, false);
         }
@@ -46,7 +48,9 @@ public class CharacterManager : MonoBehaviour {
         character.ApplyCharacter(saveData, true);
     }
 
-    public void TryGender() { }
+    public void TryGender() {
+
+    }
 
     public void TrySkinMaterial(Material material) {
         saveData.skinMaterial = material;
@@ -104,6 +108,7 @@ public class CharacterManager : MonoBehaviour {
             currentData.rightHandCosmeticMesh = null;
             currentData.rightHandCosmeticMaterial = null;
         }
+        if(gender != null) saveManager.SaveOneData(gender, "gender");
         if(skin != null) currentData.skinMaterial = skin;
         if(hair != null) currentData.hairMaterial = hair;
         if(head != null) currentData.headMaterial = head;

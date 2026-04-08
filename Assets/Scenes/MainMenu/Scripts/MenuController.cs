@@ -38,6 +38,7 @@ public class MenuController : MonoBehaviour {
     [SerializeField] private PlayPanel play;
     [SerializeField] private CanvasGroup main;
     [SerializeField] private CanvasGroup character;
+    [SerializeField] private SettingsPanel settings;
     [SerializeField] private AboutPanel about;
 
     [Header("Sounds")]
@@ -56,6 +57,10 @@ public class MenuController : MonoBehaviour {
         buttonClickSound.Play();
         play.OpenPlayPanel();
         StartCoroutine(levelLoader.LoadLevel(transition, "Map1"));
+    }
+
+    public void OpenMultiplayer() {
+        Debug.Log("Clicked Multiplayer");
     }
 
     public void OpenCharacterPanel() {
@@ -89,7 +94,6 @@ public class MenuController : MonoBehaviour {
         shoesButton.ShowBtn();
         applyButton.ShowBtn();
         cancelButton.ShowBtn();
-        Debug.Log("Pressed Character!");
     }
 
     public void CloseCharacterPanel(bool saveCharacter) {
@@ -128,25 +132,28 @@ public class MenuController : MonoBehaviour {
         settingsButton.ShowBtn();
         aboutButton.ShowBtn();
         exitButton.ShowBtn();
-        Debug.Log("Pressed Character!");
     }
 
     public void OpenSettingsPanel() {
+        main.alpha = 0f;
         buttonClickSound.Play();
-        Debug.Log("Pressed Settings!");
+        settings.OpenSettingsPanel();
     }
 
     public void CloseSettingsPanel() {
+        main.alpha = 1f;
         buttonClickSound.Play();
-        Debug.Log("Pressed Settings!");
+        settings.CloseSettingsPanel();
     }
 
     public void OpenAboutPanel() {
+        main.alpha = 0f;
         buttonClickSound.Play();
         about.OpenAboutPanel();
     }
 
     public void CloseAboutPanel() {
+        main.alpha = 1f;
         buttonClickSound.Play();
         about.CloseAboutPanel();
     }
