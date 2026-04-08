@@ -47,10 +47,10 @@ public class LookAround : MonoBehaviour {
             }
         }
 
-        if(Input.touchCount == 0 && Mouse.current != null){
-            if(Mouse.current.leftButton.isPressed && !EventSystem.current.IsPointerOverGameObject()){
+        if(activeTouches.Count == 0 && Mouse.current != null){
+            //if(!EventSystem.current.IsPointerOverGameObject()){
                 isAnyValidFingerLooking = true;
-            }
+            //}
         }
 
         inputController.enabled = isAnyValidFingerLooking;

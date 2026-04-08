@@ -66198,6 +66198,7 @@ GameObject:
   - component: {fileID: 664443816}
   - component: {fileID: 664443818}
   - component: {fileID: 664443817}
+  - component: {fileID: 664443819}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -66247,6 +66248,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5b7d548e0a74b2a4d86d4d30288b30dc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SaveManager
+--- !u!114 &664443819
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 664443815}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a984468ec6492724db4747d5b7267c3b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HandleMobile
+  mobileUIButtons: {fileID: 1675408241}
 --- !u!1 &664879226
 GameObject:
   m_ObjectHideFlags: 0
@@ -101188,6 +101202,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 219883035}
     m_Modifications:
+    - target: {fileID: 6888545687472818788, guid: 4d8a5733f321d014393194e21272769d, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5866666021909216657, guid: 56d7179c5bde2c447b2665c87a79d1ac, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: af93379fa5344fc4ba7c763ad280d7f0, type: 2}
     - target: {fileID: -8679921383154817045, guid: 5059ff0dbdf20314381aeb9ba1e43389, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -101233,14 +101255,6 @@ PrefabInstance:
       value: Character
       objectReference: {fileID: 0}
     - target: {fileID: 5866666021909216657, guid: 5059ff0dbdf20314381aeb9ba1e43389, type: 3}
-      propertyPath: m_Controller
-      value: 
-      objectReference: {fileID: 9100000, guid: af93379fa5344fc4ba7c763ad280d7f0, type: 2}
-    - target: {fileID: 6888545687472818788, guid: 4d8a5733f321d014393194e21272769d, type: 3}
-      propertyPath: m_IsActive
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 5866666021909216657, guid: 56d7179c5bde2c447b2665c87a79d1ac, type: 3}
       propertyPath: m_Controller
       value: 
       objectReference: {fileID: 9100000, guid: af93379fa5344fc4ba7c763ad280d7f0, type: 2}
@@ -164539,7 +164553,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1675408242
 RectTransform:
   m_ObjectHideFlags: 0
