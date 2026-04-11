@@ -68736,6 +68736,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HandleMobile
   mobileUIButtons: {fileID: 1675408241}
+  screenCursor: {fileID: 1031816063}
 --- !u!1 &664879226
 GameObject:
   m_ObjectHideFlags: 0

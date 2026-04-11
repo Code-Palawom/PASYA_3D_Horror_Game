@@ -17,6 +17,12 @@ public class CameraCursor : MonoBehaviour {
     private TextMeshProUGUI lastButtonText;
 
     void Update() {
+        #if UNITY_EDITOR || UNITY_STANDALONE
+            HandleCursorAndHover(); 
+        #endif
+    }
+
+    private void HandleCursorAndHover() {
         PointerEventData hoverData = new PointerEventData(eventSystem);
         hoverData.position = new Vector2(Screen.width / 2, Screen.height / 2);
 
