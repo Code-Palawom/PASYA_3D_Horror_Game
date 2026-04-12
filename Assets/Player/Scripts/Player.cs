@@ -1,9 +1,10 @@
 using System;
 using Unity.Cinemachine;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-public class Player : MonoBehaviour {
+public class Player : NetworkBehaviour  {
     [SerializeField] private Transform cameraTransform;
     [SerializeField] private bool shouldFaceMoveDirection = false;
     [SerializeField] private bool onlyLookForward = false;
@@ -160,6 +161,8 @@ public class Player : MonoBehaviour {
     }
 
     private void SetCharacter(bool mode) {
+        if(!IsOwner) return;
+
         var renderers = GetComponentsInChildren<SkinnedMeshRenderer>();
 
         if(mode){
@@ -179,6 +182,8 @@ public class Player : MonoBehaviour {
 
     // Update is called once per frame
     void Update() {
+        if(!IsOwner) return;
+
         playerAnimation.UpdateAnimationState(moveInput, controller.isGrounded);
 
         Vector3 forward = cameraTransform.forward;
