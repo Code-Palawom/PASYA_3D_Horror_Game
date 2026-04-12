@@ -7,7 +7,8 @@ using TMPro;
 
 public class CameraCursor : MonoBehaviour {
     public EventSystem eventSystem;
-    public float maxDistance = 2.0f;
+    public Transform character;
+    public float maxClickDistance = 1.5f;
     public Color hoverColor = Color.white;
     public Color textHoverColor = Color.black;
 
@@ -32,8 +33,8 @@ public class CameraCursor : MonoBehaviour {
         Button currentButton = null;
 
         foreach(RaycastResult result in hoverResults){
-            float dist = Vector3.Distance(transform.position, result.gameObject.transform.position);
-            if (dist <= maxDistance){
+            float dist = Vector3.Distance(character.position, result.gameObject.transform.position);
+            if (dist <= maxClickDistance){
                 Button btn = result.gameObject.GetComponent<Button>();
         
                 if(btn != null && btn.interactable){

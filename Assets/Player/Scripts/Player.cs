@@ -17,6 +17,7 @@ public class Player : MonoBehaviour {
     [SerializeField] private Vector3 crouchCenter = new Vector3(0, -0.3f, 0);
     [SerializeField] private float crouchTransitionSpeed = 2f;
 
+    [SerializeField] private SaveManager saveManager;
     [SerializeField] private CinemachineCamera thirdPersonPOV;
     [SerializeField] private CinemachineCamera firstPersonPOV;
     private Boolean isFirstPerson = true;
@@ -50,6 +51,10 @@ public class Player : MonoBehaviour {
         standCenter = controller.center;
         standHeight = controller.height;
 
+        int currentPOV = int.Parse(saveManager.GetOneData("pov") ?? "0");
+        isFirstPerson = currentPOV == 0;
+        Debug.Log(currentPOV);
+        Debug.Log(isFirstPerson);
         SetCharacter(isFirstPerson);
     }
 
@@ -107,11 +112,9 @@ public class Player : MonoBehaviour {
     public void OnSwitchPOV(InputAction.CallbackContext context) {
         isFirstPerson = !isFirstPerson;
         if(isFirstPerson) {
-            firstPersonPOV.Priority = 10;
-            thirdPersonPOV.Priority = 0;
+            saveManager.SaveOneData("0", "pov");
         }else{
-            firstPersonPOV.Priority = 0;
-            thirdPersonPOV.Priority = 10;
+            saveManager.SaveOneData("1", "pov");
         }
 
         SetCharacter(isFirstPerson);
@@ -159,11 +162,15 @@ public class Player : MonoBehaviour {
     private void SetCharacter(bool mode) {
         var renderers = GetComponentsInChildren<SkinnedMeshRenderer>();
 
-        if(mode) {
+        if(mode){
+            firstPersonPOV.Priority = 10;
+            thirdPersonPOV.Priority = 0;
             foreach (var r in renderers) {
                 r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
             }
         }else{
+            firstPersonPOV.Priority = 0;
+            thirdPersonPOV.Priority = 10;
             foreach (var r in renderers) {
                 r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
             }

@@ -4,6 +4,8 @@ public class SaveData {
     public string gender;
     public Graphics graphics = new Graphics();
 
+    public string pov;
+
     [System.Serializable]
     public class Graphics {
         public string resolution;

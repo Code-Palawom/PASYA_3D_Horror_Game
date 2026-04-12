@@ -26,6 +26,8 @@ public class SaveManager : MonoBehaviour {
             data.graphics = new SaveData.Graphics {
                 resolution = d
             };
+        }else if(type == "pov") {
+            data.pov = d;
         }
 
         string json = JsonUtility.ToJson(data);
@@ -63,6 +65,8 @@ public class SaveManager : MonoBehaviour {
                 return data.gender;
             }else if(type == "resolution"){
                 return data.graphics.resolution;
+            }else if(type == "pov"){
+                return data.pov;
             }else{
                 return null;
             }

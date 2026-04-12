@@ -1,2 +1,16 @@
 fileFormatVersion: 2
 guid: d76bf71fba899624fad50dc4cf251713
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - easyBank: {instanceID: 0}
+  - mediumBank: {instanceID: 0}
+  - hardBank: {instanceID: 0}
+  - questionText: {instanceID: 0}
+  - connectedDoor: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
