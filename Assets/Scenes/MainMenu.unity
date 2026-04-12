@@ -8957,7 +8957,7 @@ MonoBehaviour:
   characterManager: {fileID: 180044154}
   mesh: {fileID: 0}
   material:
-  - {fileID: 2100000, guid: 2b325f2b39408c14996425a6eda0d000, type: 2}
+  - {fileID: 2100000, guid: 195ffead2f97b5045af34f2c0ad9a674, type: 2}
 --- !u!114 &264150579
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -18471,7 +18471,7 @@ MonoBehaviour:
   characterManager: {fileID: 180044154}
   mesh: {fileID: 0}
   material:
-  - {fileID: 2100000, guid: 0b6a288a4debea246b7f3f7e9d3941bf, type: 2}
+  - {fileID: 2100000, guid: 01292bd67bce12f49b7d5f0ebe5128b0, type: 2}
 --- !u!114 &366729993
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -36299,9 +36299,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonMaterialHandler
   characterManager: {fileID: 180044154}
-  mesh: {fileID: 0}
+  mesh: {fileID: -5768860637884414165, guid: b6a7741c60a3ec746bd87d13b6491c97, type: 3}
   material:
-  - {fileID: 2100000, guid: 00518b6d4e2a06141a807cb46d6f9408, type: 2}
+  - {fileID: 2100000, guid: 1886651b6a313684a964fcbe2e6cf769, type: 2}
 --- !u!114 &632390617
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -40534,9 +40534,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonMaterialHandler
   characterManager: {fileID: 180044154}
-  mesh: {fileID: 0}
+  mesh: {fileID: 5433102353385186542, guid: b6a7741c60a3ec746bd87d13b6491c97, type: 3}
   material:
-  - {fileID: 2100000, guid: 73e7e90be8e01ff46bcc0088fd580c10, type: 2}
+  - {fileID: 2100000, guid: d2b80b41bf6ab8446adf327f4a011d09, type: 2}
 --- !u!114 &711201249
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -48467,9 +48467,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonMaterialHandler
   characterManager: {fileID: 180044154}
-  mesh: {fileID: 0}
+  mesh: {fileID: 5433102353385186542, guid: b6a7741c60a3ec746bd87d13b6491c97, type: 3}
   material:
-  - {fileID: 2100000, guid: e1324ee4798f7fc48b538a78025fbb62, type: 2}
+  - {fileID: 2100000, guid: e03cce160df428840b906e075a0a490e, type: 2}
 --- !u!114 &894870885
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -92267,9 +92267,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonMaterialHandler
   characterManager: {fileID: 180044154}
-  mesh: {fileID: 0}
+  mesh: {fileID: 5433102353385186542, guid: b6a7741c60a3ec746bd87d13b6491c97, type: 3}
   material:
-  - {fileID: 2100000, guid: 0a5818854fc9aae4c89daa6e603c2453, type: 2}
+  - {fileID: 2100000, guid: 6018083b2e920a349b28ad43f8ad1bd9, type: 2}
 --- !u!114 &1084748672
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -92592,7 +92592,7 @@ MonoBehaviour:
   characterManager: {fileID: 180044154}
   mesh: {fileID: 0}
   material:
-  - {fileID: 2100000, guid: 0435b1fb060c17c4ca6f487ffd88cd42, type: 2}
+  - {fileID: 2100000, guid: 88ca667be479c2740849d9232fc4b0bf, type: 2}
 --- !u!224 &1090209079 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 2537056719139743680, guid: 49f166b9804d0a3499e6d196b46432b5, type: 3}
@@ -98296,9 +98296,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonMaterialHandler
   characterManager: {fileID: 180044154}
-  mesh: {fileID: 0}
+  mesh: {fileID: 5433102353385186542, guid: b6a7741c60a3ec746bd87d13b6491c97, type: 3}
   material:
-  - {fileID: 2100000, guid: ba77208a39f69894ebcd4bbcb3edb5db, type: 2}
+  - {fileID: 2100000, guid: f45d2706e904a4f419d660bb5aaae6e1, type: 2}
 --- !u!114 &1254615120
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -99117,9 +99117,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonMaterialHandler
   characterManager: {fileID: 180044154}
-  mesh: {fileID: 0}
+  mesh: {fileID: -5768860637884414165, guid: b6a7741c60a3ec746bd87d13b6491c97, type: 3}
   material:
-  - {fileID: 2100000, guid: b80d457c680ee8641b852859d9e843d3, type: 2}
+  - {fileID: 2100000, guid: 4f0263260646c9e4fb70d6fd30946b72, type: 2}
 --- !u!114 &1293936578
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -100829,9 +100829,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonMaterialHandler
   characterManager: {fileID: 180044154}
-  mesh: {fileID: 0}
+  mesh: {fileID: -5768860637884414165, guid: b6a7741c60a3ec746bd87d13b6491c97, type: 3}
   material:
-  - {fileID: 2100000, guid: 8433409fc16979a49880e8ae59d84749, type: 2}
+  - {fileID: 2100000, guid: 8be9590bd4fa2c247a864f1ff4f7a6b2, type: 2}
 --- !u!114 &1361213320
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -101680,9 +101680,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonMaterialHandler
   characterManager: {fileID: 180044154}
-  mesh: {fileID: 0}
+  mesh: {fileID: -8545447256379345787, guid: b6a7741c60a3ec746bd87d13b6491c97, type: 3}
   material:
-  - {fileID: 2100000, guid: 03f41a5340ab82f40b5468742e46f16b, type: 2}
+  - {fileID: 2100000, guid: 8022e5a4190acc14a8632a9fad59c243, type: 2}
 --- !u!114 &1381847814
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -108266,9 +108266,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonMaterialHandler
   characterManager: {fileID: 180044154}
-  mesh: {fileID: 0}
+  mesh: {fileID: -8545447256379345787, guid: b6a7741c60a3ec746bd87d13b6491c97, type: 3}
   material:
-  - {fileID: 2100000, guid: df5ee92ce268e2a4eb2993c3e312e17f, type: 2}
+  - {fileID: 2100000, guid: a31128009b5b1c947af1a4c4c0c29f53, type: 2}
 --- !u!114 &1486609186
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -116464,7 +116464,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonMaterialHandler
   characterManager: {fileID: 180044154}
-  mesh: {fileID: -1978514511154977101, guid: 5059ff0dbdf20314381aeb9ba1e43389, type: 3}
+  mesh: {fileID: 0}
   material: []
 --- !u!1 &1604301105 stripped
 GameObject:
@@ -118740,9 +118740,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonMaterialHandler
   characterManager: {fileID: 180044154}
-  mesh: {fileID: 0}
+  mesh: {fileID: -5017437812508297076, guid: b6a7741c60a3ec746bd87d13b6491c97, type: 3}
   material:
-  - {fileID: 2100000, guid: 407b8c2a4c192134282e1351542fcea6, type: 2}
+  - {fileID: 2100000, guid: c80d65f188b167141a5af4a6cf909d1f, type: 2}
 --- !u!1 &1634723420
 GameObject:
   m_ObjectHideFlags: 0
@@ -119155,7 +119155,7 @@ MonoBehaviour:
   characterManager: {fileID: 180044154}
   mesh: {fileID: 0}
   material:
-  - {fileID: 2100000, guid: 77b095c5e87e7894b82300d4191bf984, type: 2}
+  - {fileID: 2100000, guid: b5bfe465f82ad3941b95d9d6c002f98d, type: 2}
 --- !u!114 &1641669863
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -120254,9 +120254,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonMaterialHandler
   characterManager: {fileID: 180044154}
-  mesh: {fileID: 0}
+  mesh: {fileID: -5017437812508297076, guid: b6a7741c60a3ec746bd87d13b6491c97, type: 3}
   material:
-  - {fileID: 2100000, guid: 8cb6d421601960048937c1fdd739a0b7, type: 2}
+  - {fileID: 2100000, guid: 7f7644b098e691c478ba06457094441b, type: 2}
 --- !u!1 &1665427841
 GameObject:
   m_ObjectHideFlags: 0
@@ -120311,9 +120311,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonMaterialHandler
   characterManager: {fileID: 180044154}
-  mesh: {fileID: 0}
+  mesh: {fileID: -5768860637884414165, guid: b6a7741c60a3ec746bd87d13b6491c97, type: 3}
   material:
-  - {fileID: 2100000, guid: 49ddc0015b32d614982e805da81f687c, type: 2}
+  - {fileID: 2100000, guid: be8805dda0460124a98b13d7b2565f6e, type: 2}
 --- !u!114 &1665427845
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -123022,7 +123022,7 @@ CanvasGroup:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1683797417}
   m_Enabled: 1
-  m_Alpha: 1
+  m_Alpha: 0
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
@@ -123755,9 +123755,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonMaterialHandler
   characterManager: {fileID: 180044154}
-  mesh: {fileID: 0}
+  mesh: {fileID: -8545447256379345787, guid: b6a7741c60a3ec746bd87d13b6491c97, type: 3}
   material:
-  - {fileID: 2100000, guid: 0e32e8259f5275c45ab9150c63c5da1b, type: 2}
+  - {fileID: 2100000, guid: 5312a46a531431d45944d58ea0871ebb, type: 2}
 --- !u!114 &1727020399
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -124262,10 +124262,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonMaterialHandler
   characterManager: {fileID: 180044154}
-  mesh: {fileID: -1978514511154977101, guid: 5059ff0dbdf20314381aeb9ba1e43389, type: 3}
+  mesh: {fileID: -1978514511154977101, guid: b6a7741c60a3ec746bd87d13b6491c97, type: 3}
   material:
-  - {fileID: 2100000, guid: 2b25ed4e525dcf34abfc95ee101ba4eb, type: 2}
-  - {fileID: 2100000, guid: 8cde11e902ecdc44586eae6e2e4f2d83, type: 2}
+  - {fileID: 2100000, guid: 4d78bd31de7f6574d8cf4704170b2db1, type: 2}
+  - {fileID: 2100000, guid: 71bda4fe62d8a864eaad6853e202a64e, type: 2}
 --- !u!43 &1763206597
 Mesh:
   m_ObjectHideFlags: 0
@@ -134739,9 +134739,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonMaterialHandler
   characterManager: {fileID: 180044154}
-  mesh: {fileID: 0}
+  mesh: {fileID: 5433102353385186542, guid: b6a7741c60a3ec746bd87d13b6491c97, type: 3}
   material:
-  - {fileID: 2100000, guid: e8b29d65f56b69c4a901cddea2c6f046, type: 2}
+  - {fileID: 2100000, guid: 4e600c52b3619b14abdacc2b3a746b5b, type: 2}
 --- !u!114 &1961431191
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -139187,7 +139187,7 @@ MonoBehaviour:
   characterManager: {fileID: 180044154}
   mesh: {fileID: 0}
   material:
-  - {fileID: 2100000, guid: 3130310b5a38d9945ad14665a62fa677, type: 2}
+  - {fileID: 2100000, guid: 21100c2a04aebc2409c4564d0e0986c3, type: 2}
 --- !u!114 &2034900778
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -141361,16 +141361,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ButtonMaterialHandler
   characterManager: {fileID: 180044154}
-  mesh: {fileID: -7070831255929112694, guid: 5059ff0dbdf20314381aeb9ba1e43389, type: 3}
+  mesh: {fileID: -7070831255929112694, guid: b6a7741c60a3ec746bd87d13b6491c97, type: 3}
   material:
-  - {fileID: 2100000, guid: 26d6e21df82bbef4692017b0c3f9134f, type: 2}
-  - {fileID: 2100000, guid: 41cb51804a4adc044b143856b7bd80de, type: 2}
-  - {fileID: 2100000, guid: b88810b6d0c62654bba5147c96592a7a, type: 2}
-  - {fileID: 2100000, guid: 3ab9e32da2e070e4f80b0dc838092c7d, type: 2}
-  - {fileID: 2100000, guid: 946853f46cecfa8499255b11679c17a3, type: 2}
-  - {fileID: 2100000, guid: c2082ad7e3fccfe4686f883cc5eec6dc, type: 2}
-  - {fileID: 2100000, guid: 0d3515165d396bc47b060585961f0764, type: 2}
-  - {fileID: 2100000, guid: 91715b107fdfc8a48873205c59ec4265, type: 2}
+  - {fileID: 2100000, guid: d59a70f99aefbed4faf25a14ecbd9dfe, type: 2}
+  - {fileID: 2100000, guid: 5f01eafafaaa948468df9ca0e454f3da, type: 2}
+  - {fileID: 2100000, guid: f8d0e1531252ea54cbc73e1f8f540d51, type: 2}
+  - {fileID: 2100000, guid: 4371cb7b1adb7124cbb738e7d0ccbf01, type: 2}
+  - {fileID: 2100000, guid: d8ce8cb6a7b575d42a9ce31cd5ec0b85, type: 2}
+  - {fileID: 2100000, guid: 478874d14f76c9044bef40ed2e62777b, type: 2}
+  - {fileID: 2100000, guid: 432860e2f1f962d48addc48a44060f48, type: 2}
+  - {fileID: 2100000, guid: 607b6ffb1ca8ab94e9a89698e8f2b27a, type: 2}
 --- !u!114 &2053869176
 MonoBehaviour:
   m_ObjectHideFlags: 0
