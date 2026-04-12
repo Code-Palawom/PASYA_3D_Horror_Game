@@ -25,14 +25,14 @@ MonoBehaviour:
   hairMaterial:
   - {fileID: 2100000, guid: 8cb6d421601960048937c1fdd739a0b7, type: 2}
   headMaterial:
-  - {fileID: 9171952328373019990, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
-  - {fileID: -2886261885951862949, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
-  - {fileID: 7420331253886010339, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
-  - {fileID: 1280446133571650962, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
-  - {fileID: 7613012251463365022, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
-  - {fileID: -7421800713997745752, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
-  - {fileID: -4740866918696808673, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
-  - {fileID: 5195831374844971781, guid: a261e867d7687124f8a505f1d62ea38c, type: 3}
+  - {fileID: 2100000, guid: 26d6e21df82bbef4692017b0c3f9134f, type: 2}
+  - {fileID: 2100000, guid: 41cb51804a4adc044b143856b7bd80de, type: 2}
+  - {fileID: 2100000, guid: b88810b6d0c62654bba5147c96592a7a, type: 2}
+  - {fileID: 2100000, guid: 3ab9e32da2e070e4f80b0dc838092c7d, type: 2}
+  - {fileID: 2100000, guid: 946853f46cecfa8499255b11679c17a3, type: 2}
+  - {fileID: 2100000, guid: c2082ad7e3fccfe4686f883cc5eec6dc, type: 2}
+  - {fileID: 2100000, guid: 0d3515165d396bc47b060585961f0764, type: 2}
+  - {fileID: 2100000, guid: 91715b107fdfc8a48873205c59ec4265, type: 2}
   bodyMaterial:
   - {fileID: 2100000, guid: df5ee92ce268e2a4eb2993c3e312e17f, type: 2}
   pantsMaterial:
