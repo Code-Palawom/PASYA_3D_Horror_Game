@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-public class PlayPanel : MonoBehaviour {
+public class MultiplayerPanel : MonoBehaviour {
     [SerializeField] private GameObject panel;
     [SerializeField] private float fadeDuration = 1f;
 
@@ -14,14 +14,14 @@ public class PlayPanel : MonoBehaviour {
         canvas.alpha = 0f;
     }
 
-    public void OpenPlayPanel() {
+    public void OpenMultiplayerPanel() {
         panel.SetActive(true);
 
         if(activeAnimation != null) StopCoroutine(activeAnimation);
         activeAnimation = StartCoroutine(Fade(true, 1f));
     }
 
-    public void ClosePlayPanel() {
+    public void CloseMultiplayerPanel() {
         if(activeAnimation != null) StopCoroutine(activeAnimation);
         activeAnimation = StartCoroutine(Fade(false, 0f));
     }

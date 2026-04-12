@@ -36,6 +36,7 @@ public class MenuController : MonoBehaviour {
 
     [Header("Panels")]
     [SerializeField] private PlayPanel play;
+    [SerializeField] private MultiplayerPanel multiplayer;
     [SerializeField] private CanvasGroup main;
     [SerializeField] private CanvasGroup character;
     [SerializeField] private SettingsPanel settings;
@@ -53,14 +54,47 @@ public class MenuController : MonoBehaviour {
         characterAnimation = GetComponent<MMCharacterAnimation>();
     }
 
-    public void Play() {
+    public void Play(string map) {
+        buttonClickSound.Play();
+        StartCoroutine(levelLoader.LoadLevel(transition, map));
+    }
+
+    public void HostMultiplayer(string map) {
+        GameModeSettings.CurrentMode = GameModeSettings.GameMode.HostMultiplayer;
+        buttonClickSound.Play();
+        StartCoroutine(levelLoader.LoadLevel(transition, map));
+    }
+
+    public void JoinMultiplayer(string map) {
+        GameModeSettings.CurrentMode = GameModeSettings.GameMode.JoinMultiplayer;
+        buttonClickSound.Play();
+        StartCoroutine(levelLoader.LoadLevel(transition, map));
+    }
+
+    public void OpenPlayPanel() {
+        GameModeSettings.CurrentMode = GameModeSettings.GameMode.SinglePlayer;
+        main.alpha = 0f;
         buttonClickSound.Play();
         play.OpenPlayPanel();
-        StartCoroutine(levelLoader.LoadLevel(transition, "Map1"));
+    }
+
+    public void ClosePlayPanel() {
+        main.alpha = 1f;
+        buttonClickSound.Play();
+        play.ClosePlayPanel();
     }
 
     public void OpenMultiplayer() {
-        Debug.Log("Clicked Multiplayer");
+        GameModeSettings.CurrentMode = GameModeSettings.GameMode.HostMultiplayer;
+        main.alpha = 0f;
+        buttonClickSound.Play();
+        multiplayer.OpenMultiplayerPanel();
+    }
+
+    public void CloseMultiplayer() {
+        main.alpha = 1f;
+        buttonClickSound.Play();
+        multiplayer.CloseMultiplayerPanel();
     }
 
     public void OpenCharacterPanel() {
