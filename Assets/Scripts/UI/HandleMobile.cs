@@ -8,7 +8,7 @@ public class HandleMobile : MonoBehaviour {
     void Start() {
         #if UNITY_ANDROID || UNITY_IOS
             mobileUIButtons.SetActive(true);
-            screenCursor.setActive(false);
+            screenCursor.SetActive(false);
         #endif
 
         // For development otherwise remove
