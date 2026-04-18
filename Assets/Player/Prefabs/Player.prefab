@@ -931,7 +931,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f45348297d34c8b4fadf5728138b95a3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimation
-  animator: {fileID: 5524811283486467684}
+  animator: {fileID: 8451296044462420008}
   motionBlendSpeed: 8
 --- !u!114 &362129682550908473
 MonoBehaviour:
@@ -1023,7 +1023,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   NetworkAnimatorExpanded: 0
   AuthorityMode: 1
-  m_Animator: {fileID: 5524811283486467684}
+  m_Animator: {fileID: 8451296044462420008}
   TransitionStateInfoList: []
   AnimatorParameterEntries:
     ParameterEntries:
@@ -1583,7 +1583,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1398212334812659468}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.25554875, y: 0.6849333, z: 0.28163913, w: 0.6214827}
+  m_LocalRotation: {x: -0.569786, y: -0.09401801, z: -0.06583212, w: 0.81373876}
   m_LocalPosition: {x: 328.2109, y: 1.6, z: 53.84344}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -4703,7 +4703,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &5028639296356981328
 Transform:
   m_ObjectHideFlags: 0
@@ -4736,7 +4736,7 @@ Animator:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5040492869964005791}
-  m_Enabled: 1
+  m_Enabled: 0
   m_Avatar: {fileID: 9000000, guid: 5059ff0dbdf20314381aeb9ba1e43389, type: 3}
   m_Controller: {fileID: 9100000, guid: af93379fa5344fc4ba7c763ad280d7f0, type: 2}
   m_CullingMode: 1
@@ -4777,7 +4777,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5040492869964005791}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e38fa621d1fe048439a25a426505334b, type: 3}
   m_Name: 
@@ -4885,7 +4885,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5110092272429389082}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.25554875, y: 0.6849333, z: 0.28163913, w: 0.6214827}
+  m_LocalRotation: {x: -0.569786, y: -0.09401801, z: -0.06583212, w: 0.81373876}
   m_LocalPosition: {x: 328.2109, y: 1.6, z: 53.84344}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -4963,7 +4963,7 @@ MonoBehaviour:
   ReferenceFrame: 1
   RecenterTarget: 0
   PanAxis:
-    Value: 95.561165
+    Value: -13.181272
     Center: 0
     Range: {x: -180, y: 180}
     Wrap: 1
@@ -4973,7 +4973,7 @@ MonoBehaviour:
       Time: 2
     Restrictions: 0
   TiltAxis:
-    Value: -44.704155
+    Value: -70
     Center: 0
     Range: {x: -70, y: 70}
     Wrap: 0
@@ -5669,8 +5669,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5900058071888231165}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.11640098, y: 0.7141167, z: -0.12235792, w: 0.6793502}
-  m_LocalPosition: {x: 326.32733, y: 2.265821, z: 53.93749}
+  m_LocalRotation: {x: -0, y: -0.14352386, z: -0, w: 0.98964685}
+  m_LocalPosition: {x: 328.77905, y: 1.6, z: 51.92584}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5753,7 +5753,7 @@ MonoBehaviour:
     SplineCurvature: 0.5
   RecenteringTarget: 2
   HorizontalAxis:
-    Value: 92.85838
+    Value: -16.503677
     Center: 0
     Range: {x: -180, y: 180}
     Wrap: 1
@@ -5763,7 +5763,7 @@ MonoBehaviour:
       Time: 2
     Restrictions: 0
   VerticalAxis:
-    Value: 19.445524
+    Value: 0
     Center: 17.5
     Range: {x: 0, y: 45}
     Wrap: 0
@@ -6347,7 +6347,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &1037571334629436295
 Transform:
   m_ObjectHideFlags: 0
@@ -6378,7 +6378,7 @@ Animator:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6818679465777125271}
-  m_Enabled: 0
+  m_Enabled: 1
   m_Avatar: {fileID: 9000000, guid: 502c5c2206ebb87418742a6bf3261536, type: 3}
   m_Controller: {fileID: 9100000, guid: af93379fa5344fc4ba7c763ad280d7f0, type: 2}
   m_CullingMode: 1
