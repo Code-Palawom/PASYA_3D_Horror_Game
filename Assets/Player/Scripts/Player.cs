@@ -61,6 +61,26 @@ public class Player : NetworkBehaviour  {
 
     public void OnMove(InputAction.CallbackContext context) {
         moveInput = context.ReadValue<Vector2>();
+
+        //var device = context.control.device;
+        ///* if(device is Keyboard){
+        //}else */if(device is Gamepad){
+        //    if(moveInput.x > 0.8f || moveInput.y > 0.8f) {
+        //        isRunning = true;
+        //        if(isCrouching == false) {
+        //            playerSpeed = sprintSpeed;
+
+        //        }
+        //        Debug.Log("Sprinting!");
+        //    }else{
+        //        if(isCrouching == false) {
+        //            playerSpeed = basePlayerSpeed;
+        //        }
+        //        isRunning = false;
+        //        Debug.Log("Done sprinting!");
+        //    }
+        //}
+
         Debug.Log($"Move Input: {moveInput}");
     }
 

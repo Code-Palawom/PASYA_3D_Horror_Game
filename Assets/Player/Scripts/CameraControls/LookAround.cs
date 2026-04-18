@@ -1,66 +1,70 @@
-using System.Collections.Generic;
-using Unity.Cinemachine;
-using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.InputSystem;
+﻿using UnityEngine;
 using UnityEngine.InputSystem.EnhancedTouch;
+using Unity.Cinemachine;
 using Touch = UnityEngine.InputSystem.EnhancedTouch.Touch;
+using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 
 public class LookAround : MonoBehaviour {
-    private CinemachineInputAxisController inputController;
-    private HashSet<int> uiFingers = new HashSet<int>();
+    [SerializeField] private RectTransform moveBoundaryRect;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start() {
-        inputController = GetComponent<CinemachineInputAxisController>();
-    }
+    [SerializeField] private CinemachineOrbitalFollow orbitalFollow;
 
-    // Update is called once per frame
-    void Update() {
-        HandleRotationBlocking();
-    }
+    [SerializeField] private float horizontalSensitivity = 0.25f;
+    [SerializeField] private float verticalSensitivity   = 0.18f;
 
-    private void HandleRotationBlocking() {
-        if(inputController == null) return;
+    [SerializeField] private bool invertVertical = true;
 
-        bool isAnyValidFingerLooking = false;
-        var activeTouches = Touch.activeTouches; 
+    private Finger _lookFinger;
 
-        for(int i = 0; i < activeTouches.Count; i++){
-            Touch t = activeTouches[i];
-            if(t.phase == UnityEngine.InputSystem.TouchPhase.Began){
-                if (EventSystem.current.IsPointerOverGameObject(t.touchId)){
-                    uiFingers.Add(t.touchId);
-                    //Debug.Log($"Finger {t.touchId} started on UI. Ignoring.");
-                }
-            }
-
-            if(t.phase == UnityEngine.InputSystem.TouchPhase.Ended || t.phase == UnityEngine.InputSystem.TouchPhase.Canceled){
-                uiFingers.Remove(t.touchId);
-                continue;
-            }
-
-            if(!uiFingers.Contains(t.touchId)){
-                if (t.phase == UnityEngine.InputSystem.TouchPhase.Moved || t.phase == UnityEngine.InputSystem.TouchPhase.Stationary) {
-                    isAnyValidFingerLooking = true;
-                }
-            }
-        }
-
-        if(activeTouches.Count == 0 && Mouse.current != null){
-            //if(!EventSystem.current.IsPointerOverGameObject()){
-                isAnyValidFingerLooking = true;
-            //}
-        }
-
-        inputController.enabled = isAnyValidFingerLooking;
-    }
-
-    void OnEnable() {
+    private void OnEnable() {
         EnhancedTouchSupport.Enable();
     }
 
-    void OnDisable() {
+    private void OnDisable() {
         EnhancedTouchSupport.Disable();
+        _lookFinger = null;
     }
+
+    private void Update() {
+        foreach(Touch touch in Touch.activeTouches){
+            switch(touch.phase){
+                case TouchPhase.Began:
+                    TryClaimLookFinger(touch);
+                    break;
+                case TouchPhase.Moved:
+                    if(_lookFinger != null && touch.finger == _lookFinger) ApplyLookDelta(touch.delta);
+                    break;
+                case TouchPhase.Ended:
+                case TouchPhase.Canceled:
+                    if(_lookFinger != null && touch.finger == _lookFinger) _lookFinger = null;
+                    break;
+            }
+        }
+    }
+
+    private void TryClaimLookFinger(Touch touch) {
+        if(_lookFinger != null) return;
+
+        bool onJoystick = moveBoundaryRect != null && RectTransformUtility.RectangleContainsScreenPoint(moveBoundaryRect, touch.screenPosition, null);
+
+        if(!onJoystick) _lookFinger = touch.finger;
+    }
+
+    private void ApplyLookDelta(Vector2 delta) {
+        if(orbitalFollow == null) return;
+
+        float yaw   =  delta.x * horizontalSensitivity;
+        float pitch =  delta.y * verticalSensitivity * (invertVertical ? -1f : 1f);
+
+        orbitalFollow.HorizontalAxis.Value += yaw;
+        orbitalFollow.VerticalAxis.Value   += pitch;
+    }
+
+
+#if UNITY_EDITOR
+    private void OnGUI() {
+        GUI.Label(new Rect(10, 10, 300, 20), $"Look finger: {(_lookFinger != null ? _lookFinger.index.ToString() : "none")}");
+        GUI.Label(new Rect(10, 30, 300, 20), $"Active touches: {Touch.activeTouches.Count}");
+    }
+#endif
 }
