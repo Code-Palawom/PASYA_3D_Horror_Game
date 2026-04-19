@@ -9,6 +9,7 @@ public class Player : NetworkBehaviour  {
     [SerializeField] private bool shouldFaceMoveDirection = false;
     [SerializeField] private bool onlyLookForward = false;
     [SerializeField] private float basePlayerSpeed = 4f;
+    [SerializeField] private float sprintTreshold = 0.70f;
     [SerializeField] private float sprintSpeed = 8f;
     [SerializeField] private float crouchSpeed = 1.5f;
     [SerializeField] private float jumpHeight = 2f;
@@ -21,6 +22,8 @@ public class Player : NetworkBehaviour  {
     [SerializeField] private SaveManager saveManager;
     [SerializeField] private CinemachineCamera thirdPersonPOV;
     [SerializeField] private CinemachineCamera firstPersonPOV;
+    [SerializeField] private ThirdPersonCameraLook thirdPersonLook;
+    [SerializeField] private FirstPersonCameraLook firstPersonLook;
     private Boolean isFirstPerson = true;
 
     private float playerSpeed;
@@ -62,24 +65,32 @@ public class Player : NetworkBehaviour  {
     public void OnMove(InputAction.CallbackContext context) {
         moveInput = context.ReadValue<Vector2>();
 
-        //var device = context.control.device;
-        ///* if(device is Keyboard){
-        //}else */if(device is Gamepad){
-        //    if(moveInput.x > 0.8f || moveInput.y > 0.8f) {
-        //        isRunning = true;
-        //        if(isCrouching == false) {
-        //            playerSpeed = sprintSpeed;
+        var device = context.control.device;
+        /* if(device is Keyboard){
+        }else */
+        if(device is Gamepad) {
+            Debug.Log($"X: {moveInput.x}");
+            Debug.Log($"Y: {moveInput.y}");
+            if(moveInput.x > sprintTreshold || moveInput.y > sprintTreshold || moveInput.x < -sprintTreshold) {
+                if(isCrouching == false && moveInput.y > -0.50f) {
+                    isRunning = true;
+                    playerSpeed = sprintSpeed;
+                    Debug.Log("Sprinting!");
+                }else{
+                    isRunning = false;
+                    playerSpeed = basePlayerSpeed;
+                    Debug.Log("Done sprinting!");
+                }
+            }else{
+                if(isCrouching == false) {
+                    isRunning = false;
+                    playerSpeed = basePlayerSpeed;
+                    Debug.Log("Done sprinting!");
+                }
+            }
 
-        //        }
-        //        Debug.Log("Sprinting!");
-        //    }else{
-        //        if(isCrouching == false) {
-        //            playerSpeed = basePlayerSpeed;
-        //        }
-        //        isRunning = false;
-        //        Debug.Log("Done sprinting!");
-        //    }
-        //}
+            moveInput = moveInput.normalized;
+        }
 
         Debug.Log($"Move Input: {moveInput}");
     }
@@ -188,12 +199,16 @@ public class Player : NetworkBehaviour  {
         if(mode){
             firstPersonPOV.Priority = 10;
             thirdPersonPOV.Priority = 0;
+            firstPersonLook.enabled = true;
+            thirdPersonLook.enabled = false;
             foreach (var r in renderers) {
                 r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
             }
         }else{
             firstPersonPOV.Priority = 0;
             thirdPersonPOV.Priority = 10;
+            firstPersonLook.enabled = false;
+            thirdPersonLook.enabled = true;
             foreach (var r in renderers) {
                 r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
             }
@@ -218,7 +233,7 @@ public class Player : NetworkBehaviour  {
         Vector3 moveDirection = forward * moveInput.y + right * moveInput.x;
         if(shouldFaceMoveDirection && !isFirstPerson && moveDirection.sqrMagnitude > 0.001f) {
             Vector3 faceDirection = moveDirection;
-            if(moveInput.y < 0) faceDirection = forward;
+            if(moveInput.y < -0.50f) faceDirection = forward;
             Quaternion rotation = Quaternion.LookRotation(onlyLookForward ? forward :  faceDirection, Vector3.up);
             transform.rotation = Quaternion.Slerp(transform.rotation, rotation, 10f * Time.deltaTime);
             //Debug.Log($"Third Person Rotation: {rotation}");
@@ -235,7 +250,7 @@ public class Player : NetworkBehaviour  {
             }
         }
         
-        if(moveInput.y < 0) {
+        if(moveInput.y < -0.50f) {
             playerSpeed = crouchSpeed;
         }else if(!isRunning && !isCrouching){
             playerSpeed = basePlayerSpeed;
