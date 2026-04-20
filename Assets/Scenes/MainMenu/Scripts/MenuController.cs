@@ -1,4 +1,5 @@
 using Unity.Cinemachine;
+using Unity.Netcode;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -52,6 +53,11 @@ public class MenuController : MonoBehaviour {
     private void Start() {
         levelLoader = gameObject.AddComponent<LevelLoader>();
         characterAnimation = GetComponent<MMCharacterAnimation>();
+
+        if(NetworkManager.Singleton != null){
+            NetworkManager.Singleton.Shutdown();
+            Destroy(NetworkManager.Singleton.gameObject);
+        }
     }
 
     public void Play(string map) {

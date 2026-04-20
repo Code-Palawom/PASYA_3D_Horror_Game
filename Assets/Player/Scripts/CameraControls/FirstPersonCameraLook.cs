@@ -14,12 +14,19 @@ public class FirstPersonCameraLook : MonoBehaviour {
     [SerializeField] private float verticalSensitivity = 0.18f;
     [SerializeField] private bool invertVertical = true;
 
+    public SaveManager saveManager;
+    public bool showOverlay = false;
+
     private Finger lookFinger;
 
     private void OnEnable() => EnhancedTouchSupport.Enable();
     private void OnDisable() {
         EnhancedTouchSupport.Disable();
         lookFinger = null;
+    }
+
+    void Start() {
+        RefreshDebugMode();
     }
 
     private void Update() {
@@ -69,12 +76,18 @@ public class FirstPersonCameraLook : MonoBehaviour {
         return false;
     }
 
-#if UNITY_EDITOR
+    public void RefreshDebugMode() {
+        showOverlay = saveManager.GetOneData(0);
+    }
+
+//#if UNITY_EDITOR
     private void OnGUI() {
+        if(!showOverlay) return;
+
         GUI.Label(new Rect(10, 10, 420, 20), $"[1P] Look finger : {(lookFinger != null ? lookFinger.index.ToString() : "none")}");
         GUI.Label(new Rect(10, 30, 420, 20), $"[1P] Pan  : {(panTilt != null ? panTilt.PanAxis.Value.ToString("F1")  + "°" : "—")}");
         GUI.Label(new Rect(10, 50, 420, 20), $"[1P] Tilt : {(panTilt != null ? panTilt.TiltAxis.Value.ToString("F1") + "°" : "—")}");
         GUI.Label(new Rect(10, 70, 420, 20), $"Active touches: {Touch.activeTouches.Count}");
     }
-#endif
+//#endif
 }

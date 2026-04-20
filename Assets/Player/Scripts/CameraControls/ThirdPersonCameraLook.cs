@@ -19,6 +19,9 @@ public class ThirdPersonCameraLook : MonoBehaviour {
     [SerializeField] private float maxRadius = 15f;
     [SerializeField] private float zoomSmoothSpeed = 10f;
 
+    public SaveManager saveManager;
+    public bool showOverlay = false;
+
     private Finger lookFinger;
     private Finger pinchFinger1;
     private Finger pinchFinger2;
@@ -34,6 +37,7 @@ public class ThirdPersonCameraLook : MonoBehaviour {
 
     private void Start() {
         if(orbitalFollow != null) targetRadius = orbitalFollow.Radius;
+        RefreshDebugMode();
     }
 
     private void Update() {
@@ -112,13 +116,19 @@ public class ThirdPersonCameraLook : MonoBehaviour {
         pinchPrevDistance = 0f;
     }
 
-#if UNITY_EDITOR
+    public void RefreshDebugMode() {
+        showOverlay = saveManager.GetOneData(0);
+    }
+
+//#if UNITY_EDITOR
     private void OnGUI() {
+        if(!showOverlay) return;
+
         GUI.Label(new Rect(10, 10, 380, 20), $"[3P] Look finger : {(lookFinger   != null ? lookFinger.index.ToString()   : "none")}");
         GUI.Label(new Rect(10, 30, 380, 20), $"[3P] Pinch f1    : {(pinchFinger1 != null ? pinchFinger1.index.ToString() : "none")}");
         GUI.Label(new Rect(10, 50, 380, 20), $"[3P] Pinch f2    : {(pinchFinger2 != null ? pinchFinger2.index.ToString() : "none")}");
         GUI.Label(new Rect(10, 70, 380, 20), $"[3P] Radius target: {targetRadius:F2}  actual: {(orbitalFollow != null ? orbitalFollow.Radius.ToString("F2") : "—")}");
         GUI.Label(new Rect(10, 90, 380, 20), $"Active touches: {Touch.activeTouches.Count}");
     }
-#endif
+//#endif
 }

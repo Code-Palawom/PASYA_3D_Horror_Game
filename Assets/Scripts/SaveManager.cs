@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.IO;
+using System;
 
 public class SaveManager : MonoBehaviour {
     private string savePath;
@@ -28,6 +29,17 @@ public class SaveManager : MonoBehaviour {
             };
         }else if(type == "pov") {
             data.pov = d;
+        }
+
+        string json = JsonUtility.ToJson(data);
+        File.WriteAllText(savePath, EncryptDecrypt(json));
+    }
+
+    public void SaveOneData(bool d, string type) {
+        SaveData data = Load();
+
+        if(type == "debugMode") {
+            data.debugMode = d;
         }
 
         string json = JsonUtility.ToJson(data);
@@ -72,6 +84,30 @@ public class SaveManager : MonoBehaviour {
             }
         }catch{
             return null;
+        }
+    }
+
+    public bool GetOneData(int type) {
+        if (!File.Exists(savePath)) return false;
+        string encryptedJson = File.ReadAllText(savePath);
+
+        static string d(int i) {
+            return i switch {
+                0 => "debugMode",
+                _ => null,
+            };
+        }
+
+        try {
+            SaveData data = JsonUtility.FromJson<SaveData>(EncryptDecrypt(encryptedJson));
+
+            if(d(type) == "debugMode") {
+                return data.debugMode;
+            }else{
+                return false;
+            }
+        }catch{
+            return false;
         }
     }
 

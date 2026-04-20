@@ -8,7 +8,7 @@ public class SettingsPanel : MonoBehaviour {
     private CanvasGroup canvas;
     private Coroutine activeAnimation;
 
-    void Start () {
+    void Start() {
         canvas = GetComponent<CanvasGroup>();
         panel.SetActive(false);
         canvas.alpha = 0f;

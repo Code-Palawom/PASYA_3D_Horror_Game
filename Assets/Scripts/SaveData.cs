@@ -6,6 +6,8 @@ public class SaveData {
 
     public string pov;
 
+    public bool debugMode = false;
+
     [System.Serializable]
     public class Graphics {
         public string resolution;

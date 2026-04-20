@@ -215,6 +215,14 @@ public class Player : NetworkBehaviour  {
         }
     }
 
+    public void RefreshPOV() {
+        int currentPOV = int.Parse(saveManager.GetOneData("pov") ?? "0");
+        isFirstPerson = currentPOV == 0;
+        Debug.Log(currentPOV);
+        Debug.Log(isFirstPerson);
+        SetCharacter(isFirstPerson);
+    }
+
     // Update is called once per frame
     void Update() {
         if(!IsOwner) return;
