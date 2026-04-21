@@ -6,10 +6,10 @@ public class ResolutionSelector : MonoBehaviour {
 
     [SerializeField] private TMP_Text displayLabel;
     private string[] qualityLevels = {"Low", "Medium", "High"};
-    private int currentIndex = 2;
+    private int currentIndex = 1;
 
     void Start() {
-        currentIndex = int.Parse(saveManager.GetOneData("resolution") ?? "2");
+        currentIndex = int.Parse(saveManager.GetOneData("resolution") ?? "1");
         UpdateResolution();
     }
 
