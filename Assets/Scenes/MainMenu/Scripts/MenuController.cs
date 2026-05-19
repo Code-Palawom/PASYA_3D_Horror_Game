@@ -21,14 +21,6 @@ public class MenuController : MonoBehaviour {
     [SerializeField] private ActiveMenu aboutButton;
     [SerializeField] private ActiveMenu exitButton;
 
-    [SerializeField] private ActiveMenu cosmeticsButton;
-    [SerializeField] private ActiveMenu genderButton;
-    [SerializeField] private ActiveMenu skinButton;
-    [SerializeField] private ActiveMenu hairButton;
-    [SerializeField] private ActiveMenu headButton;
-    [SerializeField] private ActiveMenu bodyButton;
-    [SerializeField] private ActiveMenu pantsButton;
-    [SerializeField] private ActiveMenu shoesButton;
     [SerializeField] private ActiveMenu applyButton;
     [SerializeField] private ActiveMenu cancelButton;
 
@@ -45,10 +37,6 @@ public class MenuController : MonoBehaviour {
 
     [Header("Sounds")]
     [SerializeField] private AudioSource buttonClickSound;
-
-    [Header("Character Manager")]
-    [SerializeField] private CharacterData characterData;
-    [SerializeField] private CharacterManager characterManager;
 
     private void Start() {
         levelLoader = gameObject.AddComponent<LevelLoader>();
@@ -113,7 +101,6 @@ public class MenuController : MonoBehaviour {
         character.interactable = true;
         character.blocksRaycasts = true;
 
-        characterManager.CustomizeCharacter();
         characterAnimation.SetAnimationState("standing");
 
         playButton.HideBtn();
@@ -124,14 +111,6 @@ public class MenuController : MonoBehaviour {
         exitButton.HideBtn();
 
         characterSelection.ShowBtn();
-        cosmeticsButton.ShowBtn();
-        genderButton.ShowBtn();
-        skinButton.ShowBtn();
-        headButton.ShowBtn();
-        hairButton.ShowBtn();
-        bodyButton.ShowBtn();
-        pantsButton.ShowBtn();
-        shoesButton.ShowBtn();
         applyButton.ShowBtn();
         cancelButton.ShowBtn();
     }
@@ -146,22 +125,8 @@ public class MenuController : MonoBehaviour {
         character.interactable = false;
         character.blocksRaycasts = false;
 
-        if(saveCharacter) {
-            characterManager.SetCharacter();
-        }else{
-            characterManager.RevertCharacter();
-        }
-
         characterAnimation.SetAnimationState("idle");
 
-        cosmeticsButton.HideBtn();
-        genderButton.HideBtn();
-        skinButton.HideBtn();
-        headButton.HideBtn();
-        hairButton.HideBtn();
-        bodyButton.HideBtn();
-        pantsButton.HideBtn();
-        shoesButton.HideBtn();
         applyButton.HideBtn();
         cancelButton.HideBtn();
 

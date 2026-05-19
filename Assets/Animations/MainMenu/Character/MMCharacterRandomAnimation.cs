@@ -6,7 +6,7 @@ public class MMCharacterRandomAnimation : MonoBehaviour {
     public float minTime = 5f;
     public float maxTime = 15f;
 
-    private MMCharacterAnimation animation;
+    private new MMCharacterAnimation animation;
 
     void Start() {
         animation = GetComponent<MMCharacterAnimation>();
