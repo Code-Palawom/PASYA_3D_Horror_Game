@@ -1079,7 +1079,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 3683115389
+  GlobalObjectIdHash: 2432858981
   InScenePlacedSourceGlobalObjectIdHash: 3683115389
   DeferredDespawnTick: 0
   Ownership: 1
@@ -1897,7 +1897,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1398212334812659468}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.09126576, y: 0.90357566, z: -0.34233427, w: 0.24089181}
+  m_LocalRotation: {x: 0.014311525, y: -0.92667633, z: 0.035468902, w: 0.37390926}
   m_LocalPosition: {x: 328.2109, y: 1.6, z: 53.84344}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -6919,12 +6919,15 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4873860132950981941}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: a984468ec6492724db4747d5b7267c3b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HandleMobile
-  mobileUIButtons: {fileID: 3203534369014249282}
+  mobileUIButtons:
+  - {fileID: 3203534369014249282}
+  - {fileID: 4355301472380621332}
+  - {fileID: 4739581927018558069}
   screenCursor: {fileID: 4746832841231728062}
 --- !u!114 &7772765542932355834
 MonoBehaviour:
@@ -7352,7 +7355,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5110092272429389082}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.09126576, y: 0.90357566, z: -0.34233427, w: 0.24089181}
+  m_LocalRotation: {x: 0.014311525, y: -0.92667633, z: 0.035468902, w: 0.37390926}
   m_LocalPosition: {x: 328.2109, y: 1.6, z: 53.84344}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -7430,7 +7433,7 @@ MonoBehaviour:
   ReferenceFrame: 1
   RecenterTarget: 0
   PanAxis:
-    Value: 150.14447
+    Value: -136.05234
     Center: 0
     Range: {x: -180, y: 180}
     Wrap: 1
@@ -7440,7 +7443,7 @@ MonoBehaviour:
       Time: 2
     Restrictions: 0
   TiltAxis:
-    Value: 41.500008
+    Value: 4.3838973
     Center: 0
     Range: {x: -70, y: 70}
     Wrap: 0
@@ -7496,7 +7499,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5110092272429389082}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 89875cdc57c54474a8a74efd9b2a3b5d, type: 3}
   m_Name: 
@@ -7508,7 +7511,7 @@ MonoBehaviour:
     Controllers:
     - Name: Look X (Pan)
       Owner: {fileID: 5240064665015112383}
-      Enabled: 0
+      Enabled: 1
       Input:
         InputAction: {fileID: -5630151704836100654, guid: 1d6e640e716dc4ff6989b73d02023f2b, type: 3}
         Gain: 1
@@ -7519,7 +7522,7 @@ MonoBehaviour:
         DecelTime: 0
     - Name: Look Y (Tilt)
       Owner: {fileID: 5240064665015112383}
-      Enabled: 0
+      Enabled: 1
       Input:
         InputAction: {fileID: -5630151704836100654, guid: 1d6e640e716dc4ff6989b73d02023f2b, type: 3}
         Gain: -1
@@ -8421,8 +8424,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5900058071888231165}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.32728788, y: 0.34338793, z: 0.12905987, w: 0.87081057}
-  m_LocalPosition: {x: 327.18378, y: 0.282704, z: 52.743565}
+  m_LocalRotation: {x: -0.18321443, y: 0.78815204, z: 0.27934325, w: 0.51692957}
+  m_LocalPosition: {x: 326.78595, y: 0.34051108, z: 54.462444}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -8505,7 +8508,7 @@ MonoBehaviour:
     SplineCurvature: 0.5
   RecenteringTarget: 2
   HorizontalAxis:
-    Value: 43.041286
+    Value: 113.48021
     Center: 0
     Range: {x: -180, y: 180}
     Wrap: 1
@@ -8515,7 +8518,7 @@ MonoBehaviour:
       Time: 2
     Restrictions: 0
   VerticalAxis:
-    Value: -41.196842
+    Value: -39.031277
     Center: 17.5
     Range: {x: -45, y: 45}
     Wrap: 0
@@ -8651,7 +8654,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5900058071888231165}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 89875cdc57c54474a8a74efd9b2a3b5d, type: 3}
   m_Name: 
@@ -8663,7 +8666,7 @@ MonoBehaviour:
     Controllers:
     - Name: Look Orbit X
       Owner: {fileID: 2769187261544237235}
-      Enabled: 0
+      Enabled: 1
       Input:
         InputAction: {fileID: -5630151704836100654, guid: 1d6e640e716dc4ff6989b73d02023f2b, type: 3}
         Gain: 1
@@ -8674,7 +8677,7 @@ MonoBehaviour:
         DecelTime: 0.2
     - Name: Look Orbit Y
       Owner: {fileID: 2769187261544237235}
-      Enabled: 0
+      Enabled: 1
       Input:
         InputAction: {fileID: -5630151704836100654, guid: 1d6e640e716dc4ff6989b73d02023f2b, type: 3}
         Gain: -1
@@ -11770,6 +11773,7 @@ GameObject:
   m_Component:
   - component: {fileID: 339866162602200247}
   - component: {fileID: 3187701083774756158}
+  - component: {fileID: 782316502379408149}
   - component: {fileID: 2566550882278226269}
   - component: {fileID: 3402036182562605423}
   m_Layer: 0
@@ -11826,6 +11830,23 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
+--- !u!114 &782316502379408149
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8792835128094835794}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a984468ec6492724db4747d5b7267c3b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HandleMobile
+  mobileUIButtons:
+  - {fileID: 3203534369014249282}
+  - {fileID: 4355301472380621332}
+  - {fileID: 4739581927018558069}
+  screenCursor: {fileID: 4746832841231728062}
 --- !u!114 &2566550882278226269
 MonoBehaviour:
   m_ObjectHideFlags: 0

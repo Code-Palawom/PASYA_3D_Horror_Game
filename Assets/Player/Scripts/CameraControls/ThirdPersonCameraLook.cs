@@ -4,6 +4,8 @@ using Unity.Cinemachine;
 using Touch = UnityEngine.InputSystem.EnhancedTouch.Touch;
 using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 
+[RequireComponent(typeof(CinemachineInputAxisController))]
+[RequireComponent(typeof(CameraControls))]
 public class ThirdPersonCameraLook : MonoBehaviour {
     [SerializeField] private RectTransform[] moveBoundaryRects;
     [SerializeField] private CinemachineOrbitalFollow orbitalFollow;
@@ -28,6 +30,9 @@ public class ThirdPersonCameraLook : MonoBehaviour {
     private float pinchPrevDistance;
     private float targetRadius;
 
+    private CinemachineInputAxisController inputAxisController;
+    private CameraControls cameraController;
+
     private void OnEnable() => EnhancedTouchSupport.Enable();
     private void OnDisable() {
         EnhancedTouchSupport.Disable();
@@ -36,7 +41,16 @@ public class ThirdPersonCameraLook : MonoBehaviour {
     }
 
     private void Start() {
-        if(orbitalFollow != null) targetRadius = orbitalFollow.Radius;
+        inputAxisController = GetComponent<CinemachineInputAxisController>();
+        cameraController = GetComponent<CameraControls>();
+
+        if (!Application.isMobilePlatform) {
+            inputAxisController.enabled = true;
+            cameraController.enabled = true;
+            this.enabled = false;
+        }
+
+        if (orbitalFollow != null) targetRadius = orbitalFollow.Radius;
         RefreshDebugMode();
     }
 

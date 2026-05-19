@@ -4,6 +4,7 @@ using Unity.Cinemachine;
 using Touch = UnityEngine.InputSystem.EnhancedTouch.Touch;
 using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 
+[RequireComponent(typeof(CinemachineInputAxisController))]
 public class FirstPersonCameraLook : MonoBehaviour {
     [SerializeField] private RectTransform[] moveBoundaryRects;
     [SerializeField] private CinemachinePanTilt panTilt;
@@ -18,6 +19,7 @@ public class FirstPersonCameraLook : MonoBehaviour {
     public bool showOverlay = false;
 
     private Finger lookFinger;
+    private CinemachineInputAxisController inputAxisController;
 
     private void OnEnable() => EnhancedTouchSupport.Enable();
     private void OnDisable() {
@@ -26,6 +28,13 @@ public class FirstPersonCameraLook : MonoBehaviour {
     }
 
     void Start() {
+        inputAxisController = GetComponent<CinemachineInputAxisController>();
+
+        if (!Application.isMobilePlatform) {
+            inputAxisController.enabled = true;
+            this.enabled = false;
+        }
+
         RefreshDebugMode();
     }
 
