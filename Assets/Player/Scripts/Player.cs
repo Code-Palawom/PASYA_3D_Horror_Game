@@ -3,6 +3,7 @@ using Unity.Cinemachine;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Windows;
 
 public class Player : NetworkBehaviour  {
     [SerializeField] private Transform cameraTransform;
@@ -45,8 +46,8 @@ public class Player : NetworkBehaviour  {
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start() {
         controller = GetComponent<CharacterController>();
-        playerInput = GetComponent<PlayerInput>();
-        playerInput.actions.FindActionMap("POV").Enable();
+        playerInput = new PlayerInput();
+        playerInput.POV.Enable();
 
         playerState = GetComponent<PlayerState>();
         playerAnimation = GetComponent<PlayerAnimation>();
@@ -54,6 +55,7 @@ public class Player : NetworkBehaviour  {
         playerSpeed = basePlayerSpeed;
         standCenter = controller.center;
         standHeight = controller.height;
+        playerInput.POV.SwitchPOV.performed += OnSwitchPOV;
 
         int currentPOV = int.Parse(saveManager.GetOneData("pov") ?? "0");
         isFirstPerson = currentPOV == 0;
@@ -272,6 +274,12 @@ public class Player : NetworkBehaviour  {
 
         UpdateMovementState();
         UpdateControllerCollider();
+    }
+
+    public void SetSpeedMultiplier(float multiplier) {
+        basePlayerSpeed *= multiplier;
+        sprintSpeed *= multiplier;
+        crouchSpeed *= multiplier;
     }
 
     private void FixedUpdate() {
