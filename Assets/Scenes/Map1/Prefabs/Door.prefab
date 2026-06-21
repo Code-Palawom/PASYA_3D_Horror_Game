@@ -1872,7 +1872,7 @@ MonoBehaviour:
   m_PreserveMeshAssetOnDestroy: 0
   assetGuid: 
   m_Mesh: {fileID: 0}
-  m_VersionIndex: 5765
+  m_VersionIndex: 5861
   m_IsSelectable: 1
   m_SelectedFaces: 
   m_SelectedEdges: []
@@ -1995,8 +1995,8 @@ GameObject:
   - component: {fileID: 3945662826935889782}
   - component: {fileID: 8318127510233077460}
   - component: {fileID: 854238586674402021}
-  - component: {fileID: 8407123030655307757}
-  - component: {fileID: 6654996271400097101}
+  - component: {fileID: 1537707709014424892}
+  - component: {fileID: 3328394084278557223}
   m_Layer: 0
   m_Name: Door
   m_TagString: Untagged
@@ -2012,7 +2012,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1397620009583593468}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -6.1484985, y: -0.3804201, z: 0.099998474}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -3014,7 +3014,7 @@ MonoBehaviour:
   m_PreserveMeshAssetOnDestroy: 0
   assetGuid: 
   m_Mesh: {fileID: 0}
-  m_VersionIndex: 3134
+  m_VersionIndex: 3230
   m_IsSelectable: 1
   m_SelectedFaces: 
   m_SelectedEdges: []
@@ -3134,8 +3134,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 2314771402
-  InScenePlacedSourceGlobalObjectIdHash: 0
+  GlobalObjectIdHash: 1340421821
+  InScenePlacedSourceGlobalObjectIdHash: 1340421821
   DeferredDespawnTick: 0
   Ownership: 1
   AlwaysReplicateAsRoot: 0
@@ -3147,7 +3147,7 @@ MonoBehaviour:
   AutoObjectParentSync: 1
   SyncOwnerTransformWhenParented: 1
   AllowOwnerToParent: 0
---- !u!114 &8407123030655307757
+--- !u!114 &1537707709014424892
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -3156,17 +3156,19 @@ MonoBehaviour:
   m_GameObject: {fileID: 1397620009583593468}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 25b81864492cef84ebbee7695ef8fc8e, type: 3}
+  m_Script: {fileID: 11500000, guid: cae163be75cfb354fb43fb230a7c03aa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NetworkedQuizGate
   ShowTopMostFoldoutHeaderGroup: 1
-  quizSet: {fileID: 11400000, guid: 1f40a979f148e0d408c85aa9dc471d4f, type: 2}
   difficulty: 0
   oneTimeUnlock: 1
-  registry: {fileID: 11400000, guid: 0a16828125df96a47bfca81929fc8a9d, type: 2}
-  sideEffects:
+  wrongAnswerCooldown: 10
+  registry: {fileID: 11400000, guid: 9512fe5676303ec48a6c455bf31243c7, type: 2}
+  wrongSideEffects:
   - {fileID: 11400000, guid: 6905f195c1b92ae47b4b9e3e82ad55d1, type: 2}
---- !u!114 &6654996271400097101
+  - {fileID: 11400000, guid: 396627f8faa14134db4759ee88dfe125, type: 2}
+  cooldownDisplay: {fileID: 0}
+--- !u!114 &3328394084278557223
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -3175,7 +3177,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1397620009583593468}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: aedb9068067d9e64f8953f4e9ccea3a4, type: 3}
+  m_Script: {fileID: 11500000, guid: d28a630fef1ba5c4e8873aebf9e3baf7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NetworkedDoorController
   ShowTopMostFoldoutHeaderGroup: 1
@@ -3198,7 +3200,7 @@ GameObject:
   - component: {fileID: 3602620699670652765}
   - component: {fileID: 347581190469033535}
   - component: {fileID: 402613996317277419}
-  - component: {fileID: 8794881852875716970}
+  - component: {fileID: 5370940541632463229}
   m_Layer: 6
   m_Name: Handle
   m_TagString: Untagged
@@ -3433,7 +3435,7 @@ MonoBehaviour:
   m_PreserveMeshAssetOnDestroy: 0
   assetGuid: 
   m_Mesh: {fileID: 0}
-  m_VersionIndex: 1073
+  m_VersionIndex: 1169
   m_IsSelectable: 1
   m_SelectedFaces: 
   m_SelectedEdges: []
@@ -3564,7 +3566,7 @@ CapsuleCollider:
   m_Height: 0.15
   m_Direction: 0
   m_Center: {x: 0.0900116, y: -0.07999998, z: -0.020000458}
---- !u!114 &8794881852875716970
+--- !u!114 &5370940541632463229
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -3573,7 +3575,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 6913599202045109700}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: edcad3b92f0796e4b8dc272a5ed44d2e, type: 3}
+  m_Script: {fileID: 11500000, guid: 2fcf8da8ba3372248ae92fa1415ab8e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DoorHandleInteractable
 --- !u!1 &7836389630381087396
@@ -3824,7 +3826,7 @@ MonoBehaviour:
   m_PreserveMeshAssetOnDestroy: 0
   assetGuid: 
   m_Mesh: {fileID: 0}
-  m_VersionIndex: 1905
+  m_VersionIndex: 2001
   m_IsSelectable: 1
   m_SelectedFaces: 
   m_SelectedEdges: []
@@ -4181,7 +4183,7 @@ MonoBehaviour:
   m_PreserveMeshAssetOnDestroy: 0
   assetGuid: 
   m_Mesh: {fileID: 0}
-  m_VersionIndex: 1282
+  m_VersionIndex: 1378
   m_IsSelectable: 1
   m_SelectedFaces: 
   m_SelectedEdges: []

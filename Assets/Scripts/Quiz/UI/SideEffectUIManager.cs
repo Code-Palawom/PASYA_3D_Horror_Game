@@ -9,12 +9,12 @@ public class SideEffectUIManager : MonoBehaviour {
     public static SideEffectUIManager Instance { get; private set; }
 
     [Header("HUD (Screen-space)")]
-    [SerializeField] Transform hudEffectContainer;          // Horizontal Layout Group
+    [SerializeField] Transform hudEffectContainer;      // Horizontal Layout Group
     [SerializeField] GameObject hudEffectEntryPrefab;
 
-    [Header("World-space Billboard")]
-    [SerializeField] GameObject worldEffectBillboardPrefab;
-    [SerializeField] float billboardYOffset = 2.5f;
+    //[Header("World-space Billboard")]
+    //[SerializeField] GameObject worldEffectBillboardPrefab;
+    //[SerializeField] float billboardYOffset = 2.5f;
 
     private class ActiveEntry {
         public QuizSideEffect effect;
@@ -31,10 +31,10 @@ public class SideEffectUIManager : MonoBehaviour {
     // isLocalPlayer: controls whether HUD entry is created.
     // Billboard always shown.
     public void AddEffect(QuizSideEffect effect, GameObject player, bool isLocalPlayer) {
-        if (!_active.ContainsKey(player))
+        /*if (!_active.ContainsKey(player))
             _active[player] = new List<ActiveEntry>();
 
-        // Prevent duplicate entries for same effect on same player
+        // Prevent duplicate entries for same effect on same player (non-stackable)
         if (_active[player].Any(e => e.effect == effect)) return;
 
         // HUD — local player only
@@ -42,36 +42,36 @@ public class SideEffectUIManager : MonoBehaviour {
         if (isLocalPlayer) {
             hudEntry = Instantiate(hudEffectEntryPrefab, hudEffectContainer);
             hudEntry.GetComponent<HUDEffectEntry>().Setup(effect);
-        }
+        }*/
 
         // Billboard — all clients see this above the affected player
-        var billboard = GetOrCreateBillboard(player);
+        /*var billboard = GetOrCreateBillboard(player);
         billboard.AddEffect(effect);
 
         _active[player].Add(new ActiveEntry {
             effect = effect,
             hudEntry = hudEntry,
             billboard = billboard
-        });
+        });*/
     }
 
     public void RemoveEffect(QuizSideEffect effect, GameObject player) {
-        if (!_active.TryGetValue(player, out var list)) return;
+        /*if (!_active.TryGetValue(player, out var list)) return;
 
         var entry = list.FirstOrDefault(e => e.effect == effect);
         if (entry == null) return;
 
         if (entry.hudEntry != null) Destroy(entry.hudEntry);
         entry.billboard?.RemoveEffect(effect);
-        list.Remove(entry);
+        list.Remove(entry);*/
     }
 
-    WorldEffectBillboard GetOrCreateBillboard(GameObject player) {
+    /*WorldEffectBillboard GetOrCreateBillboard(GameObject player) {
         var existing = player.GetComponentInChildren<WorldEffectBillboard>();
         if (existing != null) return existing;
 
-        var go = Instantiate(worldEffectBillboardPrefab, player.transform);
-        go.transform.localPosition = new Vector3(0f, billboardYOffset, 0f);
+        //var go = Instantiate(worldEffectBillboardPrefab, player.transform);
+        //go.transform.localPosition = new Vector3(0f, billboardYOffset, 0f);
         return go.GetComponent<WorldEffectBillboard>();
-    }
+    }*/
 }

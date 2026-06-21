@@ -2,11 +2,13 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-/// <summary>
-/// Uses the New Input System via a generated Player asset.
-/// Raycast origin:    player body at eye height
-/// Raycast direction: MainCamera forward (follows camera Y axis)
-/// </summary>
+
+// Raycast origin:    player body at eye height
+// Raycast direction: MainCamera forward
+
+// Each frame the player looks at an IInteractable, calls OnFocus()
+// so the interactable can push custom prompt/cooldown data to the UI.
+// Disabled on non-owner clients so only the local player interacts.
 public class InteractionController : NetworkBehaviour {
     [Header("Detection")]
     [SerializeField] float interactRange = 3f;
@@ -23,36 +25,24 @@ public class InteractionController : NetworkBehaviour {
     private IInteractable _currentTarget;
 
     // ─────────────────────────────────────────────────────────
-    // Only owner runs this
-    // ─────────────────────────────────────────────────────────
     public override void OnNetworkSpawn() {
-        if (!IsOwner) {
-            enabled = false;
-            return;
-        }
+        if (!IsOwner) { enabled = false; return; }
 
-        // Create and enable input actions
         _input = new PlayerInput();
         _input.Interactions.Enable();
-
-        // Subscribe to Interact action
         _input.Interactions.Interact.performed += OnInteractPerformed;
     }
 
     public override void OnNetworkDespawn() {
         if (_input == null) return;
-
         _input.Interactions.Interact.performed -= OnInteractPerformed;
         _input.Interactions.Disable();
         _input.Dispose();
     }
 
     // ─────────────────────────────────────────────────────────
-    void Update() {
-        DetectInteractable();
-    }
+    void Update() => DetectInteractable();
 
-    // ─────────────────────────────────────────────────────────
     void DetectInteractable() {
         Vector3 origin = transform.position + Vector3.up * eyeHeight;
         Vector3 direction = playerCamera.transform.forward;
@@ -62,7 +52,10 @@ public class InteractionController : NetworkBehaviour {
         if (Physics.Raycast(origin, direction, out RaycastHit hit, interactRange, interactLayer)) {
             if (hit.collider.TryGetComponent(out IInteractable interactable)) {
                 _currentTarget = interactable;
-                interactionUI.Show(_currentTarget.InteractPrompt);
+
+                // Let the interactable decide what to show
+                // (normal prompt, cooldown, "someone answering", etc.)
+                _currentTarget.OnFocus(interactionUI);
                 return;
             }
         }
@@ -72,18 +65,12 @@ public class InteractionController : NetworkBehaviour {
     }
 
     // ─────────────────────────────────────────────────────────
-    // Fired by Input System when Interact is pressed
-    // ─────────────────────────────────────────────────────────
     void OnInteractPerformed(InputAction.CallbackContext ctx) {
         _currentTarget?.OnInteract(gameObject);
     }
 
-    // ─────────────────────────────────────────────────────────
-    // Called from mobile UI button
-    // ─────────────────────────────────────────────────────────
-    public void TriggerInteract() {
+    public void TriggerInteract() =>
         _currentTarget?.OnInteract(gameObject);
-    }
 
     // ─────────────────────────────────────────────────────────
     void OnDrawGizmosSelected() {

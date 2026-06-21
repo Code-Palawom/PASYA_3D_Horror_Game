@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce523329f94506d45b6f89f6da7b4698, type: 3}
+  m_Name: First Quiz
+  m_EditorClassIdentifier: Assembly-CSharp::QuizSetData
+  setName: First Quiz
+  questions:
+  - {fileID: 11400000, guid: 82a85a831ad7b1445ba6561d20b17afd, type: 2}
+  - {fileID: 11400000, guid: f8280addb2f2b024d99a2c31af1a43a4, type: 2}
+  - {fileID: 11400000, guid: 95cbad98ce6ee6044807ab636941298c, type: 2}
+  - {fileID: 11400000, guid: 2d1ef518ddece2048a498a5b94430b32, type: 2}

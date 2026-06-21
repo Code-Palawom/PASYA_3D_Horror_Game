@@ -1,0 +1,111 @@
+using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
+
+public class SettingsPanelController : MonoBehaviour {
+
+    [Header("Quality")]
+    [SerializeField] private TextMeshProUGUI qualityLabel;
+    [SerializeField] private Button prevQualityButton;
+    [SerializeField] private Button nextQualityButton;
+
+    [Header("POV")]
+    [SerializeField] private Button firstPersonButton;
+    [SerializeField] private Button thirdPersonButton;
+
+    [Header("Debug")]
+    [SerializeField] private Toggle debugToggle;
+    [SerializeField] private DebugSetting debug;
+
+    [Header("Panel Actions")]
+    [SerializeField] private Button backButton;
+    [SerializeField] private PauseMenuController pauseMenu;
+
+    // ── Working state ────────────────────────────────────────
+    private string[] _qualityNames;
+    private int _qualityIndex;
+    private bool _isFirstPerson;
+    private bool _showDebug;
+
+    void Awake() {
+        _qualityNames = QualitySettings.names;
+
+        prevQualityButton.onClick.AddListener(OnPrevQuality);
+        nextQualityButton.onClick.AddListener(OnNextQuality);
+        firstPersonButton.onClick.AddListener(OnSelectFirstPerson);
+        thirdPersonButton.onClick.AddListener(OnSelectThirdPerson);
+        debugToggle.onValueChanged.AddListener(OnDebugToggled);
+        backButton.onClick.AddListener(() => pauseMenu.OnBackFromSettings());
+    }
+
+    // ── Called by PauseMenuController when opening ──────────
+    public void Open() {
+        GameSettings s = SettingsManager.Instance.Current;
+
+        //_qualityIndex = Mathf.Clamp(s.qualityLevel, 0, _qualityNames.Length - 1);
+        Debug.Log(_qualityIndex);
+        RefreshQualityLabel();
+
+        _isFirstPerson = s.isFirstPerson;
+        RefreshPOVButtons();
+
+        _showDebug = s.showDebugOverlay;
+        debugToggle.SetIsOnWithoutNotify(_showDebug);
+    }
+
+    // ── Quality carousel ─────────────────────────────────────
+    void OnPrevQuality() {
+        _qualityIndex = (_qualityIndex - 1 + _qualityNames.Length) % _qualityNames.Length;
+        RefreshQualityLabel();
+        AutoSave();
+    }
+
+    void OnNextQuality() {
+        _qualityIndex = (_qualityIndex + 1) % _qualityNames.Length;
+        RefreshQualityLabel();
+        AutoSave();
+    }
+
+    void RefreshQualityLabel() {
+        qualityLabel.text = _qualityNames[_qualityIndex];
+    }
+
+    // ── POV toggle ───────────────────────────────────────────
+    void OnSelectFirstPerson() {
+        _isFirstPerson = true;
+        RefreshPOVButtons();
+        AutoSave();
+    }
+
+    void OnSelectThirdPerson() {
+        _isFirstPerson = false;
+        RefreshPOVButtons();
+        AutoSave();
+    }
+
+    void RefreshPOVButtons() {
+        firstPersonButton.interactable = !_isFirstPerson;
+        thirdPersonButton.interactable = _isFirstPerson;
+        firstPersonButton.image.color = _isFirstPerson ? Color.blue : Color.gray;
+        thirdPersonButton.image.color = !_isFirstPerson ? Color.blue : Color.gray;
+    }
+
+    // ── Debug toggle ─────────────────────────────────────────
+    void OnDebugToggled(bool value) {
+        _showDebug = value;
+        AutoSave();
+        debug.RefreshDebugMode();
+    }
+
+    // ── Auto-save on every change ────────────────────────────
+    void AutoSave() {
+        GameSettings current = SettingsManager.Instance.Current;
+
+        SettingsManager.Instance.Save(new GameSettings {
+            playerName = current.playerName,
+            qualityLevel = _qualityIndex,
+            isFirstPerson = _isFirstPerson,
+            showDebugOverlay = _showDebug,
+        });
+    }
+}

@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 73fd8bb64f294c04081d5c6ad9706dbe, type: 3}
+  m_Name: LobbySpawn
+  m_EditorClassIdentifier: Assembly-CSharp::SceneSpawnData
+  sceneName: Lobby
+  spawnPoints:
+  - position: {x: -3, y: 1, z: -4}
+    rotation: {x: 0, y: 0, z: 0, w: 0}
+  - position: {x: -1, y: 1, z: -4}
+    rotation: {x: 0, y: 0, z: 0, w: 0}
+  - position: {x: 1, y: 1, z: -4}
+    rotation: {x: 0, y: 0, z: 0, w: 0}
+  - position: {x: 3, y: 1, z: -4}
+    rotation: {x: 0, y: 0, z: 0, w: 0}

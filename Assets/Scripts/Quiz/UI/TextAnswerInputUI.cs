@@ -47,7 +47,6 @@ public class TextAnswerInputUI : MonoBehaviour {
 
     void OnValueChanged(string value) {
         UpdateCharCount();
-        // Allow submit only if something is typed
         submitButton.interactable = !string.IsNullOrWhiteSpace(value);
     }
 
@@ -60,15 +59,21 @@ public class TextAnswerInputUI : MonoBehaviour {
         _onSubmit?.Invoke(text);
     }
 
-    void UpdateCharCount() {
-        if (characterCountLabel == null) return;
-        int limit = inputField.characterLimit;
-        characterCountLabel.text = $"{inputField.text.Length} / {limit}";
+    // Called by QuizCanvasController.LockAll() after answer submitted or timer expired.
+    public void SetInteractable(bool state) {
+        inputField.interactable = state;
+        submitButton.interactable = state;
     }
 
     public void Clear() {
         inputField.text = "";
         inputField.interactable = true;
         submitButton.interactable = false;
+    }
+
+    void UpdateCharCount() {
+        if (characterCountLabel == null) return;
+        int limit = inputField.characterLimit;
+        characterCountLabel.text = $"{inputField.text.Length} / {limit}";
     }
 }

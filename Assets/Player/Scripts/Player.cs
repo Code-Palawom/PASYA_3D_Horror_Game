@@ -3,9 +3,9 @@ using Unity.Cinemachine;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
-using UnityEngine.Windows;
 
-public class Player : NetworkBehaviour  {
+public class Player : NetworkBehaviour {
+    [Header("Movement")]
     [SerializeField] private Transform cameraTransform;
     [SerializeField] private bool shouldFaceMoveDirection = false;
     [SerializeField] private bool onlyLookForward = false;
@@ -19,18 +19,26 @@ public class Player : NetworkBehaviour  {
     [SerializeField] private float crouchHeight = 1.4f;
     [SerializeField] private Vector3 crouchCenter = new Vector3(0, -0.3f, 0);
     [SerializeField] private float crouchTransitionSpeed = 2f;
+    [SerializeField] private float groundedGraceTime = 0.15f;
 
-    [SerializeField] private SaveManager saveManager;
+    [Header("POV")]
     [SerializeField] private CinemachineCamera thirdPersonPOV;
     [SerializeField] private CinemachineCamera firstPersonPOV;
     [SerializeField] private ThirdPersonCameraLook thirdPersonLook;
     [SerializeField] private FirstPersonCameraLook firstPersonLook;
-    private Boolean isFirstPerson = true;
 
+    [Header("Player Setup")]
+    [SerializeField] private Camera playerCamera;
+    [SerializeField] private Canvas playerCanvas;
+    [SerializeField] private AudioListener audioListener;
+
+    private bool isFirstPerson = true;
+    private float ungroundedTimer = 0f;
+    private bool stableGrounded = true;
     private float playerSpeed;
     private float verticalVelocity = 0f;
-    private Boolean isRunning = false;
-    private Boolean isCrouching = false;
+    private bool isRunning = false;
+    private bool isCrouching = false;
 
     private float standHeight;
     private Vector3 standCenter;
@@ -39,52 +47,81 @@ public class Player : NetworkBehaviour  {
     private Vector2 moveInput;
     private Vector3 velocity;
     private PlayerInput playerInput;
-
     private PlayerState playerState;
     private PlayerAnimation playerAnimation;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    // Runs on all instances — only grab components here, no owner-specific logic
     void Start() {
         controller = GetComponent<CharacterController>();
-        playerInput = new PlayerInput();
-        playerInput.POV.Enable();
-
         playerState = GetComponent<PlayerState>();
         playerAnimation = GetComponent<PlayerAnimation>();
 
-        playerSpeed = basePlayerSpeed;
         standCenter = controller.center;
         standHeight = controller.height;
-        playerInput.POV.SwitchPOV.performed += OnSwitchPOV;
+    }
 
-        int currentPOV = int.Parse(saveManager.GetOneData("pov") ?? "0");
-        isFirstPerson = currentPOV == 0;
-        Debug.Log(currentPOV);
-        Debug.Log(isFirstPerson);
-        SetCharacter(isFirstPerson);
+    // Replaces owner-specific Start() logic; guaranteed IsOwner is valid here
+    public override void OnNetworkSpawn() {
+        if (IsOwner) {
+            gameObject.tag = "LocalPlayer";
+
+            // --- Camera & Audio setup ---
+            playerCamera.enabled = true;
+            playerCamera.tag = "MainCamera";
+            audioListener.enabled = true;
+
+            // Assign canvas to local player's camera explicitly — never rely on Camera.main
+            playerCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            playerCanvas.worldCamera = playerCamera;
+            playerCanvas.gameObject.SetActive(true);
+
+            // --- Input ---
+            playerInput = new PlayerInput();
+            playerInput.POV.Enable();
+            playerInput.POV.SwitchPOV.performed += OnSwitchPOV;
+
+            // --- POV restore from SettingsManager ---
+            playerSpeed = basePlayerSpeed;
+            isFirstPerson = SettingsManager.Instance != null
+                ? SettingsManager.Instance.Current.isFirstPerson
+                : true;
+            SetCharacter(isFirstPerson);
+        } else {
+            // Remote instances on this machine: disable camera, audio, and UI
+            playerCamera.enabled = false;
+            playerCamera.tag = "Untagged"; // Prevents hijacking Camera.main
+            audioListener.enabled = false;
+            playerCanvas.gameObject.SetActive(false);
+        }
+    }
+
+    public override void OnNetworkDespawn() {
+        // Clean up input when this player leaves to avoid dangling subscriptions
+        if (IsOwner && playerInput != null) {
+            playerInput.POV.SwitchPOV.performed -= OnSwitchPOV;
+            playerInput.POV.Disable();
+        }
     }
 
     public void OnMove(InputAction.CallbackContext context) {
         moveInput = context.ReadValue<Vector2>();
 
         var device = context.control.device;
-        /* if(device is Keyboard){
-        }else */
-        if(device is Gamepad) {
+        if (device is Gamepad) {
             Debug.Log($"X: {moveInput.x}");
             Debug.Log($"Y: {moveInput.y}");
-            if(moveInput.x > sprintTreshold || moveInput.y > sprintTreshold || moveInput.x < -sprintTreshold) {
-                if(isCrouching == false && moveInput.y > -0.50f) {
+            if (moveInput.x > sprintTreshold || moveInput.y > sprintTreshold || moveInput.x < -sprintTreshold) {
+                if (isCrouching == false && moveInput.y > -0.50f) {
                     isRunning = true;
                     playerSpeed = sprintSpeed;
                     Debug.Log("Sprinting!");
-                }else{
+                } else {
                     isRunning = false;
                     playerSpeed = basePlayerSpeed;
                     Debug.Log("Done sprinting!");
                 }
-            }else{
-                if(isCrouching == false) {
+            } else {
+                if (isCrouching == false) {
                     isRunning = false;
                     playerSpeed = basePlayerSpeed;
                     Debug.Log("Done sprinting!");
@@ -98,7 +135,7 @@ public class Player : NetworkBehaviour  {
     }
 
     public void OnJump(InputAction.CallbackContext context) {
-        if(context.performed && controller.isGrounded) {
+        if (context.performed && controller.isGrounded) {
             verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
             Debug.Log("Jump!");
         }
@@ -106,128 +143,78 @@ public class Player : NetworkBehaviour  {
     }
 
     public void OnSprint(InputAction.CallbackContext context) {
-        if(moveInput.y == -1) return;
+        if (moveInput.y == -1) return;
 
-        if(context.started) {
+        if (context.started) {
             isRunning = true;
-            if(isCrouching == false) {
-                playerSpeed = sprintSpeed;
-                
-            }
+            if (isCrouching == false) playerSpeed = sprintSpeed;
             Debug.Log("Sprinting!");
         }
 
-        if(context.canceled) {
-            if(isCrouching == false) {
-                playerSpeed = basePlayerSpeed;
-            }
-
+        if (context.canceled) {
+            if (isCrouching == false) playerSpeed = basePlayerSpeed;
             isRunning = false;
             Debug.Log("Done sprinting!");
         }
     }
 
     public void OnCrouch(InputAction.CallbackContext context) {
-        if(context.started){
+        if (context.started) {
             playerSpeed = crouchSpeed;
             isCrouching = true;
         }
 
-        if(context.canceled) {
+        if (context.canceled) {
             playerSpeed = basePlayerSpeed;
             isCrouching = false;
-
-            if(isRunning) {
-                playerSpeed = sprintSpeed;
-            }
+            if (isRunning) playerSpeed = sprintSpeed;
         }
     }
 
     public void OnSwitchPOV(InputAction.CallbackContext context) {
         isFirstPerson = !isFirstPerson;
-        if(isFirstPerson) {
-            saveManager.SaveOneData("0", "pov");
-        }else{
-            saveManager.SaveOneData("1", "pov");
+
+        if (SettingsManager.Instance != null) {
+            var s = SettingsManager.Instance.Current;
+            s.isFirstPerson = isFirstPerson;
+            SettingsManager.Instance.Save(s);
         }
 
         SetCharacter(isFirstPerson);
-
         Debug.Log($"POV Switch is First Person: {isFirstPerson}");
     }
 
-    private void UpdateMovementState() {
-        bool isMovementInput = moveInput != Vector2.zero;
-        bool isMovingLiterally = IsMovingLiterally();
-
-        PlayerMovementState lateralState = isRunning ? PlayerMovementState.Running : isMovingLiterally || isMovementInput ? PlayerMovementState.Walking : PlayerMovementState.Idling;
-        playerState.SetPlayerMovementState(lateralState);
-        //print($"velocity {controller.velocity.y}");
-        if(!controller.isGrounded && controller.velocity.y > 0f) {
-            playerState.SetPlayerMovementState(PlayerMovementState.Jumping);
-        } else if(!controller.isGrounded && controller.velocity.y <= 0f) {
-            playerState.SetPlayerMovementState(PlayerMovementState.Falling);
-        }
-
-        if(isCrouching) {
-            playerState.SetPlayerMovementState(PlayerMovementState.Crouching);
-        }
-    }
-
-    private void UpdateControllerCollider() {
-        Vector3 targetCenter = standCenter;
-        float targetHeight = standHeight;
-
-        if(isCrouching) {
-            targetCenter = crouchCenter;
-            targetHeight = crouchHeight;
-        }
-
-        controller.height = Mathf.Lerp(controller.height, targetHeight, crouchTransitionSpeed * Time.deltaTime);
-        controller.center = Vector3.Lerp(controller.center, targetCenter, crouchTransitionSpeed * Time.deltaTime);
-    }
-
-    private bool IsMovingLiterally() {
-        Vector3 lateralVelocity = new Vector3(controller.velocity.x, 0f, controller.velocity.y);
-
-        return lateralVelocity.magnitude > movingThreshold;
-    }
-
     private void SetCharacter(bool mode) {
-        if(!IsOwner) return;
+        if (!IsOwner) return;
 
         var renderers = GetComponentsInChildren<SkinnedMeshRenderer>();
 
-        if(mode){
+        if (mode) {
             firstPersonPOV.Priority = 10;
             thirdPersonPOV.Priority = 0;
             firstPersonLook.enabled = true;
             thirdPersonLook.enabled = false;
-            foreach (var r in renderers) {
+            foreach (var r in renderers)
                 r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
-            }
-        }else{
+        } else {
             firstPersonPOV.Priority = 0;
             thirdPersonPOV.Priority = 10;
             firstPersonLook.enabled = false;
             thirdPersonLook.enabled = true;
-            foreach (var r in renderers) {
+            foreach (var r in renderers)
                 r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
-            }
         }
     }
 
     public void RefreshPOV() {
-        int currentPOV = int.Parse(saveManager.GetOneData("pov") ?? "0");
-        isFirstPerson = currentPOV == 0;
-        Debug.Log(currentPOV);
-        Debug.Log(isFirstPerson);
+        if (SettingsManager.Instance == null) return;
+        isFirstPerson = SettingsManager.Instance.Current.isFirstPerson;
         SetCharacter(isFirstPerson);
     }
 
-    // Update is called once per frame
     void Update() {
-        if(!IsOwner) return;
+        if (PlayerInputBlocker.IsBlocked) return;
+        if (!IsOwner) return;
 
         playerAnimation.UpdateAnimationState(moveInput, controller.isGrounded);
 
@@ -241,39 +228,79 @@ public class Player : NetworkBehaviour  {
         right.Normalize();
 
         Vector3 moveDirection = forward * moveInput.y + right * moveInput.x;
-        if(shouldFaceMoveDirection && !isFirstPerson && moveDirection.sqrMagnitude > 0.001f) {
+        if (shouldFaceMoveDirection && !isFirstPerson && moveDirection.sqrMagnitude > 0.001f) {
             Vector3 faceDirection = moveDirection;
-            if(moveInput.y < -0.50f) faceDirection = forward;
-            Quaternion rotation = Quaternion.LookRotation(onlyLookForward ? forward :  faceDirection, Vector3.up);
+            if (moveInput.y < -0.50f) faceDirection = forward;
+            Quaternion rotation = Quaternion.LookRotation(onlyLookForward ? forward : faceDirection, Vector3.up);
             transform.rotation = Quaternion.Slerp(transform.rotation, rotation, 10f * Time.deltaTime);
-            //Debug.Log($"Third Person Rotation: {rotation}");
         }
 
-        if(isFirstPerson) {
+        if (isFirstPerson) {
             Vector3 camForward = firstPersonPOV.transform.forward;
-            camForward.y = 0; // Not rotate the body alongside with the camera
+            camForward.y = 0;
 
-            if(camForward.sqrMagnitude > 0.01f) {
+            if (camForward.sqrMagnitude > 0.01f) {
                 Quaternion rotation = Quaternion.LookRotation(camForward, Vector3.up);
                 transform.rotation = Quaternion.Slerp(transform.rotation, rotation, 10f * Time.deltaTime);
-                //Debug.Log($"First Person Rotation: {rotation}");
             }
         }
-        
-        if(moveInput.y < -0.50f) {
+
+        if (moveInput.y < -0.50f) {
             playerSpeed = crouchSpeed;
-        }else if(!isRunning && !isCrouching){
+        } else if (!isRunning && !isCrouching) {
             playerSpeed = basePlayerSpeed;
         }
 
-        if(controller.isGrounded && verticalVelocity < 0) verticalVelocity = 0;
+        if (controller.isGrounded && verticalVelocity < 0) verticalVelocity = 0;
         verticalVelocity += gravity * Time.deltaTime;
 
         velocity = new Vector3(moveDirection.x * playerSpeed, verticalVelocity, moveDirection.z * playerSpeed);
         controller.Move(velocity * Time.deltaTime);
 
+        if (controller.isGrounded) {
+            ungroundedTimer = 0f;
+            stableGrounded = true;
+        } else {
+            ungroundedTimer += Time.deltaTime;
+            if (ungroundedTimer > groundedGraceTime) stableGrounded = false;
+        }
+
         UpdateMovementState();
         UpdateControllerCollider();
+    }
+
+    private void UpdateMovementState() {
+        bool isMovementInput = moveInput != Vector2.zero;
+        bool isMovingLiterally = IsMovingLiterally();
+
+        PlayerMovementState lateralState = isRunning
+            ? PlayerMovementState.Running
+            : isMovingLiterally || isMovementInput
+                ? PlayerMovementState.Walking
+                : PlayerMovementState.Idling;
+
+        playerState.SetPlayerMovementState(lateralState);
+
+        if (!stableGrounded && controller.velocity.y > 0f)
+            playerState.SetPlayerMovementState(PlayerMovementState.Jumping);
+        else if (!stableGrounded && controller.velocity.y <= 0f)
+            playerState.SetPlayerMovementState(PlayerMovementState.Falling);
+
+        if (isCrouching)
+            playerState.SetPlayerMovementState(PlayerMovementState.Crouching);
+    }
+
+    private void UpdateControllerCollider() {
+        Vector3 targetCenter = isCrouching ? crouchCenter : standCenter;
+        float targetHeight = isCrouching ? crouchHeight : standHeight;
+
+        controller.height = Mathf.Lerp(controller.height, targetHeight, crouchTransitionSpeed * Time.deltaTime);
+        controller.center = Vector3.Lerp(controller.center, targetCenter, crouchTransitionSpeed * Time.deltaTime);
+    }
+
+    private bool IsMovingLiterally() {
+        Vector3 lateralVelocity = new Vector3(controller.velocity.x, 0f, controller.velocity.y);
+        return lateralVelocity.magnitude > movingThreshold;
     }
 
     public void SetSpeedMultiplier(float multiplier) {
@@ -282,8 +309,11 @@ public class Player : NetworkBehaviour  {
         crouchSpeed *= multiplier;
     }
 
-    private void FixedUpdate() {
-        // controller.Move(movement * basePlayerSpeed * Time.deltaTime);
-        // controller.Move(velocity * Time.deltaTime);
+    [ClientRpc]
+    public void TeleportClientRpc(Vector3 position, Quaternion rotation) {
+        var cc = GetComponent<CharacterController>();
+        if (cc != null) cc.enabled = false;
+        transform.SetPositionAndRotation(position, rotation);
+        if (cc != null) cc.enabled = true;
     }
 }

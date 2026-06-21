@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6f51c8b1a4a5d9149abd1872f88064f0, type: 3}
+  m_Name: GlobalSideEffectRegistry
+  m_EditorClassIdentifier: Assembly-CSharp::SideEffectRegistry
+  effects:
+  - {fileID: 11400000, guid: 6905f195c1b92ae47b4b9e3e82ad55d1, type: 2}
+  - {fileID: 11400000, guid: 19365b5b0e25dc44db07932d458e0f86, type: 2}
+  - {fileID: 11400000, guid: e963d27fe09deb14686ff35c644988c1, type: 2}
+  - {fileID: 11400000, guid: 396627f8faa14134db4759ee88dfe125, type: 2}
+  - {fileID: 11400000, guid: f1b0d566bf77e4843a11dcd8b59b7313, type: 2}

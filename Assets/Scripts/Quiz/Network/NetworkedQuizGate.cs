@@ -1,98 +1,296 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
 
-// Networked quiz gate. Uses NGO 2.x unified [Rpc] attribute.
-// - Question assigned randomly on server spawn, synced to all clients.
-// - Unlock state via NetworkVariable.
-// - Side effects broadcast to all clients via Rpc(SendTo.Everyone).
-
-public class NetworkedQuizGate : NetworkBehaviour {
+// Networked quiz gate.
+//
+// - Tracks ALL currently interacting players via NetworkList
+// - On wrong answer: side effects applied to every interacting player
+// - Cooldown after wrong answer, visible to all
+// - Interacting player can allow others to join
+public class NetworkedQuizGate : NetworkBehaviour, IInteractable {
     [Header("Quiz")]
-    [SerializeField] QuizSetData quizSet;
     [SerializeField] QuestionDifficulty difficulty = QuestionDifficulty.Easy;
     [SerializeField] bool oneTimeUnlock = true;
+    [SerializeField] float wrongAnswerCooldown = 10f;
 
-    [Header("Side Effects")]
+    [Header("Side Effects (Wrong Answer — applied to ALL interacting players)")]
     [SerializeField] SideEffectRegistry registry;
-    [SerializeField] List<QuizSideEffect> sideEffects;
+    [SerializeField] List<QuizSideEffect> wrongSideEffects;
 
-    // Networked state
+    // ── Networked state ───────────────────────────────────────
     private NetworkVariable<bool> _unlocked = new(
-        false,
-        NetworkVariableReadPermission.Everyone,
-        NetworkVariableWritePermission.Server
-    );
+        false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
-    private NetworkVariable<int> _questionIndex = new(
-        -1,
-        NetworkVariableReadPermission.Everyone,
-        NetworkVariableWritePermission.Server
-    );
+    private NetworkVariable<NetworkedQuestionData> _questionData = new(
+        default, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+    // All players currently interacting with this gate
+    private NetworkList<ulong> _interactingPlayers;
+
+    // Allow other players to also interact while someone is answering
+    private NetworkVariable<bool> _allowOthers = new(
+        false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+    // Server time when cooldown ends (0 = no cooldown active)
+    private NetworkVariable<double> _cooldownEndTime = new(
+        0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+    // ── Public state ──────────────────────────────────────────
     public bool IsUnlocked => _unlocked.Value;
+    public bool HasInteractingPlayer => _interactingPlayers.Count > 0;
+    public bool AllowOthers => _allowOthers.Value;
+    public bool IsCooldownActive => _cooldownEndTime.Value > 0 &&
+                                          NetworkManager.ServerTime.Time < _cooldownEndTime.Value;
+    public float WrongAnswerCooldown => wrongAnswerCooldown;
+    public double CooldownRemaining => IsCooldownActive
+                                          ? _cooldownEndTime.Value - NetworkManager.ServerTime.Time
+                                          : 0;
 
-    // Assign question on server spawn
-    public override void OnNetworkSpawn() {
-        if (IsServer) {
-            int idx = quizSet.GetRandomIndexByDifficulty(difficulty);
-            _questionIndex.Value = idx;
+    private QuestionRuntime _cachedQuestion;
+
+    // ── IInteractable ─────────────────────────────────────────
+    public string InteractPrompt => "Open Gate";
+    public bool IsLocked => (HasInteractingPlayer && !_allowOthers.Value) || IsCooldownActive;
+
+    public void OnInteract(GameObject interactor) =>
+        Attempt(interactor, onSuccess: OpenGate, onFail: null);
+
+    public void OnFocus(PlayerInteractionUI ui) {
+        if (_unlocked.Value) {
+            ui.Hide();
+            return;
         }
+
+        if (IsCooldownActive) {
+            ui.ShowWithCooldown(CooldownRemaining, wrongAnswerCooldown);
+            return;
+        }
+
+        if (HasInteractingPlayer && !_allowOthers.Value) {
+            ui.Show("Someone is answering...", "");
+            return;
+        }
+
+        ui.Show(InteractPrompt);
     }
 
-    public QuestionData GetQuestion() => quizSet.GetByIndex(_questionIndex.Value);
+    // Override in subclass or wire via UnityEvent for door animation/trigger
+    protected virtual void OpenGate() { }
 
-    // Called by interactables
+    // ─────────────────────────────────────────────────────────
+    // NetworkList must be created in Awake
+    // ─────────────────────────────────────────────────────────
+    void Awake() {
+        _interactingPlayers = new NetworkList<ulong>(
+            new List<ulong>(),
+            NetworkVariableReadPermission.Everyone,
+            NetworkVariableWritePermission.Server
+        );
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Server-only: held for answer evaluation without re-fetching
+    private QuestionRuntime _runtimeQuestion;
+
+    public override void OnNetworkSpawn() {
+        if (IsServer) {
+            // Guard: coordinator must be initialized first
+            if (QuizAssignmentCoordinator.Instance == null) {
+                Debug.LogError("[NetworkedQuizGate] QuizAssignmentCoordinator not ready. " +
+                               "Check scene execution order.");
+                return;
+            }
+
+            if (QuizAssignmentCoordinator.Instance.ClaimQuestion(
+                    difficulty, out var runtime)) {
+                _questionData.Value = NetworkedQuestionData.FromRuntime(runtime);
+                _runtimeQuestion = runtime; // server holds for answer evaluation
+            } else {
+                Debug.LogError($"[NetworkedQuizGate] '{name}' could not claim a question.");
+            }
+        }
+
+        _questionData.OnValueChanged += (_, _) => _cachedQuestion = null;
+    }
+
+    public override void OnNetworkDespawn() {
+        _questionData.OnValueChanged -= (_, _) => _cachedQuestion = null;
+    }
+
+    // ─────────────────────────────────────────────────────────
+    public QuestionRuntime GetQuestion() {
+        if (_cachedQuestion == null)
+            _cachedQuestion = _questionData.Value.ToRuntime();
+        return _cachedQuestion;
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Attempt — called by interactables
+    // ─────────────────────────────────────────────────────────
     public void Attempt(GameObject interactor, Action onSuccess, Action onFail) {
         if (_unlocked.Value) { onSuccess?.Invoke(); return; }
 
+        // ── Cooldown check ────────────────────────────────────
+        if (IsCooldownActive) {
+            string msg = $"[Gate '{name}'] Cooldown active — {CooldownRemaining:F1}s remaining.";
+            Debug.Log(msg);
+            PlayerInteractionUI.ShowMessageForPlayer(interactor, msg);
+            return;
+        }
+
+        // ── Lock check ────────────────────────────────────────
+        if (HasInteractingPlayer && !_allowOthers.Value) {
+            ulong interactorId = interactor.GetComponent<NetworkObject>()?.NetworkObjectId
+                                 ?? ulong.MaxValue;
+
+            // Allow if this player is already in the list
+            if (!_interactingPlayers.Contains(interactorId)) {
+                string msg = $"[Gate '{name}'] Another player is already interacting.";
+                Debug.Log(msg);
+                PlayerInteractionUI.ShowMessageForPlayer(interactor, msg);
+                return;
+            }
+        }
+
+        // ── Add this player to interacting list ───────────────
+        if (interactor.TryGetComponent<NetworkObject>(out var netObj))
+            AddInteractingPlayerRpc(netObj.NetworkObjectId);
+
+        // ── Ask question ──────────────────────────────────────
         QuizManager.Instance.AskQuestion(
             this,
             interactor,
             onCorrect: () => {
                 RequestUnlockRpc();
+
+                var q = GetQuestion();
+                string playerName = ResolveLocalPlayerName(interactor);
+                ChatManager.Instance.SendSystemMessage($"{playerName} answered correctly!\nQ: \"{q.questionText}\"\nA: \"{q.correctAnswer}\"");
+
+                // Remove only this player from the list on correct
+                if (interactor.TryGetComponent<NetworkObject>(out var n))
+                    RemoveInteractingPlayerRpc(n.NetworkObjectId);
+
                 onSuccess?.Invoke();
             },
             onWrong: () => {
-                if (interactor.TryGetComponent<NetworkObject>(out var netObj))
-                    RequestSideEffectsRpc(netObj.NetworkObjectId);
+                // Apply side effects to ALL currently interacting players
+                ApplyWrongSideEffectsToAllRpc(BuildIndices(wrongSideEffects));
+
+                var q = GetQuestion();
+                string playerName = ResolveLocalPlayerName(interactor);
+                ChatManager.Instance.SendSystemMessage($"{playerName} answered incorrectly.\nQ: \"{q.questionText}\"");
+
+                // Start cooldown — clears entire interacting list when done
+                StartCooldownRpc();
 
                 onFail?.Invoke();
             }
         );
     }
 
-    // Unlock — any client can request, only server writes
+    // ─────────────────────────────────────────────────────────
+    // Allow Others — called by InteractionStatusUI
+    // ─────────────────────────────────────────────────────────
+    public void RequestSetAllowOthers(bool allow) => SetAllowOthersRpc(allow);
+
+    // ─────────────────────────────────────────────────────────
+    // RPCs
+    // ─────────────────────────────────────────────────────────
+
+    [Rpc(SendTo.Server)]
+    void AddInteractingPlayerRpc(ulong id) {
+        if (!_interactingPlayers.Contains(id))
+            _interactingPlayers.Add(id);
+    }
+
+    [Rpc(SendTo.Server)]
+    void RemoveInteractingPlayerRpc(ulong id) {
+        if (_interactingPlayers.Contains(id))
+            _interactingPlayers.Remove(id);
+
+        // Reset AllowOthers when list is empty
+        if (_interactingPlayers.Count == 0)
+            _allowOthers.Value = false;
+    }
+
     [Rpc(SendTo.Server)]
     void RequestUnlockRpc() {
         if (oneTimeUnlock) _unlocked.Value = true;
     }
 
-    // Side effects — client requests server, server tells everyone
     [Rpc(SendTo.Server)]
-    void RequestSideEffectsRpc(ulong playerNetworkObjectId) {
-        int[] indices = sideEffects
-            .Select(e => registry.IndexOf(e))
-            .Where(i => i >= 0)
-            .ToArray();
+    void SetAllowOthersRpc(bool allow) => _allowOthers.Value = allow;
 
-        ApplySideEffectsRpc(playerNetworkObjectId, indices);
+    [Rpc(SendTo.Server)]
+    void StartCooldownRpc() {
+        _cooldownEndTime.Value = NetworkManager.ServerTime.Time + wrongAnswerCooldown;
+        StartCoroutine(CooldownRoutine());
+    }
+
+    IEnumerator CooldownRoutine() {
+        yield return new WaitForSeconds(wrongAnswerCooldown);
+        _cooldownEndTime.Value = 0;
+
+        // Force-close any open quiz session mid-answer
+        QuizManager.Instance.ForceClose();
+
+        // Clear ALL interacting players after cooldown
+        _interactingPlayers.Clear();
+        _allowOthers.Value = false;
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Apply wrong side effects to EVERY player in _interactingPlayers
+    // ─────────────────────────────────────────────────────────
+
+    [Rpc(SendTo.Server)]
+    void ApplyWrongSideEffectsToAllRpc(int[] indices) {
+        if (indices.Length == 0) return;
+
+        // Collect all NetworkObjectIds currently in the list
+        ulong[] ids = new ulong[_interactingPlayers.Count];
+        for (int i = 0; i < _interactingPlayers.Count; i++)
+            ids[i] = _interactingPlayers[i];
+
+        BroadcastSideEffectsToAllRpc(ids, indices);
     }
 
     [Rpc(SendTo.Everyone)]
-    void ApplySideEffectsRpc(ulong playerNetworkObjectId, int[] effectIndices) {
-        if (!NetworkManager.Singleton.SpawnManager.SpawnedObjects
-                .TryGetValue(playerNetworkObjectId, out var netObj)) return;
+    void BroadcastSideEffectsToAllRpc(ulong[] playerIds, int[] effectIndices) {
+        foreach (ulong playerId in playerIds) {
+            if (!NetworkManager.Singleton.SpawnManager.SpawnedObjects
+                    .TryGetValue(playerId, out var netObj)) continue;
 
-        GameObject player = netObj.gameObject;
-        bool isLocalPlayer = netObj.IsOwner;
+            GameObject player = netObj.gameObject;
+            bool isLocalPlayer = netObj.IsOwner;
 
-        foreach (int idx in effectIndices) {
-            QuizSideEffect effect = registry.GetByIndex(idx);
-            if (effect != null)
-                StartCoroutine(effect.ApplyWithDuration(player, isLocalPlayer));
+            foreach (int idx in effectIndices) {
+                var effect = registry.GetByIndex(idx);
+                if (effect != null)
+                    StartCoroutine(effect.ApplyWithDuration(player, isLocalPlayer));
+            }
         }
     }
+
+    string ResolveLocalPlayerName(GameObject interactor) {
+        if (interactor.TryGetComponent<NetworkObject>(out var netObj)
+            && GameSessionManager.Instance != null) {
+            foreach (var player in GameSessionManager.Instance.Players)
+                if (player.ClientId == netObj.OwnerClientId)
+                    return player.PlayerName.ToString();
+        }
+        return "Unknown";
+    }
+
+    // ─────────────────────────────────────────────────────────
+    int[] BuildIndices(List<QuizSideEffect> effects) =>
+        effects?
+            .Select(e => registry.IndexOf(e))
+            .Where(i => i >= 0)
+            .ToArray() ?? Array.Empty<int>();
 }

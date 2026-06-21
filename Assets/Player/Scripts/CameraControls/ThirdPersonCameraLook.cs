@@ -13,7 +13,7 @@ public class ThirdPersonCameraLook : MonoBehaviour {
     [Header("Look Sensitivity")]
     [SerializeField] private float horizontalSensitivity = 0.25f;
     [SerializeField] private float verticalSensitivity = 0.18f;
-    [SerializeField] private bool  invertVertical = true;
+    [SerializeField] private bool invertVertical = true;
 
     [Header("Pinch Zoom")]
     [SerializeField] private float zoomSensitivity = 0.02f;
@@ -21,9 +21,7 @@ public class ThirdPersonCameraLook : MonoBehaviour {
     [SerializeField] private float maxRadius = 15f;
     [SerializeField] private float zoomSmoothSpeed = 10f;
 
-    public SaveManager saveManager;
-    public bool showOverlay = false;
-
+    private bool showOverlay;
     private Finger lookFinger;
     private Finger pinchFinger1;
     private Finger pinchFinger2;
@@ -55,8 +53,8 @@ public class ThirdPersonCameraLook : MonoBehaviour {
     }
 
     private void Update() {
-        foreach(Touch touch in Touch.activeTouches){
-            switch(touch.phase){
+        foreach (Touch touch in Touch.activeTouches) {
+            switch (touch.phase) {
                 case TouchPhase.Began: OnTouchBegan(touch); break;
                 case TouchPhase.Moved:
                 case TouchPhase.Stationary: OnTouchMoved(touch); break;
@@ -64,34 +62,34 @@ public class ThirdPersonCameraLook : MonoBehaviour {
                 case TouchPhase.Canceled: OnTouchEnded(touch); break;
             }
         }
-
         ApplyZoomSmoothing();
     }
 
     private void OnTouchBegan(Touch touch) {
-        if(IsBlocked(touch.screenPosition)) return;
+        if (IsBlocked(touch.screenPosition)) return;
 
-        if(pinchFinger1 == null){
+        if (pinchFinger1 == null) {
             pinchFinger1 = touch.finger;
-        }else if(pinchFinger2 == null && touch.finger != pinchFinger1){
+        } else if (pinchFinger2 == null && touch.finger != pinchFinger1) {
             pinchFinger2 = touch.finger;
             pinchPrevDistance = GetPinchDistance();
             ReleaseLook();
             return;
         }
 
-        if(lookFinger == null && touch.finger != pinchFinger2) lookFinger = touch.finger;
+        if (lookFinger == null && touch.finger != pinchFinger2) lookFinger = touch.finger;
     }
 
     private void OnTouchMoved(Touch touch) {
-        if(lookFinger != null && touch.finger == lookFinger && pinchFinger2 == null){
+        if (lookFinger != null && touch.finger == lookFinger && pinchFinger2 == null) {
             float h = touch.delta.x * horizontalSensitivity;
             float v = touch.delta.y * verticalSensitivity * (invertVertical ? -1f : 1f);
             orbitalFollow.HorizontalAxis.Value += h;
-            orbitalFollow.VerticalAxis.Value   += v;
+            orbitalFollow.VerticalAxis.Value += v;
         }
 
-        if(pinchFinger1 != null && pinchFinger2 != null && (touch.finger == pinchFinger1 || touch.finger == pinchFinger2)){
+        if (pinchFinger1 != null && pinchFinger2 != null &&
+           (touch.finger == pinchFinger1 || touch.finger == pinchFinger2)) {
             float dist = GetPinchDistance();
             targetRadius -= (dist - pinchPrevDistance) * zoomSensitivity;
             targetRadius = Mathf.Clamp(targetRadius, minRadius, maxRadius);
@@ -100,27 +98,31 @@ public class ThirdPersonCameraLook : MonoBehaviour {
     }
 
     private void OnTouchEnded(Touch touch) {
-        if(lookFinger  != null && touch.finger == lookFinger) ReleaseLook();
-
-        if((pinchFinger1 != null && touch.finger == pinchFinger1) || (pinchFinger2 != null && touch.finger == pinchFinger2)) ReleasePinch();
+        if (lookFinger != null && touch.finger == lookFinger) ReleaseLook();
+        if ((pinchFinger1 != null && touch.finger == pinchFinger1) ||
+            (pinchFinger2 != null && touch.finger == pinchFinger2)) ReleasePinch();
     }
 
     private void ApplyZoomSmoothing() {
-        if(orbitalFollow == null) return;
-        orbitalFollow.Radius = zoomSmoothSpeed > 0f ? Mathf.Lerp(orbitalFollow.Radius, targetRadius, Time.deltaTime * zoomSmoothSpeed) : targetRadius;
+        if (orbitalFollow == null) return;
+        orbitalFollow.Radius = zoomSmoothSpeed > 0f
+            ? Mathf.Lerp(orbitalFollow.Radius, targetRadius, Time.deltaTime * zoomSmoothSpeed)
+            : targetRadius;
     }
 
     private bool IsBlocked(Vector2 screenPos) {
-        if(moveBoundaryRects == null) return false;
-        foreach(RectTransform r in moveBoundaryRects){
-            if(r != null && RectTransformUtility.RectangleContainsScreenPoint(r, screenPos, null)) return true;
+        if (moveBoundaryRects == null) return false;
+        foreach (RectTransform r in moveBoundaryRects) {
+            if (r != null && RectTransformUtility.RectangleContainsScreenPoint(r, screenPos, null)) return true;
         }
         return false;
     }
 
     private float GetPinchDistance() {
-        if(pinchFinger1 == null || pinchFinger2 == null) return 0f;
-        return Vector2.Distance(pinchFinger1.currentTouch.screenPosition, pinchFinger2.currentTouch.screenPosition);
+        if (pinchFinger1 == null || pinchFinger2 == null) return 0f;
+        return Vector2.Distance(
+            pinchFinger1.currentTouch.screenPosition,
+            pinchFinger2.currentTouch.screenPosition);
     }
 
     private void ReleaseLook() => lookFinger = null;
@@ -131,18 +133,21 @@ public class ThirdPersonCameraLook : MonoBehaviour {
     }
 
     public void RefreshDebugMode() {
-        showOverlay = saveManager.GetOneData(0);
+        if (SettingsManager.Instance == null) {
+            Debug.LogWarning("[ThirdPersonCameraLook] SettingsManager not ready yet.");
+            return;
+        }
+        showOverlay = SettingsManager.Instance.Current.showDebugOverlay;
     }
 
-//#if UNITY_EDITOR
+    //#if UNITY_EDITOR
     private void OnGUI() {
-        if(!showOverlay) return;
-
-        GUI.Label(new Rect(10, 10, 380, 20), $"[3P] Look finger : {(lookFinger   != null ? lookFinger.index.ToString()   : "none")}");
-        GUI.Label(new Rect(10, 30, 380, 20), $"[3P] Pinch f1    : {(pinchFinger1 != null ? pinchFinger1.index.ToString() : "none")}");
-        GUI.Label(new Rect(10, 50, 380, 20), $"[3P] Pinch f2    : {(pinchFinger2 != null ? pinchFinger2.index.ToString() : "none")}");
+        if (!showOverlay) return;
+        GUI.Label(new Rect(10, 10, 380, 20), $"[3P] Look finger  : {(lookFinger != null ? lookFinger.index.ToString() : "none")}");
+        GUI.Label(new Rect(10, 30, 380, 20), $"[3P] Pinch f1     : {(pinchFinger1 != null ? pinchFinger1.index.ToString() : "none")}");
+        GUI.Label(new Rect(10, 50, 380, 20), $"[3P] Pinch f2     : {(pinchFinger2 != null ? pinchFinger2.index.ToString() : "none")}");
         GUI.Label(new Rect(10, 70, 380, 20), $"[3P] Radius target: {targetRadius:F2}  actual: {(orbitalFollow != null ? orbitalFollow.Radius.ToString("F2") : "—")}");
         GUI.Label(new Rect(10, 90, 380, 20), $"Active touches: {Touch.activeTouches.Count}");
     }
-//#endif
+    //#endif
 }

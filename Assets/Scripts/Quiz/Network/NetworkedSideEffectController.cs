@@ -2,10 +2,13 @@ using Unity.Netcode;
 using UnityEngine;
 
 // Sits on the Player prefab.
+// Use for non-gate side effects (environmental traps, items, etc.).
+// Do NOT call from gate logic — use NetworkedQuizGate's broadcast path instead.
+// Uses NGO 2.x unified [Rpc] attribute.
 public class NetworkedSideEffectController : NetworkBehaviour {
     [SerializeField] SideEffectRegistry registry;
 
-    // Call on the local player to broadcast side effects to all clients.
+    /// Call on the local player to broadcast side effects to all clients.
     [Rpc(SendTo.Server)]
     public void TriggerSideEffectsRpc(int[] effectIndices) {
         ApplySideEffectsRpc(effectIndices);
