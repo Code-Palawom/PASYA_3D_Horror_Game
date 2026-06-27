@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using TMPro;
@@ -319,20 +320,26 @@ public class MainMenuUI : MonoBehaviour {
     // ─────────────────────────────────────────────────────────
     void OnStartClicked() {
         if (_pendingMode == GameMode.Host)
-            StartAsHost();
+            StartCoroutine(StartAsHost());
         else if (_pendingMode == GameMode.SinglePlayer)
-            StartAsSinglePlayer();
+            StartCoroutine(StartAsSinglePlayer());
     }
 
-    void StartAsHost() {
+    IEnumerator StartAsHost() {
         GameModeManager.Instance.SetHostMode(_selectedQuizSetName, _selectedLevelSceneName);
 
-        statusText.text = "Starting host...";
+        statusText.text = "";
         startButton.interactable = false;
 
         ConfigureTransport("0.0.0.0", gamePort);
+
+        LoadingScreenController.Instance.Show("Starting host...");
+        yield return new WaitForSeconds(1f);
+
         NetworkManager.Singleton.OnServerStarted += OnHostServerStarted;
         NetworkManager.Singleton.StartHost();
+
+        LoadingScreenController.Instance.SetMessage("Entering lobby...");
     }
 
     void OnHostServerStarted() {
@@ -359,13 +366,17 @@ public class MainMenuUI : MonoBehaviour {
         NetworkManager.Singleton.SceneManager.LoadScene(lobbySceneName, LoadSceneMode.Single);
     }
 
-    void StartAsSinglePlayer() {
+    IEnumerator StartAsSinglePlayer() {
         GameModeManager.Instance.SetSinglePlayerMode(_selectedQuizSetName, _selectedLevelSceneName);
 
-        statusText.text = "Starting...";
+        statusText.text = "";
         startButton.interactable = false;
 
         ConfigureTransport("127.0.0.1", gamePort);
+
+        LoadingScreenController.Instance.Show("Loading...");
+        yield return new WaitForSeconds(1f);
+
         NetworkManager.Singleton.OnServerStarted += OnSinglePlayerServerStarted;
         NetworkManager.Singleton.StartHost();
     }
@@ -441,15 +452,22 @@ public class MainMenuUI : MonoBehaviour {
         availableLevels.FirstOrDefault(l => l.sceneName == sceneName)?.displayName ?? sceneName;
 
     void OnJoinClicked() {
-        if (_selectedHost == null) return;
+        StartCoroutine(JoinGame());
+    }
+
+    IEnumerator JoinGame() {
+        if (_selectedHost == null) yield break;
 
         GameModeManager.Instance.SetClientMode(_selectedHost.Address, _selectedHost.GamePort);
         ConfigureTransport(_selectedHost.Address, _selectedHost.GamePort);
 
-        joinStatusText.text = "Connecting...";
+        joinStatusText.text = "";
 
         // Set player name payload before connecting
         NetworkManager.Singleton.NetworkConfig.ConnectionData = System.Text.Encoding.UTF8.GetBytes(GameModeManager.Instance.LocalPlayerName);
+
+        LoadingScreenController.Instance.Show($"Joining \"{_selectedHost.HostName}\" Lobby...");
+        yield return new WaitForSeconds(1f);
 
         NetworkManager.Singleton.OnClientConnectedCallback += OnClientJoined;
         NetworkManager.Singleton.OnClientDisconnectCallback += OnClientJoinFailed;
@@ -462,7 +480,8 @@ public class MainMenuUI : MonoBehaviour {
         NetworkManager.Singleton.OnClientConnectedCallback -= OnClientJoined;
         NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientJoinFailed;
 
-        joinStatusText.text = "Connected!";
+        LoadingScreenController.Instance.SetMessage("Entering lobby...");
+        //joinStatusText.text = "Connected!";
         // Server controls scene sync automatically once connected.
     }
 
@@ -473,12 +492,21 @@ public class MainMenuUI : MonoBehaviour {
         // Read the disconnect reason sent by the server's approval callback
         string reason = NetworkManager.Singleton.DisconnectReason;
 
-        joinStatusText.text = reason switch {
-            ConnectionApprovalHandler.ReasonFull => "Cannot join — lobby is full (4/4).",
-            ConnectionApprovalHandler.ReasonInProgress => "Cannot join — game is already in progress.",
-            ConnectionApprovalHandler.ReasonCountdown => "Cannot join — game is about to start.",
+        //joinStatusText.text = reason switch {
+        //    ConnectionApprovalHandler.ReasonFull => "Cannot join — lobby is full (4/4).",
+        //    ConnectionApprovalHandler.ReasonInProgress => "Cannot join — game is already in progress.",
+        //    ConnectionApprovalHandler.ReasonCountdown => "Cannot join — game is about to start.",
+        //    _ => "Failed to connect."
+        //};
+
+        LoadingScreenController.Instance.SetMessage(reason switch {
+            ConnectionApprovalHandler.ReasonFull => "Cannot join - lobby is full.",
+            ConnectionApprovalHandler.ReasonInProgress => "Cannot join - game is already in progress.",
+            ConnectionApprovalHandler.ReasonCountdown => "Cannot join - game is about to start.",
             _ => "Failed to connect."
-        };
+        }, LoadingScreenController.MessageColor.Error);
+
+        LoadingScreenController.Instance.Hide(3f);
     }
 
     // ─────────────────────────────────────────────────────────

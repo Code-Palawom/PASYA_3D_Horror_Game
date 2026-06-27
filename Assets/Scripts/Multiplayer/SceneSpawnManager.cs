@@ -67,14 +67,23 @@ public class SceneSpawnManager : MonoBehaviour {
     }
 
     // ─────────────────────────────────────────────────────────
-    // Scene finished loading — reposition all existing players
+    // Scene events — wait for all clients then reposition
     // ─────────────────────────────────────────────────────────
     void OnSceneEvent(SceneEvent sceneEvent) {
+        if (sceneEvent.SceneEventType == SceneEventType.LoadComplete) {
+            if (!NetworkManager.Singleton.IsServer) {
+                if (sceneEvent.ClientId == NetworkManager.Singleton.LocalClientId)
+                    Debug.Log($"[SceneSpawnManager] (Client) Finished loading '{sceneEvent.SceneName}'.");
+                return;
+            }
+
+            return;
+        }
+
         if (sceneEvent.SceneEventType != SceneEventType.LoadEventCompleted) return;
         if (!NetworkManager.Singleton.IsServer) return;
 
         string loadedScene = sceneEvent.SceneName;
-
         if (!_spawnScenes.Contains(loadedScene)) return;
 
         // Safety fallback: ensure coordinator is initialized before player
@@ -119,7 +128,7 @@ public class SceneSpawnManager : MonoBehaviour {
     }
 
     // ─────────────────────────────────────────────────────────
-    // Reposition all connected players after a scene loads
+    // Reposition all connected players once all have loaded
     // ─────────────────────────────────────────────────────────
     IEnumerator RepositionAllPlayers(string sceneName) {
         yield return null;

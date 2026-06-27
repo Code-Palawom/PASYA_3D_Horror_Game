@@ -134,7 +134,7 @@ public class ReadyButtonUI : NetworkBehaviour {
         readyButton.interactable = !locked;
 
         if (locked) {
-            buttonLabel.text = "Starting...";
+            buttonLabel.text = "Starting";
             buttonLabel.color = disabledColor;
         } else if (ready) {
             buttonLabel.text = "Cancel";

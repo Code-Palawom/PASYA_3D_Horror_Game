@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using Unity.Cinemachine;
 using Unity.Netcode;
 using UnityEngine;
@@ -315,5 +316,16 @@ public class Player : NetworkBehaviour {
         if (cc != null) cc.enabled = false;
         transform.SetPositionAndRotation(position, rotation);
         if (cc != null) cc.enabled = true;
+        StartCoroutine(HideLoadingScreen());
+    }
+
+    [ClientRpc]
+    public void ShowLoadingScreenClientRpc() {
+        LoadingScreenController.Instance.Show("Loading...");
+    }
+
+    IEnumerator HideLoadingScreen() {
+        yield return new WaitForSeconds(1f);
+        LoadingScreenController.Instance.Hide();
     }
 }

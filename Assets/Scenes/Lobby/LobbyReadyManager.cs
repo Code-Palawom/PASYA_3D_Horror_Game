@@ -147,7 +147,9 @@ public class LobbyReadyManager : NetworkBehaviour {
         _countdownLocked.Value = true;
 
         // Wait the final 3 seconds
-        yield return new WaitForSeconds(3f);
+        yield return new WaitForSeconds(2.8f);
+        ShowLoadingScreenClientRpc();
+        yield return new WaitForSeconds(0.2f);
 
         if (!IsCountdownActive) yield break;
 
@@ -162,7 +164,12 @@ public class LobbyReadyManager : NetworkBehaviour {
             yield break;
         }
 
-        NetworkManager.Singleton.SceneManager.LoadScene(
-            levelScene, UnityEngine.SceneManagement.LoadSceneMode.Single);
+        NetworkManager.Singleton.SceneManager.LoadScene(levelScene, UnityEngine.SceneManagement.LoadSceneMode.Single);
+    }
+
+    [Rpc(SendTo.ClientsAndHost)]
+    void ShowLoadingScreenClientRpc() {
+        if (!NetworkManager.Singleton.LocalClient.PlayerObject.TryGetComponent<Player>(out var localPlayer)) return;
+        localPlayer.ShowLoadingScreenClientRpc();
     }
 }

@@ -230,22 +230,4 @@ public class GameSessionManager : NetworkBehaviour {
     public void SetSelectedLevel(string sceneName) {
         if (IsServer) SelectedLevelSceneName.Value = sceneName;
     }
-
-    // ─────────────────────────────────────────────────────────
-    // Server: load the level that was picked back in the Main Menu,
-    // for ALL connected clients. No parameter needed — uses the
-    // synced SelectedLevelSceneName so Join clients always agree
-    // with the host on which scene to load.
-    // ─────────────────────────────────────────────────────────
-    public void StartLevel() {
-        if (!IsServer) return;
-
-        string scene = SelectedLevelSceneName.Value.ToString();
-        if (string.IsNullOrEmpty(scene)) {
-            Debug.LogError("[GameSessionManager] No level scene selected — cannot start.");
-            return;
-        }
-
-        NetworkManager.Singleton.SceneManager.LoadScene(scene, LoadSceneMode.Single);
-    }
 }
