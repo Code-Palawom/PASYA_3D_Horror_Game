@@ -117,12 +117,28 @@ public class QuizCanvasController : MonoBehaviour {
 
     void SetupMultipleChoice(QuestionRuntime question) {
         var choices = question.GetChoices();
+
+        // Build (originalIndex, text) pairs and shuffle display order
+        var pairs = new System.Collections.Generic.List<(int originalIndex, string text)>();
+        for (int i = 0; i < choices.Count; i++)
+            pairs.Add((i, choices[i]));
+
+        // Fisher-Yates shuffle
+        for (int i = pairs.Count - 1; i > 0; i--) {
+            int j = UnityEngine.Random.Range(0, i + 1);
+            (pairs[i], pairs[j]) = (pairs[j], pairs[i]);
+        }
+
+        string[] labels = { "A", "B", "C", "D" };
+
         for (int i = 0; i < choiceButtons.Length; i++) {
-            bool hasChoice = i < choices.Count;
+            bool hasChoice = i < pairs.Count;
             choiceButtons[i].gameObject.SetActive(hasChoice);
             if (hasChoice) {
-                int captured = i;
-                choiceButtons[i].Setup(i, choices[i], _ => SubmitIndex(captured));
+                int originalIndex = pairs[i].originalIndex;
+                string label = labels[i];
+                string display = $"{label}.  {pairs[i].text}";
+                choiceButtons[i].Setup(i, display, _ => SubmitIndex(originalIndex));
             }
         }
     }

@@ -17,12 +17,20 @@ public class DefaultSettingsConfig : ScriptableObject {
     [Range(0, 2)]
     public int qualityLevel = 2;
 
+    [Header("Show Name Tag")]
+    public bool showNameTags = true;
+
+    [Header("Debug Mode")]
+    public bool showDebug = false;
+
     /// <summary>
     /// Converts this config into a GameSettings instance.
     /// </summary>
     public GameSettings ToGameSettings() => new GameSettings {
         playerName = playerName,
         isFirstPerson = isFirstPerson,
-        qualityLevel = Mathf.Clamp(qualityLevel, 0, QualitySettings.names.Length - 1)
+        qualityLevel = Mathf.Clamp(qualityLevel, 0, QualitySettings.names.Length - 1),
+        showNameTags = showNameTags,
+        showDebugOverlay = showDebug
     };
 }

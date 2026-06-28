@@ -43,11 +43,6 @@ public class ConnectionApprovalHandler : MonoBehaviour {
         Debug.Log("[ConnectionApprovalHandler] Approval callback registered.");
     }
 
-    void OnDisable() {
-        if (NetworkManager.Singleton != null)
-            NetworkManager.Singleton.ConnectionApprovalCallback = null;
-    }
-
     // ─────────────────────────────────────────────────────────
     void ApprovalCheck(
         NetworkManager.ConnectionApprovalRequest request,

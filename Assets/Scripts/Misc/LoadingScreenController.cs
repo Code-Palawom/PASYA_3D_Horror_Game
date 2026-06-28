@@ -3,21 +3,20 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-/// <summary>
-/// Handles a full-screen black fade + loading panel.
-///
-/// Public API:
-///   LoadingScreenController.Instance.Show("Loading...");
-///   LoadingScreenController.Instance.Hide();
-///
-/// Canvas hierarchy expected:
-///   [LoadingScreenController GameObject]
-///     └── BlackOverlay          (Image, full screen, black) + CanvasGroup
-///           └── LoadingPanel    (child GameObject)
-///                 ├── Image     (progress bar, filled)
-///                 ├── TMP_Text  (status e.g. "Loading...")
-///                 └── TMP_Text  (tip text)
-/// </summary>
+// Handles a full-screen black fade + loading panel.
+
+// Public API:
+//   LoadingScreenController.Instance.Show("Loading...");
+//   LoadingScreenController.Instance.Hide();
+
+// Canvas hierarchy expected:
+//   [LoadingScreenController GameObject]
+//     └── BlackOverlay          (Image, full screen, black) + CanvasGroup
+//           └── LoadingPanel    (child GameObject)
+//                 ├── Image     (progress bar, filled)
+//                 ├── TMP_Text  (status e.g. "Loading...")
+//                 └── TMP_Text  (tip text)
+
 public class LoadingScreenController : MonoBehaviour {
     public static LoadingScreenController Instance { get; private set; }
 
@@ -35,7 +34,8 @@ public class LoadingScreenController : MonoBehaviour {
     [SerializeField] private TMP_Text tipText;
 
     private Coroutine _fakeProgressCoroutine;
-
+    private bool isFirstShow = true;
+    
     // -------------------------------------------------------------------------
     // Lifecycle
     // -------------------------------------------------------------------------
@@ -50,9 +50,12 @@ public class LoadingScreenController : MonoBehaviour {
     }
 
 
-    IEnumerator Start() {
-        blackOverlay.blocksRaycasts = false;
-        yield return StartCoroutine(FadeOverlay(1f, 0f, 1f));
+    void Start() {
+        if (isFirstShow) {
+            blackOverlay.blocksRaycasts = false;
+            StartCoroutine(FadeOverlay(1f, 0f, 1f));
+            isFirstShow = false;
+        }
     }
 
     // -------------------------------------------------------------------------

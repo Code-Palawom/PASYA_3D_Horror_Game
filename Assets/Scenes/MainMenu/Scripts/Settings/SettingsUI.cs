@@ -19,10 +19,14 @@ public class SettingsUI : MonoBehaviour {
     [SerializeField] private Color activeColor = new Color(0.20f, 0.60f, 1.00f);
     [SerializeField] private Color inactiveColor = new Color(0.30f, 0.30f, 0.30f);
 
+    [Header("Name Tag Toggle")]
+    [SerializeField] private Toggle nameTagToggle;
+
     // ── State ────────────────────────────────────────────────
     private bool _isFirstPerson;
     private int _qualityIndex;
     private string[] _qualityNames;
+    private bool _showNameTags;
 
     // ── Init ────────────────────────────────────────────────
     void Awake() {
@@ -41,6 +45,8 @@ public class SettingsUI : MonoBehaviour {
 
         // Name — auto-save on field exit, not on every keystroke
         nameField.onEndEdit.AddListener(_ => AutoSave());
+
+        nameTagToggle.onValueChanged.AddListener((isOn) => SetNameTagVisibility(isOn));
 
         if (SettingsManager.Instance != null)
             Populate(SettingsManager.Instance.Current);
@@ -75,6 +81,11 @@ public class SettingsUI : MonoBehaviour {
         AutoSave();
     }
 
+    private void SetNameTagVisibility(bool show) {
+        _showNameTags = show;
+        AutoSave();
+    }
+
     // ── Auto-save ────────────────────────────────────────────
     private void AutoSave() {
         if (SettingsManager.Instance == null) return;
@@ -82,7 +93,8 @@ public class SettingsUI : MonoBehaviour {
         SettingsManager.Instance.Save(new GameSettings {
             playerName = nameField.text.Trim(),
             isFirstPerson = _isFirstPerson,
-            qualityLevel = _qualityIndex
+            qualityLevel = _qualityIndex,
+            showNameTags = _showNameTags
         });
     }
 
@@ -97,6 +109,9 @@ public class SettingsUI : MonoBehaviour {
         _isFirstPerson = s.isFirstPerson;
         SetButtonColor(btnFirstPerson, s.isFirstPerson);
         SetButtonColor(btnThirdPerson, !s.isFirstPerson);
+
+        // Name tag toggle
+        nameTagToggle.SetIsOnWithoutNotify(s.showNameTags);
     }
 
     // ── Helpers ──────────────────────────────────────────────

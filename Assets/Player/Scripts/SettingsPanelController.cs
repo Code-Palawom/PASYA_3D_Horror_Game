@@ -13,6 +13,9 @@ public class SettingsPanelController : MonoBehaviour {
     [SerializeField] private Button firstPersonButton;
     [SerializeField] private Button thirdPersonButton;
 
+    [Header("NameTag")]
+    [SerializeField] private Toggle nameTagToggle;
+
     [Header("Debug")]
     [SerializeField] private Toggle debugToggle;
     [SerializeField] private DebugSetting debug;
@@ -26,6 +29,7 @@ public class SettingsPanelController : MonoBehaviour {
     private int _qualityIndex;
     private bool _isFirstPerson;
     private bool _showDebug;
+    private bool _nameTag;
 
     void Awake() {
         _qualityNames = QualitySettings.names;
@@ -35,6 +39,7 @@ public class SettingsPanelController : MonoBehaviour {
         firstPersonButton.onClick.AddListener(OnSelectFirstPerson);
         thirdPersonButton.onClick.AddListener(OnSelectThirdPerson);
         debugToggle.onValueChanged.AddListener(OnDebugToggled);
+        nameTagToggle.onValueChanged.AddListener(OnNameTagToggled);
         backButton.onClick.AddListener(() => pauseMenu.OnBackFromSettings());
     }
 
@@ -48,6 +53,9 @@ public class SettingsPanelController : MonoBehaviour {
 
         _isFirstPerson = s.isFirstPerson;
         RefreshPOVButtons();
+
+        _nameTag = s.showNameTags;
+        nameTagToggle.SetIsOnWithoutNotify(_nameTag);
 
         _showDebug = s.showDebugOverlay;
         debugToggle.SetIsOnWithoutNotify(_showDebug);
@@ -97,6 +105,12 @@ public class SettingsPanelController : MonoBehaviour {
         debug.RefreshDebugMode();
     }
 
+    void OnNameTagToggled(bool value) {
+        _nameTag = value;
+        PlayerNameDisplay.All.ForEach(p => p.SetNameTagVisible(_nameTag));
+        AutoSave();
+    }
+
     // ── Auto-save on every change ────────────────────────────
     void AutoSave() {
         GameSettings current = SettingsManager.Instance.Current;
@@ -106,6 +120,7 @@ public class SettingsPanelController : MonoBehaviour {
             qualityLevel = _qualityIndex,
             isFirstPerson = _isFirstPerson,
             showDebugOverlay = _showDebug,
+            showNameTags = _nameTag
         });
     }
 }

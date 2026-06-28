@@ -80,6 +80,12 @@ public class LobbyWorldCanvasController : MonoBehaviour {
     }
 
     void RefreshPlayerList() {
+        string activeScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        bool inLevel = GameSessionManager.Instance != null &&
+                       activeScene == GameSessionManager.Instance
+                           .SelectedLevelSceneName.Value.ToString();
+        if (inLevel) return; // Don't show player list in the level scene
+
         foreach (var item in _playerItems) Destroy(item.gameObject);
         _playerItems.Clear();
 

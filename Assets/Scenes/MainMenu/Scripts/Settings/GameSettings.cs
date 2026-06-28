@@ -6,4 +6,5 @@ public class GameSettings {
     public bool isFirstPerson = true;
     public int qualityLevel = 1;   // index into QualitySettings.names
     public bool showDebugOverlay = false;
+    public bool showNameTags = true;
 }

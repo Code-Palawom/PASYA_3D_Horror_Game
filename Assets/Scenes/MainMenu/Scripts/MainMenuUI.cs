@@ -201,7 +201,7 @@ public class MainMenuUI : MonoBehaviour {
         HideAllContentPanels();
         SetMultiplayerTabRowVisible(true);   // Host/Join tabs stay visible
         joinPanel.SetActive(true);
-        roomDetailPanel?.ShowEmpty();
+        roomDetailPanel.ShowEmpty();
         joinButton.interactable = false;
 
         // Auto-search on entry — removes the extra click, matches how
@@ -417,7 +417,7 @@ public class MainMenuUI : MonoBehaviour {
 
         joinButton.interactable = false;
         joinStatusText.text = "Searching for LAN hosts...";
-        roomDetailPanel?.ShowEmpty();
+        roomDetailPanel.ShowEmpty();
 
         LanDiscovery.Instance.StartClientDiscovery(OnHostDiscovered, duration: 4f);
     }

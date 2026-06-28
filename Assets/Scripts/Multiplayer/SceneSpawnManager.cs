@@ -36,15 +36,29 @@ public class SceneSpawnManager : MonoBehaviour {
                 _spawnScenes.Add(asset.sceneName);
 
         NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
-        NetworkManager.Singleton.SceneManager.OnSceneEvent += OnSceneEvent;
+
+        // Re-subscribe to SceneManager whenever NGO reinitializes it
+        NetworkManager.Singleton.OnServerStarted += ResubscribeSceneManager;
+        NetworkManager.Singleton.OnClientStarted += ResubscribeSceneManager;
+        ResubscribeSceneManager(); // subscribe immediately for current session
 
         Debug.Log("[SceneSpawnManager] Ready. Spawn scenes: " +
                   string.Join(", ", _spawnScenes));
     }
 
+    void ResubscribeSceneManager() {
+        if (NetworkManager.Singleton?.SceneManager == null) return;
+        // Unsubscribe first to avoid double-firing
+        NetworkManager.Singleton.SceneManager.OnSceneEvent -= OnSceneEvent;
+        NetworkManager.Singleton.SceneManager.OnSceneEvent += OnSceneEvent;
+        Debug.Log("[SceneSpawnManager] Subscribed to SceneManager.OnSceneEvent.");
+    }
+
     void OnDestroy() {
         if (NetworkManager.Singleton == null) return;
         NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
+        NetworkManager.Singleton.OnServerStarted -= ResubscribeSceneManager;
+        NetworkManager.Singleton.OnClientStarted -= ResubscribeSceneManager;
         if (NetworkManager.Singleton.SceneManager != null)
             NetworkManager.Singleton.SceneManager.OnSceneEvent -= OnSceneEvent;
     }

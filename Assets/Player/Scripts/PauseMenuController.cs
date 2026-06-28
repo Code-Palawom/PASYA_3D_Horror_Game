@@ -52,10 +52,7 @@ public class PauseMenuController : MonoBehaviour {
     public void OnBackToMainMenu() {
         Time.timeScale = 1f;
 
-        if (IsMultiplayer())
-            NetworkManager.Singleton.Shutdown();
-
-        SceneManager.LoadScene("MainMenu");
+        NetworkSessionManager.Instance.LeaveSession();
     }
 
     // ── Called by SettingsPanelController's Back button ─────
