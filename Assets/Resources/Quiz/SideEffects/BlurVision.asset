@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1fbda543d73fbac44a89710f60e3bfec, type: 3}
   m_Name: BlurVision
   m_EditorClassIdentifier: Assembly-CSharp::BlurVision
-  effectName: 
+  effectName: Blur Vision
   description: 
   icon: {fileID: 0}
   tintColor: {r: 1, g: 0, b: 0, a: 1}

@@ -21,18 +21,19 @@ public abstract class QuizSideEffect : ScriptableObject {
     // isLocalPlayer controls whether gameplay effects fire.
     // Billboard/UI is always shown regardless.
     public IEnumerator ApplyWithDuration(GameObject player, bool isLocalPlayer) {
+        Debug.Log($"ApplyWithDuration called — isLocalPlayer: {isLocalPlayer}, effect: {effectName}, frame: {Time.frameCount}");
+
         if (isLocalPlayer) {
             Apply(player);
-            // Report to server for end-game stats
             GameSessionManager.Instance.RecordSideEffectRpc();
+            SideEffectUIManager.Instance.AddEffect(this, player, isLocalPlayer);
         }
-
-        SideEffectUIManager.Instance.AddEffect(this, player, isLocalPlayer);
 
         yield return new WaitForSeconds(duration);
 
-        if (isLocalPlayer) Remove(player);
-
-        SideEffectUIManager.Instance.RemoveEffect(this, player);
+        if (isLocalPlayer) {
+            Remove(player);
+            SideEffectUIManager.Instance.RemoveEffect(this, player);
+        }
     }
 }

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9df597670f03044591f22c9e6efbde3, type: 3}
   m_Name: ScreenShake
   m_EditorClassIdentifier: Assembly-CSharp::ScreenShake
-  effectName: 
+  effectName: Screen Shake
   description: 
   icon: {fileID: 0}
   tintColor: {r: 1, g: 0, b: 0, a: 1}

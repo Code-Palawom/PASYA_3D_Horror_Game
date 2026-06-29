@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2804ff16fe5cbec459f4ecc9038fea4a, type: 3}
   m_Name: AttractEnemies
   m_EditorClassIdentifier: Assembly-CSharp::AttractEnemies
-  effectName: 
+  effectName: Attract Enemies
   description: 
   icon: {fileID: 0}
   tintColor: {r: 1, g: 0, b: 0, a: 1}

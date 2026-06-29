@@ -33,6 +33,10 @@ public class Player : NetworkBehaviour {
     [SerializeField] private Canvas playerCanvas;
     [SerializeField] private AudioListener audioListener;
 
+    private float originalBasePlayerSpeed;
+    private float originalSprintSpeed;
+    private float originalCrouchSpeed;
+
     private bool isFirstPerson = true;
     private float ungroundedTimer = 0f;
     private bool stableGrounded = true;
@@ -50,6 +54,12 @@ public class Player : NetworkBehaviour {
     private PlayerInput playerInput;
     private PlayerState playerState;
     private PlayerAnimation playerAnimation;
+
+    void Awake() {
+        originalBasePlayerSpeed = basePlayerSpeed;
+        originalSprintSpeed = sprintSpeed;
+        originalCrouchSpeed = crouchSpeed;
+    }
 
     // Runs on all instances — only grab components here, no owner-specific logic
     void Start() {
@@ -308,6 +318,12 @@ public class Player : NetworkBehaviour {
         basePlayerSpeed *= multiplier;
         sprintSpeed *= multiplier;
         crouchSpeed *= multiplier;
+    }
+
+    public void RestoreSpeedMultiplier() {
+        basePlayerSpeed = originalBasePlayerSpeed;
+        sprintSpeed = originalSprintSpeed;
+        crouchSpeed = originalCrouchSpeed;
     }
 
     [ClientRpc]

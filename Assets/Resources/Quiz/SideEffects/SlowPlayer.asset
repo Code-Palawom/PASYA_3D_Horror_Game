@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 687f6ea87f561f440bb637f8116ccc56, type: 3}
   m_Name: SlowPlayer
   m_EditorClassIdentifier: Assembly-CSharp::SlowPlayer
-  effectName: 
+  effectName: Slowed
   description: 
   icon: {fileID: 0}
   tintColor: {r: 1, g: 0, b: 0, a: 1}

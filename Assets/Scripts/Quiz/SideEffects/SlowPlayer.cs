@@ -11,6 +11,6 @@ public class SlowPlayer : QuizSideEffect {
 
     public override void Remove(GameObject player) {
         if (player.TryGetComponent<Player>(out var movement))
-            movement.SetSpeedMultiplier(1f);
+            movement.RestoreSpeedMultiplier();
     }
 }

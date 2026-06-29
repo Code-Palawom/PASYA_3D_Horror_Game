@@ -14,6 +14,7 @@ public class GameManager : MonoBehaviour {
         if (localPlayer.TryGetComponent<InteractionController>(out var ic))
             ic.enabled = enabled;
 
+        localPlayer.GetComponent<Player>().enabled = enabled;
         // Add your movement controller disable here too
         // e.g. localPlayer.GetComponent<PlayerMovement>().enabled = enabled;
     }

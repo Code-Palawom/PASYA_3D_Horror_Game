@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 108ff8ee1ba7df94e885c57860060533, type: 3}
   m_Name: DamagePlayer
   m_EditorClassIdentifier: Assembly-CSharp::DamagePlayer
-  effectName: 
+  effectName: Damage
   description: 
   icon: {fileID: 0}
   tintColor: {r: 1, g: 0, b: 0, a: 1}
