@@ -204,12 +204,14 @@ public class NetworkedQuizGate : NetworkBehaviour, IInteractable {
 
     [Rpc(SendTo.Server)]
     void AddInteractingPlayerRpc(ulong id) {
+        Debug.Log("[RPC][Server] AddInteractingPlayer");
         if (!_interactingPlayers.Contains(id))
             _interactingPlayers.Add(id);
     }
 
     [Rpc(SendTo.Server)]
     void RemoveInteractingPlayerRpc(ulong id) {
+        Debug.Log("[RPC][Server] RemoveInteractingPlayer");
         if (_interactingPlayers.Contains(id))
             _interactingPlayers.Remove(id);
 
@@ -220,14 +222,20 @@ public class NetworkedQuizGate : NetworkBehaviour, IInteractable {
 
     [Rpc(SendTo.Server)]
     void RequestUnlockRpc() {
+        Debug.Log("[RPC][Server] RequestUnlock");
         if (oneTimeUnlock) _unlocked.Value = true;
     }
 
     [Rpc(SendTo.Server)]
-    void SetAllowOthersRpc(bool allow) => _allowOthers.Value = allow;
+    void SetAllowOthersRpc(bool allow) {
+        Debug.Log("[RPC][Server] SetAllowOthers");
+        _allowOthers.Value = allow;
+    }
+    //void SetAllowOthersRpc(bool allow) => _allowOthers.Value = allow;
 
     [Rpc(SendTo.Server)]
     void StartCooldownRpc() {
+        Debug.Log("[RPC][Server] StartCooldown");
         _cooldownEndTime.Value = NetworkManager.ServerTime.Time + wrongAnswerCooldown;
         StartCoroutine(CooldownRoutine());
     }
@@ -250,6 +258,7 @@ public class NetworkedQuizGate : NetworkBehaviour, IInteractable {
 
     [Rpc(SendTo.Server)]
     void ApplyWrongSideEffectsToAllRpc(int[] indices) {
+        Debug.Log("[RPC][Server] ApplyWrongSideEffects");
         if (indices.Length == 0) return;
 
         // Collect all NetworkObjectIds currently in the list
@@ -262,6 +271,7 @@ public class NetworkedQuizGate : NetworkBehaviour, IInteractable {
 
     [Rpc(SendTo.Everyone)]
     void BroadcastSideEffectsToAllRpc(ulong[] playerIds, int[] effectIndices) {
+        Debug.Log("[RPC][Everyone] BroadcastSideEffectsToAll");
         foreach (ulong playerId in playerIds) {
             if (!NetworkManager.Singleton.SpawnManager.SpawnedObjects
                     .TryGetValue(playerId, out var netObj)) continue;

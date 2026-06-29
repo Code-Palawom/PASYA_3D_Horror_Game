@@ -67,12 +67,14 @@ public class ChatManager : NetworkBehaviour {
 
     [Rpc(SendTo.Server)]
     void RequestHistoryRpc(RpcParams rpcParams = default) {
+        Debug.Log("[RPC][Server] RequestHistory");
         ulong requesterId = rpcParams.Receive.SenderClientId;
         SyncHistoryRpc(Messages.ToArray(), RpcTarget.Single(requesterId, RpcTargetUse.Temp));
     }
 
     [Rpc(SendTo.SpecifiedInParams)]
     void SyncHistoryRpc(ChatMessage[] history, RpcParams rpcParams = default) {
+        Debug.Log("[RPC][SpecifiedInParams] SyncHistory");
         foreach (var msg in history) {
             Messages.Add(msg);
             OnMessageReceived.Invoke(msg);
@@ -83,6 +85,7 @@ public class ChatManager : NetworkBehaviour {
 
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     void SendChatMessageRpc(ulong senderId, string content) {
+        Debug.Log("[RPC][Server] SendChatMessage");
         string senderName = ResolvePlayerName(senderId);
 
         var msg = new ChatMessage {
@@ -96,18 +99,21 @@ public class ChatManager : NetworkBehaviour {
 
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     public void NotifyCorrectAnswerRpc(ulong clientId, string questionText) {
+        Debug.Log("[RPC][Server] NotifyCorrectAnswer");
         string name = ResolvePlayerName(clientId);
         SendSystemMessage($"{name} answered correctly: {questionText}");
     }
 
     [Rpc(SendTo.ClientsAndHost)]
     void BroadcastMessageRpc(ChatMessage msg) {
+        Debug.Log("[RPC][ClientsAndHost] BroadcastMessage");
         Messages.Add(msg);
         OnMessageReceived.Invoke(msg);
     }
 
     [Rpc(SendTo.ClientsAndHost)]
     void ClearChatRpc() {
+        Debug.Log("[RPC][ClientsAndHost] ClearChat");
         Messages.Clear();
         OnChatCleared.Invoke();
     }

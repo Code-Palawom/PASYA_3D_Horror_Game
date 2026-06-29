@@ -163,11 +163,13 @@ public class GameSessionManager : NetworkBehaviour {
 
     [Rpc(SendTo.Server)]
     public void RecordAnswerRpc(bool isCorrect, int score, RpcParams rpcParams = default) {
+        Debug.Log("[RPC][Server] RecordAnswer");
         RecordAnswer(rpcParams.Receive.SenderClientId, isCorrect, score);
     }
 
     [Rpc(SendTo.Server)]
     public void RecordSideEffectRpc(RpcParams rpcParams = default) {
+        Debug.Log("[RPC][Server] ReocrdSideEffect");
         RecordSideEffect(rpcParams.Receive.SenderClientId);
     }
 
@@ -204,6 +206,7 @@ public class GameSessionManager : NetworkBehaviour {
     void ReceiveResultsRpc(ulong[] clientIds, FixedString64Bytes[] playerNames, int[] scores,
                            int[] questionsAnswered, int[] questionsCorrect,
                            int[] sideEffects, bool[] disconnected) {
+        Debug.Log("[RPC][Everyone] ReceiveResults");
         int count = clientIds.Length;
         var results = new PlayerSessionStats[count];
 

@@ -11,11 +11,13 @@ public class NetworkedSideEffectController : NetworkBehaviour {
     /// Call on the local player to broadcast side effects to all clients.
     [Rpc(SendTo.Server)]
     public void TriggerSideEffectsRpc(int[] effectIndices) {
+        Debug.Log("[RPC][Server] TriggerSideEffects");
         ApplySideEffectsRpc(effectIndices);
     }
 
     [Rpc(SendTo.Everyone)]
     void ApplySideEffectsRpc(int[] effectIndices) {
+        Debug.Log("[RPC][Everyone] ApplySideEffects");
         bool isLocalPlayer = IsOwner;
 
         foreach (int idx in effectIndices) {

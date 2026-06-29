@@ -18,11 +18,17 @@ public class PlatformUIHandler : MonoBehaviour {
 #endif
 
         foreach (GameObject button in mobileUIButtons) {
-            if (button != null) button.SetActive(isMobile);
+            if (button != null) {
+                button.tag = isMobile ? "PlatformMobile" : "Untagged";
+                button.SetActive(isMobile);
+            }
         }
 
         foreach (GameObject button in pcUIButtons) {
-            if (button != null) button.SetActive(!isMobile);
+            if (button != null) {
+                button.tag = !isMobile ? "PlatformPC" : "Untagged";
+                button.SetActive(!isMobile);
+            }
         }
 
         if (screenCursor != null) screenCursor.SetActive(!isMobile);

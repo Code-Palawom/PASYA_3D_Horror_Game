@@ -100,6 +100,7 @@ public class LobbyReadyManager : NetworkBehaviour {
     // ─────────────────────────────────────────────────────────
     [Rpc(SendTo.Server)]
     public void SetReadyRpc(ulong clientId, bool ready) {
+        Debug.Log("[RPC][Server] SetReady");
         if (_countdownLocked.Value) return;   // can't change after lock
 
         if (ready) {
@@ -169,6 +170,7 @@ public class LobbyReadyManager : NetworkBehaviour {
 
     [Rpc(SendTo.ClientsAndHost)]
     void ShowLoadingScreenClientRpc() {
+        Debug.Log("[RPC][ClientsAndHost] ShowLoadingScreenClient");
         if (!NetworkManager.Singleton.LocalClient.PlayerObject.TryGetComponent<Player>(out var localPlayer)) return;
         localPlayer.ShowLoadingScreenClientRpc();
     }

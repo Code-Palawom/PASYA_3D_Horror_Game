@@ -9,7 +9,9 @@ using UnityEngine.UI;
 public class PlayerInteractionUI : MonoBehaviour {
     [Header("Prompt")]
     [SerializeField] GameObject panel;
+    [SerializeField] Button interactButton;
     [SerializeField] TMP_Text promptText;
+    [SerializeField] GameObject keyHintWrapper;
     [SerializeField] TMP_Text keyHintText;        // e.g. "[E]"
 
     [Header("Cooldown (replaces prompt text when gate is locked)")]
@@ -40,7 +42,7 @@ public class PlayerInteractionUI : MonoBehaviour {
             promptText.text = message;
         }
 
-        if (keyHintText != null) {
+        if (keyHintText != null && keyHintText.CompareTag("PlatformPC")) {
             keyHintText.gameObject.SetActive(true);
             keyHintText.text = $"[{keyHint}]";
         }
@@ -57,8 +59,8 @@ public class PlayerInteractionUI : MonoBehaviour {
         panel.SetActive(true);
 
         // Hide normal prompt text entirely — cooldown row covers messaging
-        if (promptText != null) promptText.gameObject.SetActive(false);
-        if (keyHintText != null) keyHintText.gameObject.SetActive(false);
+        if (interactButton != null) interactButton.gameObject.SetActive(false);
+        if (keyHintWrapper != null) keyHintWrapper.gameObject.SetActive(false);
 
         _cooldownEnd = Time.time + (float)cooldownRemaining;
         _cooldownTotal = cooldownTotal;
@@ -109,8 +111,8 @@ public class PlayerInteractionUI : MonoBehaviour {
             SetCooldownRowVisible(false);
 
             // Restore normal prompt visibility for next Show() call
-            if (promptText != null) promptText.gameObject.SetActive(true);
-            if (keyHintText != null) keyHintText.gameObject.SetActive(true);
+            if (interactButton != null) interactButton.gameObject.SetActive(true);
+            if (keyHintWrapper != null) keyHintWrapper.gameObject.SetActive(true);
         }
     }
 

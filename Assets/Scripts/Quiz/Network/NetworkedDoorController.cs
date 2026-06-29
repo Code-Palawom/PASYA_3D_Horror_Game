@@ -50,6 +50,7 @@ public class NetworkedDoorController : NetworkBehaviour {
 
     [Rpc(SendTo.Server)]
     void ToggleDoorRpc() {
+        Debug.Log("[RPC][Server] ToggleDoor");
         _isOpen.Value = !_isOpen.Value;
     }
 
