@@ -4,14 +4,12 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.Networking;
 
-/// <summary>
-/// Fetches loading screen tips from a REST endpoint once per session.
-/// Falls back to a local HMAC-verified cache if the request fails.
-/// Follows the same save/load pattern as SettingsManager.
-///
-/// Expected endpoint response:
-/// { "tips": ["Tip one.", "Tip two.", ...] }
-/// </summary>
+// Fetches loading screen tips from a REST endpoint once per session.
+// Falls back to a local HMAC-verified cache if the request fails.
+// Follows the same save/load pattern as SettingsManager.
+
+// Expected endpoint response:
+// { "tips": ["Tip one.", "Tip two.", ...] }
 public class TipsManager : MonoBehaviour {
     public static TipsManager Instance { get; private set; }
 

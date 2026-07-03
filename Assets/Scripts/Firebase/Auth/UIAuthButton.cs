@@ -22,6 +22,10 @@ public class UIAuthButton : MonoBehaviour {
     [SerializeField] private GameObject signedInPanel;
     [SerializeField] private GameObject signedOutPanel;
 
+    [Header("Multiplayer Button")]
+    [SerializeField] private Button multiplayerBtn;
+    [SerializeField] private TMP_Text multiplayerBtnLabel;
+
     [Header("Settings Panel")]
     [SerializeField] private Button signInBtn;
     [SerializeField] private Button logoutBtn;
@@ -76,8 +80,11 @@ public class UIAuthButton : MonoBehaviour {
         if (signedInPanel != null) signedInPanel.SetActive(signedIn);
         if (signedOutPanel != null) signedOutPanel.SetActive(!signedIn);
 
+        multiplayerBtn.enabled = signedIn;
+        multiplayerBtn.interactable = signedIn;
+        multiplayerBtnLabel.color = signedIn ? Color.white : Color.gray;
+
         signInBtn.gameObject.SetActive(!signedIn);
         logoutBtn.gameObject.SetActive(signedIn);
-
     }
 }
