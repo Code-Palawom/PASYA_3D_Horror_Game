@@ -100,3 +100,7 @@ InitTestScene*.unity*
 
 # MISC
 *google-services*
+/Assets/Scripts/Firebase/SecretStore.cs
+/Assets/Scripts/Firebase/SecretStore.cs.meta
+/Assets/Scripts/Firebase/SecretStoreEncoder.cs
+/Assets/Scripts/Firebase/SecretStoreEncoder.cs.meta
