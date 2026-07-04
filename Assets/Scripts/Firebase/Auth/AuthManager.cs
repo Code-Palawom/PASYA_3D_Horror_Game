@@ -1,8 +1,9 @@
-using System;
-using System.Threading.Tasks;
 using Firebase;
 using Firebase.Auth;
 using Google;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 
 // Central auth controller. Handles:
@@ -24,6 +25,8 @@ public class AuthManager : MonoBehaviour {
 
     private FirebaseAuth _auth;
     private bool _firebaseReady;
+
+    private CancellationTokenSource cts;
 
     // ── Lifecycle ─────────────────────────────────────────────────────────
 
@@ -111,21 +114,26 @@ public class AuthManager : MonoBehaviour {
     // ── Desktop/Editor: PKCE browser redirect ────────────────────────────
 
     private async void SignInWithGoogleDesktop() {
-        try {
-            GoogleSignInLoading.Instance.Show("Signing in");
+        cts = new CancellationTokenSource();
 
-            var user = await desktopGoogleAuth.SignInAsync();
+        try {
+            GoogleSignInLoading.Instance.Show("Signing in", onCancel: () => cts.Cancel());
+
+            var signInTask = desktopGoogleAuth.SignInAsync(cts.Token); // ← pass token
+            var user = await signInTask;
             OnSignInSuccess(user);
         } catch (OperationCanceledException) {
             Debug.LogWarning("[AuthManager] Desktop sign-in cancelled.");
         } catch (Exception e) {
             Debug.LogError($"[AuthManager] Desktop sign-in error: {e.Message}");
         } finally {
+            cts.Dispose();
+            cts = null;
             GoogleSignInLoading.Instance.Hide();
         }
     }
 
-    // ── Shared handlers ───────────────────────────────────────────────────
+    // Shared handlers
 
     private void HandleFirebaseResult(Task<FirebaseUser> task) {
         MainThreadDispatcher.Instance.Enqueue(() => {

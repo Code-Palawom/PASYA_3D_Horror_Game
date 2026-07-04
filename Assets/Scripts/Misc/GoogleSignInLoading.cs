@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class GoogleSignInLoading : MonoBehaviour {
     public static GoogleSignInLoading Instance { get; private set; }
@@ -9,6 +11,7 @@ public class GoogleSignInLoading : MonoBehaviour {
     [SerializeField] private RectTransform panel;
     [SerializeField] private TextMeshProUGUI statusText;
     [SerializeField] private CanvasGroup backgroundGroup;
+    [SerializeField] private Button cancelButton;
 
     [Header("Animation")]
     [SerializeField] private float slideDuration = 0.35f;
@@ -32,12 +35,21 @@ public class GoogleSignInLoading : MonoBehaviour {
     }
 
     // Public API
-    public void Show(string message = "Signing in") {
+    public void Show(string message = "Signing in", Action onCancel = null) {
         panel.gameObject.SetActive(true);
         statusText.text = message + "...";
         StopAllCoroutines();
         StartCoroutine(AnimateIn());
         dotCoroutine = StartCoroutine(AnimateDots(message));
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+        cancelButton.gameObject.SetActive(false);  // no cancel on Android
+#else
+        cancelButton.gameObject.SetActive(onCancel != null);
+        cancelButton.onClick.RemoveAllListeners();
+        if (onCancel != null)
+            cancelButton.onClick.AddListener(() => onCancel?.Invoke());
+#endif
     }
 
     public void Hide() {

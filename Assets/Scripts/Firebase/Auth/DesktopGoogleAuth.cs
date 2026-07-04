@@ -25,23 +25,20 @@ public class DesktopGoogleAuth : MonoBehaviour {
     // ── Public entry point ───────────────────────────────────────────────
 
     // Opens the system browser for Google Sign-In and returns the Firebase user on success.
-    public async Task<FirebaseUser> SignInAsync() {
+    public async Task<FirebaseUser> SignInAsync(CancellationToken cancellationToken = default) {
         string codeVerifier = GenerateCodeVerifier();
         string codeChallenge = GenerateCodeChallenge(codeVerifier);
         string state = GenerateState();
 
         Application.OpenURL(BuildAuthUrl(codeChallenge, state));
 
-        string code = await ListenForCodeAsync(state);
+        string code = await ListenForCodeAsync(state, cancellationToken);  // pass it down
         if (string.IsNullOrEmpty(code))
             throw new OperationCanceledException("OAuth sign-in was cancelled or timed out.");
 
         TokenResponse tokens = await ExchangeCodeAsync(code, codeVerifier);
-
         var credential = GoogleAuthProvider.GetCredential(tokens.IdToken, null);
-        var user = await FirebaseAuth.DefaultInstance.SignInWithCredentialAsync(credential);
-
-        return user;
+        return await FirebaseAuth.DefaultInstance.SignInWithCredentialAsync(credential);
     }
 
     // ── Auth URL ─────────────────────────────────────────────────────────
@@ -64,7 +61,7 @@ public class DesktopGoogleAuth : MonoBehaviour {
 
     // ── Loopback listener ─────────────────────────────────────────────────
 
-    private async Task<string> ListenForCodeAsync(string expectedState) {
+    private async Task<string> ListenForCodeAsync(string expectedState, CancellationToken externalToken = default) {
         using var listener = new HttpListener();
         listener.Prefixes.Add(RedirectUri);
 
@@ -73,16 +70,19 @@ public class DesktopGoogleAuth : MonoBehaviour {
             return null;
         }
 
-        // Cancel listener after 3 minutes if the user doesn't complete sign-in
-        using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(3));
+        // Link internal 3min timeout with the external cancel button token
+        using var cts = CancellationTokenSource.CreateLinkedTokenSource(
+            externalToken,
+            new CancellationTokenSource(TimeSpan.FromMinutes(3)).Token
+        );
         cts.Token.Register(() => { try { listener.Stop(); } catch { } });
 
         HttpListenerContext ctx;
         try {
             ctx = await listener.GetContextAsync();
         } catch (Exception) when (cts.IsCancellationRequested) {
-            Debug.LogWarning("[DesktopAuth] Sign-in timed out.");
-            return null;
+            // Throw so the caller's catch (OperationCanceledException) fires
+            throw new OperationCanceledException("Sign-in cancelled.", cts.Token);
         } catch (Exception e) {
             Debug.LogError($"[DesktopAuth] Listener error: {e.Message}");
             return null;
