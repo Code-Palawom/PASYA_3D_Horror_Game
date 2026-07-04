@@ -22,7 +22,7 @@ public class TooltipTrigger : MonoBehaviour, IPointerClickHandler {
             targetButton = GetComponent<Button>();
     }
 
-    private void OnEnable() {
+    private void Start() {
         TooltipManager.Instance.RegisterTrigger(rectTransform);
     }
 

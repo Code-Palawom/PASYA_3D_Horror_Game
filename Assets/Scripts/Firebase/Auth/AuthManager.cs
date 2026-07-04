@@ -33,21 +33,15 @@ public class AuthManager : MonoBehaviour {
         DontDestroyOnLoad(gameObject);
     }
 
-    async void Start() {
-        var status = await FirebaseApp.CheckAndFixDependenciesAsync();
-        if (status == DependencyStatus.Available) {
-            _auth = FirebaseAuth.DefaultInstance;
-            _firebaseReady = true;
-            Debug.Log("[AuthManager] Firebase ready.");
+    private void Start() {
+        if (ConfirmFirebaseServices.Instance.IsReady) InitAuth();
+        else ConfirmFirebaseServices.Instance.OnFirebaseReady += InitAuth;
+    }
 
-            // Restore cached session if available
-            if (_auth.CurrentUser != null) {
-                Debug.Log($"[AuthManager] Restoring session for {_auth.CurrentUser.DisplayName}");
-                OnSignInSuccess(_auth.CurrentUser);
-            }
-        } else {
-            Debug.LogError($"[AuthManager] Firebase dependency error: {status}");
-        }
+    private void InitAuth() {
+        _auth = FirebaseAuth.DefaultInstance;
+        _firebaseReady = true;
+        if (_auth.CurrentUser != null) OnSignInSuccess(_auth.CurrentUser);
     }
 
     // ── Public API ────────────────────────────────────────────────────────
@@ -93,9 +87,11 @@ public class AuthManager : MonoBehaviour {
             RequestEmail   = true
         };
 
+        GoogleSignInLoading.Instance.Show("Signing in");
+
         GoogleSignIn.DefaultInstance.SignIn().ContinueWith(task =>
         {
-            UnityMainThreadDispatcher.Instance.Enqueue(() =>
+            MainThreadDispatcher.Instance.Enqueue(() =>
             {
                 if (task.IsFaulted || task.IsCanceled)
                 {
@@ -107,6 +103,8 @@ public class AuthManager : MonoBehaviour {
                 _auth.SignInWithCredentialAsync(credential).ContinueWith(HandleFirebaseResult);
             });
         });
+
+        GoogleSignInLoading.Instance.Hide();
     }
 #endif
 
@@ -114,12 +112,16 @@ public class AuthManager : MonoBehaviour {
 
     private async void SignInWithGoogleDesktop() {
         try {
+            GoogleSignInLoading.Instance.Show("Signing in");
+
             var user = await desktopGoogleAuth.SignInAsync();
             OnSignInSuccess(user);
         } catch (OperationCanceledException) {
             Debug.LogWarning("[AuthManager] Desktop sign-in cancelled.");
         } catch (Exception e) {
             Debug.LogError($"[AuthManager] Desktop sign-in error: {e.Message}");
+        } finally {
+            GoogleSignInLoading.Instance.Hide();
         }
     }
 
