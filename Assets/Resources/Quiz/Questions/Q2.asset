@@ -17,9 +17,9 @@ MonoBehaviour:
   difficulty: 0
   timeLimit: 15
   pointValue: 100
-  questionImage: {fileID: 0}
   choices: []
   correctChoiceIndex: 0
+  answer: 1
   correctAnswer: 
   alternativeAnswers: []
   acceptableAnswers: []

@@ -10,7 +10,7 @@ public class MainThreadDispatcher : MonoBehaviour {
     private readonly Queue<Action> _queue = new Queue<Action>();
 
     void Awake() {
-        if (Instance != null) { Destroy(gameObject); return; }
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
         DontDestroyOnLoad(gameObject);
     }

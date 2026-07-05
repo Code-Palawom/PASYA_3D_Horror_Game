@@ -12,8 +12,6 @@ public class QuizAssignmentCoordinator : MonoBehaviour {
     void Awake() {
         Instance = this;
 
-        // Initialize in Awake so pools are ready before any gate's
-        // OnNetworkSpawn fires. Start() is too late for scene-placed NetworkObjects.
         if (NetworkManager.Singleton == null || !NetworkManager.Singleton.IsServer) return;
         if (GameSessionManager.Instance == null) {
             Debug.LogError("[QuizAssignmentCoordinator] GameSessionManager not ready in Awake. " +
@@ -32,22 +30,25 @@ public class QuizAssignmentCoordinator : MonoBehaviour {
 
         var set = QuizRepository.Instance.GetSetByName(setName);
         if (set == null) {
+            var availableNames = QuizRepository.Instance
+                .LoadCache()
+                .Select(e => e.name)
+                .ToList();
+
             Debug.LogError($"[QuizAssignmentCoordinator] Set '{setName}' not found. " +
-                           $"Available sets: {string.Join(", ", QuizRepository.Instance.GetAllSetNames())}");
+                           $"Available sets: {string.Join(", ", availableNames)}");
             return;
         }
 
         Debug.Log($"[QuizAssignmentCoordinator] Loading set '{setName}' " +
                   $"— {set.questions.Count} total questions.");
 
-        // Log every question's difficulty so we can verify grouping
         var diffBreakdown = set.questions
             .GroupBy(q => q.difficulty)
             .Select(g => $"{g.Key}: {g.Count()}");
         Debug.Log($"[QuizAssignmentCoordinator] Difficulty breakdown: " +
                   string.Join(", ", diffBreakdown));
 
-        // Group by difficulty and shuffle each bucket
         var byDifficulty = set.questions.GroupBy(q => q.difficulty);
 
         foreach (var group in byDifficulty) {

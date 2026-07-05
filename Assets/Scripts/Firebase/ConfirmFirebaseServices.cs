@@ -1,5 +1,6 @@
 using Firebase;
 using Firebase.Extensions;
+using Firebase.Firestore;
 using System;
 using UnityEngine;
 
@@ -27,6 +28,7 @@ public class ConfirmFirebaseServices : MonoBehaviour {
     public event Action OnFirebaseReady;
 
     private void Awake() {
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
     }
 
@@ -36,6 +38,8 @@ public class ConfirmFirebaseServices : MonoBehaviour {
             IsReady = true;
             Debug.Log("[ConfirmFirebaseServices] Firebase ready.");
             OnFirebaseReady?.Invoke();
+            var db = FirebaseFirestore.DefaultInstance;
+            QuizFetcher.Instance.Init(db);
         } else {
             Debug.LogError($"[ConfirmFirebaseServices] Dependency error: {status}");
         }

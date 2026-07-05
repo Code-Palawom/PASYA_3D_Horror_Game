@@ -46,6 +46,6 @@ public class CameraControls : MonoBehaviour {
 
     void HandleMouseScroll(InputAction.CallbackContext context) {
         scrollDelta = context.ReadValue<Vector2>();
-        Debug.Log($"Scroll value: {scrollDelta}");
+        //Debug.Log($"Scroll value: {scrollDelta}");
     }
 }

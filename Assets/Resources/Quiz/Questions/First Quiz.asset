@@ -13,6 +13,9 @@ MonoBehaviour:
   m_Name: First Quiz
   m_EditorClassIdentifier: Assembly-CSharp::QuizSetData
   setName: First Quiz
+  category: Random
+  authorId: Dev
+  authorName: Dev
   questions:
   - {fileID: 11400000, guid: 82a85a831ad7b1445ba6561d20b17afd, type: 2}
   - {fileID: 11400000, guid: f8280addb2f2b024d99a2c31af1a43a4, type: 2}

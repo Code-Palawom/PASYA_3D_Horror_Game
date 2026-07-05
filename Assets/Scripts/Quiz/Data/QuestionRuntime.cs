@@ -3,35 +3,38 @@ using System.Collections.Generic;
 // Universal runtime question class.
 // Used by everything at runtime — canvas, evaluator, manager.
 // Created from ScriptableObjects via QuestionData.ToRuntime()
-// or from JSON via QuizFetcher.
+// or from Firestore via QuizFetcher.
 [System.Serializable]
 public class QuestionRuntime {
+    // ── Common ────────────────────────────────────────────────
     public string questionText;
     public QuestionType questionType;
     public QuestionDifficulty difficulty;
     public float timeLimit = 15f;
     public int pointValue = 100;
 
-    // Multiple Choice / True or False
+    // ── Multiple Choice ───────────────────────────────────────
     public List<string> choices = new();
     public int correctChoiceIndex;
 
-    // Fill in the Blank
+    // ── True or False ─────────────────────────────────────────
+    public bool answerBool; // true=True, false=False
+                            // correctChoiceIndex is also set: 0=True, 1=False
+
+    // ── Fill in the Blank ─────────────────────────────────────
     public string correctAnswer;
     public List<string> alternativeAnswers = new();
 
-    // Short Answer
+    // ── Short Answer ──────────────────────────────────────────
     public List<string> acceptableAnswers = new();
     public List<string> requiredKeywords = new();
     public int requiredKeywordCount = 1;
 
     // Returns display choices.
-    // TrueOrFalse auto-returns ["True","False"] if choices list is empty.
+    // TrueOrFalse always returns ["True", "False"].
     public List<string> GetChoices() {
-        if (questionType == QuestionType.TrueOrFalse &&
-            (choices == null || choices.Count == 0))
+        if (questionType == QuestionType.TrueOrFalse)
             return new List<string> { "True", "False" };
-
         return choices;
     }
 }

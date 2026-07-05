@@ -14,7 +14,7 @@ using UnityEngine;
 // Attach to the same GameObject as AuthManager.
 public class DesktopGoogleAuth : MonoBehaviour {
     [Tooltip("Must match one of the Authorized Redirect URIs in Google Cloud Console")]
-    [SerializeField] private int port = 5000;
+    [SerializeField] private int port = 5001;
 
     // Pulled from SecretStore at runtime — never stored in a serialized field
     private string ClientId => SecretStore.GoogleClientId;
@@ -37,7 +37,7 @@ public class DesktopGoogleAuth : MonoBehaviour {
             throw new OperationCanceledException("OAuth sign-in was cancelled or timed out.");
 
         TokenResponse tokens = await ExchangeCodeAsync(code, codeVerifier);
-        var credential = GoogleAuthProvider.GetCredential(tokens.IdToken, null);
+        var credential = GoogleAuthProvider.GetCredential(tokens.Id, null);
         return await FirebaseAuth.DefaultInstance.SignInWithCredentialAsync(credential);
     }
 
@@ -47,16 +47,7 @@ public class DesktopGoogleAuth : MonoBehaviour {
         string scope = Uri.EscapeDataString("openid email profile");
         string redirect = Uri.EscapeDataString(RedirectUri);
 
-        return "https://accounts.google.com/o/oauth2/v2/auth"
-             + $"?client_id={ClientId}"
-             + $"&redirect_uri={redirect}"
-             + $"&response_type=code"
-             + $"&scope={scope}"
-             + $"&code_challenge={codeChallenge}"
-             + $"&code_challenge_method=S256"
-             + $"&state={state}"
-             + $"&access_type=offline"
-             + $"&prompt=select_account";
+        return "https://accounts.google.com/o/oauth2/v2/auth";
     }
 
     // ── Loopback listener ─────────────────────────────────────────────────
@@ -182,14 +173,7 @@ public class DesktopGoogleAuth : MonoBehaviour {
 
     private async Task<TokenResponse> ExchangeCodeAsync(string code, string codeVerifier) {
         using var http = new HttpClient();
-        var body = new FormUrlEncodedContent(new Dictionary<string, string> {
-            ["code"] = code,
-            ["client_id"] = ClientId,
-            ["client_secret"] = ClientSecret,
-            ["redirect_uri"] = RedirectUri,
-            ["grant_type"] = "authorization_code",
-            ["code_verifier"] = codeVerifier
-        });
+        var body = new FormUrlEncodedContent(new Dictionary<string, string> { });
 
         var resp = await http.PostAsync("https://oauth2.googleapis.com/token", body);
         var json = await resp.Content.ReadAsStringAsync();
@@ -228,8 +212,8 @@ public class DesktopGoogleAuth : MonoBehaviour {
 
     [Serializable]
     private class TokenResponse {
-        [JsonProperty("id_token")] public string IdToken { get; set; }
-        [JsonProperty("access_token")] public string AccessToken { get; set; }
-        [JsonProperty("refresh_token")] public string RefreshToken { get; set; }
+        [JsonProperty("id")] public string Id { get; set; }
+        [JsonProperty("access")] public string Access { get; set; }
+        [JsonProperty("refresh")] public string Refresh { get; set; }
     }
 }

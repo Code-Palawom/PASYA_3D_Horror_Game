@@ -1,25 +1,36 @@
+using Org.BouncyCastle.Crypto;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using UnityEngine;
 
 // Single source of truth for all quiz sets.
-// Persistent across scenes (MainMenu → Lobby → Level) via DontDestroyOnLoad,
-// since the Main Menu needs it to populate quiz dropdowns before any
-// network connection exists.
+// Persistent across scenes via DontDestroyOnLoad.
 
-// Saved files are protected by HMAC-SHA256 signatures (see QuizDataIntegrity).
+// Two-tier local storage:
+//                — lightweight cache for all sets (used by menu)
+//   {sha256(setId)}.bin   — full set data with questions (loaded on play)
+
+// Filenames are SHA-256 hashes of the setId — deterministic but opaque.
+// The setId → filename mapping is stored in cache.
 public class QuizRepository : MonoBehaviour {
     public static QuizRepository Instance { get; private set; }
 
     [Header("Local Sets (ScriptableObjects)")]
-    [Tooltip("Default question banks. Fetched data with the same name will override these.")]
+    [Tooltip("Default question banks. Always available, no download needed.")]
     [SerializeField] List<QuizSetData> localSets;
 
-    private List<QuizSetRuntime> _sets = new();
+    private readonly List<QuizSetRuntime> _localRuntimeSets = new();
 
-    private string SaveDirectory => Path.Combine(Application.persistentDataPath, "QuizSets");
-    private string SigPath(string jsonPath) => jsonPath + ".sig";
+    private string SaveDirectory => Path.Combine(Application.persistentDataPath, "");
+    private string CachePath => Path.Combine(SaveDirectory, "");
+
+    /// <summary>Returns the hashed .bin path for a given setId.</summary>
+    private string SetPath(string setId) =>
+        Path.Combine(SaveDirectory, $"");
 
     // ─────────────────────────────────────────────────────────
     void Awake() {
@@ -27,176 +38,190 @@ public class QuizRepository : MonoBehaviour {
         Instance = this;
         DontDestroyOnLoad(gameObject);
 
+        EnsureDirectory();
         LoadLocalSets();
-        LoadSavedSetsFromDisk();
     }
 
     // ─────────────────────────────────────────────────────────
-    // 1. Local SOs — always trusted, loaded first
+    // 1. Local SOs
     // ─────────────────────────────────────────────────────────
     void LoadLocalSets() {
         if (localSets == null) return;
-
         foreach (var so in localSets) {
             if (so == null) continue;
             var runtime = so.ToRuntime();
             runtime.source = QuizSetRuntime.SourceType.Local;
-            _sets.Add(runtime);
-            Debug.Log($"[QuizRepository] Local: '{runtime.name}' ({runtime.questions.Count} questions)");
+            _localRuntimeSets.Add(runtime);
+            Debug.Log($"[QuizRepository] Local set loaded: '{runtime.name}'");
         }
     }
 
-    // ─────────────────────────────────────────────────────────
-    // 2. Disk JSON — verify signature before accepting
-    // ─────────────────────────────────────────────────────────
-    void LoadSavedSetsFromDisk() {
-        if (!Directory.Exists(SaveDirectory)) return;
-
-        foreach (var file in Directory.GetFiles(SaveDirectory, "*.json")) {
-            try {
-                string json = File.ReadAllText(file);
-                string sigFile = SigPath(file);
-
-                if (!File.Exists(sigFile)) {
-                    Debug.LogWarning($"[QuizRepository] Missing signature for '{file}'. Skipping.");
-                    continue;
-                }
-
-                string savedSig = File.ReadAllText(sigFile).Trim();
-
-                if (!QuizDataIntegrity.Verify(json, savedSig)) {
-                    Debug.LogWarning($"[QuizRepository] Tampered file detected: '{file}'. Skipping.");
-                    DeleteCorruptedFile(file, sigFile);
-                    continue;
-                }
-
-                var wrapper = JsonUtility.FromJson<QuizSetJsonWrapper>(json);
-                if (wrapper?.questions == null) continue;
-
-                var runtime = wrapper.ToRuntime();
-                runtime.source = QuizSetRuntime.SourceType.Fetched;
-
-                RemoveByName(runtime.name);
-                _sets.Add(runtime);
-
-                Debug.Log($"[QuizRepository] Disk (verified): '{runtime.name}' ({runtime.questions.Count} questions)");
-            } catch (System.Exception e) {
-                Debug.LogWarning($"[QuizRepository] Failed to load '{file}': {e.Message}");
-            }
+    /// <summary>
+    /// Returns a QuizSetMetaEntry for each local SO set.
+    /// Local sets skip isVerified and always have hasLocalData = true.
+    /// Call in MainMenuUI.Start() alongside LoadCacheImmediately().
+    /// </summary>
+    public List<QuizSetMetaEntry> GetLocalSetMeta() {
+        if (localSets == null) return new List<QuizSetMetaEntry>();
+        var result = new List<QuizSetMetaEntry>();
+        foreach (var so in localSets) {
+            if (so == null) continue;
+            result.Add(so.ToMetaEntry());
         }
+        return result;
     }
 
     // ─────────────────────────────────────────────────────────
-    // 3. AddFetchedSet — called by QuizFetcher
+    // 2. Meta Cache
     // ─────────────────────────────────────────────────────────
-    public void AddFetchedSet(QuizSetRuntime set) {
-        set.source = QuizSetRuntime.SourceType.Fetched;
 
-        RemoveByName(set.name);
-        _sets.Add(set);
-
-        SaveToDisk(set);
-
-        Debug.Log($"[QuizRepository] Added/updated '{set.name}'. " +
-                  $"Total sets: {_sets.Count}, total questions: {TotalQuestions}");
-    }
-
-    // ─────────────────────────────────────────────────────────
-    void SaveToDisk(QuizSetRuntime set) {
+    public List<QuizSetMetaEntry> LoadCache() {
+        if (!File.Exists(CachePath)) return new List<QuizSetMetaEntry>();
         try {
-            if (!Directory.Exists(SaveDirectory))
-                Directory.CreateDirectory(SaveDirectory);
+            string json = SaveEncryption.Decrypt(File.ReadAllBytes(CachePath));
+            var wrapper = JsonUtility.FromJson<MetaCacheWrapper>(json);
+            if (wrapper?.entries == null) return new List<QuizSetMetaEntry>();
 
-            string safeName = string.Concat(set.name.Split(Path.GetInvalidFileNameChars()));
-            string jsonPath = Path.Combine(SaveDirectory, $"{safeName}.json");
-            string json = JsonUtility.ToJson(QuizSetJsonWrapper.FromRuntime(set), prettyPrint: true);
+            // Sync hasLocalData with actual disk state
+            foreach (var e in wrapper.entries)
+                e.hasLocalData = File.Exists(SetPath(e.setId));
 
-            File.WriteAllText(jsonPath, json);
-
-            string sig = QuizDataIntegrity.ComputeSignature(json);
-            File.WriteAllText(SigPath(jsonPath), sig);
-
-            Debug.Log($"[QuizRepository] Saved + signed '{set.name}' → {jsonPath}");
-        } catch (System.Exception e) {
-            Debug.LogWarning($"[QuizRepository] Save failed for '{set.name}': {e.Message}");
+            return wrapper.entries;
+        } catch (InvalidCipherTextException) {
+            Debug.LogWarning("[QuizRepository] tampered. Discarding.");
+            DeleteFile(CachePath);
+            return new List<QuizSetMetaEntry>();
+        } catch (Exception e) {
+            Debug.LogWarning($"[QuizRepository] read error: {e.Message}");
+            return new List<QuizSetMetaEntry>();
         }
     }
 
-    void DeleteCorruptedFile(string jsonPath, string sigPath) {
+    public void SaveMetaCache(List<QuizSetMetaEntry> entries) {
         try {
-            if (File.Exists(jsonPath)) File.Delete(jsonPath);
-            if (File.Exists(sigPath)) File.Delete(sigPath);
-            Debug.Log($"[QuizRepository] Deleted corrupted file: '{jsonPath}'");
-        } catch (System.Exception e) {
-            Debug.LogWarning($"[QuizRepository] Could not delete corrupted file: {e.Message}");
+            string json = JsonUtility.ToJson(new MetaCacheWrapper { entries = entries }, prettyPrint: true);
+            byte[] encrypted = SaveEncryption.Encrypt(json);
+            File.WriteAllBytes(CachePath, encrypted);
+            Debug.Log($"[QuizRepository] saved ({entries.Count} entries).");
+        } catch (Exception e) {
+            Debug.LogWarning($"[QuizRepository] save error: {e.Message}");
         }
     }
 
     // ─────────────────────────────────────────────────────────
-    // Get a random question across ALL sets, filtered by difficulty
+    // 3. Per-set .bin
     // ─────────────────────────────────────────────────────────
-    public QuestionRuntime GetRandomQuestion(QuestionDifficulty difficulty) {
-        var pool = _sets
-            .SelectMany(s => s.questions)
-            .Where(q => q.difficulty == difficulty)
-            .ToList();
 
-        if (pool.Count == 0) {
-            Debug.LogWarning($"[QuizRepository] No '{difficulty}' questions — using all.");
-            pool = _sets.SelectMany(s => s.questions).ToList();
-        }
+    /// <summary>
+    /// Returns the full QuizSetRuntime for the given display name.
+    /// Checks local SOs first, then loads from disk.
+    /// </summary>
+    public QuizSetRuntime GetSetByName(string name) {
+        var local = _localRuntimeSets.FirstOrDefault(s => s.name == name);
+        if (local != null) return local;
 
-        if (pool.Count == 0) {
-            Debug.LogError("[QuizRepository] Repository is empty.");
+        var cache = LoadCache().FirstOrDefault(e => e.name == name);
+        if (cache == null) {
+            Debug.LogWarning($"[QuizRepository] No cache entry for '{name}'.");
             return null;
         }
 
-        return pool[Random.Range(0, pool.Count)];
+        return LoadSetFromDisk(cache.setId);
     }
 
-    // ─────────────────────────────────────────────────────────
-    // Get a random question from ONE specific named set, filtered by difficulty.
-    // Used once a quiz session has a selected set (from the lobby).
-    // Falls back to searching all sets if setName is empty or not found.
-    // ─────────────────────────────────────────────────────────
-    public QuestionRuntime GetRandomQuestion(QuestionDifficulty difficulty, string setName) {
-        if (string.IsNullOrWhiteSpace(setName))
-            return GetRandomQuestion(difficulty);
-
-        var set = _sets.FirstOrDefault(s => s.name == setName);
-        if (set == null) {
-            Debug.LogWarning($"[QuizRepository] Set '{setName}' not found — falling back to all sets.");
-            return GetRandomQuestion(difficulty);
+    public QuizSetRuntime LoadSetFromDisk(string setId) {
+        string path = SetPath(setId);
+        if (!File.Exists(path)) {
+            Debug.LogWarning($"[QuizRepository] No .bin for set '{setId}'. Not downloaded yet.");
+            return null;
         }
 
-        var pool = set.questions.Where(q => q.difficulty == difficulty).ToList();
+        try {
+            string json = SaveEncryption.Decrypt(File.ReadAllBytes(path));
+            var wrapper = JsonUtility.FromJson<QuizSetJsonWrapper>(json);
+            if (wrapper?.questions == null) return null;
 
+            var runtime = wrapper.ToRuntime();
+            runtime.source = QuizSetRuntime.SourceType.Fetched;
+            Debug.Log($"[QuizRepository] Loaded from disk: '{runtime.name}' ({runtime.questions.Count} questions)");
+            return runtime;
+        } catch (InvalidCipherTextException) {
+            Debug.LogWarning($"[QuizRepository] '{setId}' bin tampered. Deleting.");
+            DeleteFile(path);
+            return null;
+        } catch (Exception e) {
+            Debug.LogWarning($"[QuizRepository] Failed to load '{setId}': {e.Message}");
+            return null;
+        }
+    }
+
+    public void SaveSetToDisk(string setId, QuizSetRuntime set) {
+        try {
+            string json = JsonUtility.ToJson(QuizSetJsonWrapper.FromRuntime(set), prettyPrint: true);
+            byte[] encrypted = SaveEncryption.Encrypt(json);
+            File.WriteAllBytes(SetPath(setId), encrypted);
+            Debug.Log($"[QuizRepository] Saved set '{setId}' → {HashId(setId)}.bin");
+        } catch (Exception e) {
+            Debug.LogWarning($"[QuizRepository] Failed to save '{setId}': {e.Message}");
+        }
+    }
+
+    public void DeleteSetFromDisk(string setId) {
+        DeleteFile(SetPath(setId));
+        Debug.Log($"[QuizRepository] Deleted bin for '{setId}'.");
+    }
+
+    public bool SetExistsOnDisk(string setId) => File.Exists(SetPath(setId));
+
+    // ─────────────────────────────────────────────────────────
+    // 4. Question access
+    // ─────────────────────────────────────────────────────────
+
+    public QuestionRuntime GetRandomQuestion(QuestionDifficulty difficulty, string setName) {
+        var set = GetSetByName(setName);
+        if (set == null) return null;
+
+        var pool = set.questions.Where(q => q.difficulty == difficulty).ToList();
         if (pool.Count == 0) {
-            Debug.LogWarning($"[QuizRepository] No '{difficulty}' questions in set '{setName}' — using any from that set.");
+            Debug.LogWarning($"[QuizRepository] No '{difficulty}' in '{setName}' — using any.");
             pool = set.questions;
         }
 
-        if (pool.Count == 0) {
-            Debug.LogError($"[QuizRepository] Set '{setName}' has no questions at all.");
-            return null;
-        }
+        if (pool.Count == 0) { Debug.LogError($"[QuizRepository] '{setName}' has no questions."); return null; }
 
-        return pool[Random.Range(0, pool.Count)];
+        return pool[UnityEngine.Random.Range(0, pool.Count)];
     }
 
     // ─────────────────────────────────────────────────────────
     // Utilities
     // ─────────────────────────────────────────────────────────
-    void RemoveByName(string name) =>
-        _sets.RemoveAll(s => s.name == name);
 
-    public List<QuizSetRuntime> GetAllSets() => _sets;
-    public int TotalQuestions => _sets.Sum(s => s.questions.Count);
+    void EnsureDirectory() {
+        if (!Directory.Exists(SaveDirectory))
+            Directory.CreateDirectory(SaveDirectory);
+    }
 
-    // Names of all available quiz sets — used to populate dropdowns. </summary>
-    public List<string> GetAllSetNames() => _sets.Select(s => s.name).ToList();
+    void DeleteFile(string path) {
+        try { if (File.Exists(path)) File.Delete(path); } catch (Exception e) { Debug.LogWarning($"[QuizRepository] Delete failed '{path}': {e.Message}"); }
+    }
 
-    // Look up one set by exact name. Returns null if not found. </summary>
-    public QuizSetRuntime GetSetByName(string name) =>
-        _sets.FirstOrDefault(s => s.name == name);
+    // Returns a deterministic SHA-256 hex string for the given setId.
+    // Used as the filename for per-set .bin files.
+    // Example: "science-quiz" → "3b4c1f..."
+    static string HashId(string id) {
+        using var sha = SHA256.Create();
+        byte[] hash = sha.ComputeHash(Encoding.UTF8.GetBytes(id));
+        return Convert.ToBase64String(hash)
+            .Replace('+', '-')
+            .Replace('/', '_')
+            .TrimEnd('=');
+    }
+
+    public List<QuizSetMetaEntry> GetAllMeta() => LoadCache();
+    public List<QuizSetMetaEntry> GetMetaByCategory(string cat) =>
+        LoadCache().Where(e => e.category == cat).ToList();
+    public List<string> GetAllCategories() =>
+        LoadCache().Select(e => e.category)
+                       .Where(c => !string.IsNullOrWhiteSpace(c))
+                       .Distinct().OrderBy(c => c).ToList();
 }
