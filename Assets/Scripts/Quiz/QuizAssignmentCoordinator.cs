@@ -31,7 +31,7 @@ public class QuizAssignmentCoordinator : MonoBehaviour {
         var set = QuizRepository.Instance.GetSetByName(setName);
         if (set == null) {
             var availableNames = QuizRepository.Instance
-                .LoadCache()
+                .LoadMetaCache()
                 .Select(e => e.name)
                 .ToList();
 
