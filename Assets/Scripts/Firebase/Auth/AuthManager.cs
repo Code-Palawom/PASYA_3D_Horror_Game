@@ -194,12 +194,12 @@ public class AuthManager : MonoBehaviour {
             // once this write lands, so we don't invoke the event here.
             var defaultProfile = new PlayerProfile {
                 DisplayName = user.DisplayName ?? "Player",
-                Level = 1,
                 Xp = 0,
                 GamesPlayed = 0,
                 HighScore = 0,
                 CorrectAnswers = 0,
                 IncorrectAnswers = 0,
+                Role = PlayerRole.Player.ToString(),
                 // Placeholders — immediately overwritten below with the authoritative
                 // server clock, since Timestamp can't hold the ServerTimestamp sentinel directly.
                 CreatedAt = Timestamp.GetCurrentTimestamp(),
@@ -246,10 +246,10 @@ public class AuthManager : MonoBehaviour {
         _lastLoginBumpedThisSession = false;
     }
 
-    /// <summary>Call when a question is answered correctly. Increments the counter server-side; the live listener will push the updated profile back via OnPlayerStatsLoaded.</summary>
+    // Call when a question is answered correctly. Increments the counter server-side; the live listener will push the updated profile back via OnPlayerStatsLoaded.
     public Task RecordQuestionAnsweredCorrectlyAsync() => IncrementProfileFieldAsync("CorrectAnswers");
 
-    /// <summary>Call when a question is answered incorrectly. Increments the counter server-side; the live listener will push the updated profile back via OnPlayerStatsLoaded.</summary>
+    // Call when a question is answered incorrectly. Increments the counter server-side; the live listener will push the updated profile back via OnPlayerStatsLoaded.
     public Task RecordQuestionAnsweredIncorrectlyAsync() => IncrementProfileFieldAsync("IncorrectAnswers");
 
     private async Task IncrementProfileFieldAsync(string fieldName) {
