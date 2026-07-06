@@ -4,6 +4,8 @@ using Firebase.Firestore;
 using Google;
 using System;
 using System.Collections.Generic;
+using System.Net.Http;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -17,16 +19,16 @@ using UnityEngine;
 public class AuthManager : MonoBehaviour {
     public static AuthManager Instance { get; private set; }
 
-    /// <summary>The currently signed-in Firebase user, or null.</summary>
+    // The currently signed-in Firebase user, or null.
     public FirebaseUser CurrentUser => _auth?.CurrentUser;
 
-    /// <summary>Fires on main thread whenever auth state changes (sign-in or sign-out).</summary>
+    // Fires on main thread whenever auth state changes (sign-in or sign-out).
     public event Action<FirebaseUser> OnAuthStateChanged;
 
-    /// <summary>Fires on main thread every time the player's Firestore profile document changes (initial load, level-up, answer counters, etc).</summary>
+    // Fires on main thread every time the player's Firestore profile document changes (initial load, level-up, answer counters, etc).
     public event Action<PlayerProfile> OnPlayerStatsLoaded;
 
-    /// <summary>Latest known profile snapshot, cached for synchronous access (e.g. UI that inits after the event already fired).</summary>
+    // Latest known profile snapshot, cached for synchronous access (e.g. UI that inits after the event already fired).
     public PlayerProfile CurrentProfile { get; private set; }
 
     [Tooltip("Assign the DesktopGoogleAuth component on this same GameObject.")]
@@ -66,9 +68,7 @@ public class AuthManager : MonoBehaviour {
 
     // ── Public API ────────────────────────────────────────────────────────
 
-    /// <summary>
-    /// Starts the sign-in flow. Uses Google (Android) or PKCE browser redirect (Desktop/Editor).
-    /// </summary>
+    // Starts the sign-in flow. Uses Google (Android) or PKCE browser redirect (Desktop/Editor).
     public void SignIn() {
         if (!_firebaseReady) {
             Debug.LogWarning("[AuthManager] Firebase not ready yet.");
@@ -82,7 +82,7 @@ public class AuthManager : MonoBehaviour {
 #endif
     }
 
-    /// <summary>Signs out of both Firebase and Google (Android only).</summary>
+    // Signs out of both Firebase and Google (Android only).
     public void SignOut() {
         if (_auth == null) return;
 
@@ -115,18 +115,42 @@ public class AuthManager : MonoBehaviour {
         {
             MainThreadDispatcher.Instance.Enqueue(() =>
             {
-                if (task.IsFaulted || task.IsCanceled)
+                // User dismissed the Google account picker
+                if (task.IsCanceled)
                 {
-                    Debug.LogError("[AuthManager] Android Google Sign-In failed: " + task.Exception);
+                    Debug.LogWarning("[AuthManager] Android Google Sign-In cancelled.");
+                    GoogleSignInLoading.Instance.Hide();
                     return;
                 }
 
+                if (task.IsFaulted)
+                {
+                    Debug.LogError("[AuthManager] Android Google Sign-In failed: " + task.Exception);
+                    GoogleSignInLoading.Instance.ShowError(GetAndroidErrorMessage(task.Exception));
+                    return;
+                }
+
+                // Google sign-in succeeded — now authenticate with Firebase
                 var credential = GoogleAuthProvider.GetCredential(task.Result.IdToken, null);
                 _auth.SignInWithCredentialAsync(credential).ContinueWith(HandleFirebaseResult);
             });
         });
+    }
 
-        GoogleSignInLoading.Instance.Hide();
+    private static string GetAndroidErrorMessage(AggregateException ex) {
+        string msg = ex?.InnerException?.Message ?? ex?.Message ?? "";
+
+        // Google Play Services not available or outdated
+        if (msg.Contains("ApiException") || msg.Contains("SIGN_IN_FAILED"))
+            return "Google Sign-In failed.\nCheck Play Services.";
+
+        // Network-related
+        if (msg.Contains("network") || msg.Contains("connect") || msg.Contains("timeout")
+            || ex?.InnerException is HttpRequestException
+            || ex?.InnerException is SocketException)
+            return "No internet connection.";
+
+        return "Sign-in failed. Try again.";
     }
 #endif
 
@@ -138,28 +162,64 @@ public class AuthManager : MonoBehaviour {
         try {
             GoogleSignInLoading.Instance.Show("Signing in", onCancel: () => cts.Cancel());
 
-            var signInTask = desktopGoogleAuth.SignInAsync(cts.Token); // ← pass token
-            var user = await signInTask;
+            var user = await desktopGoogleAuth.SignInAsync(cts.Token);
+
+            // Success — hide immediately before proceeding
+            GoogleSignInLoading.Instance.Hide();
             OnSignInSuccess(user);
+
         } catch (OperationCanceledException) {
             Debug.LogWarning("[AuthManager] Desktop sign-in cancelled.");
+            GoogleSignInLoading.Instance.Hide();   // immediate, no error message
+
         } catch (Exception e) {
             Debug.LogError($"[AuthManager] Desktop sign-in error: {e.Message}");
+            GoogleSignInLoading.Instance.ShowError(GetDesktopErrorMessage(e)); // auto-hides after 3s
+
         } finally {
-            cts.Dispose();
+            cts?.Dispose();
             cts = null;
-            GoogleSignInLoading.Instance.Hide();
+            // NOTE: Hide() is NOT called here — each branch handles its own dismiss
+            // so ShowError() has time to display before hiding.
         }
     }
 
-    // Shared handlers
+    private static string GetDesktopErrorMessage(Exception e) {
+        bool isNetwork = e is HttpRequestException
+                      || e.InnerException is SocketException
+                      || e.Message.Contains("network")
+                      || e.Message.Contains("connect")
+                      || e.Message.Contains("timeout");
 
+        return isNetwork ? "No internet connection." : "Sign-in failed. Try again.";
+    }
+
+    // ── Shared handlers ───────────────────────────────────────────────────
+
+    // Called after Android Firebase credential sign-in completes.
+    // Handles both the overlay dismiss and error display.
     private void HandleFirebaseResult(Task<FirebaseUser> task) {
         MainThreadDispatcher.Instance.Enqueue(() => {
-            if (task.IsFaulted || task.IsCanceled) {
-                Debug.LogError("[AuthManager] Firebase sign-in failed: " + task.Exception);
+            if (task.IsCanceled) {
+                Debug.LogWarning("[AuthManager] Firebase sign-in cancelled.");
+                GoogleSignInLoading.Instance.Hide();
                 return;
             }
+
+            if (task.IsFaulted) {
+                Debug.LogError("[AuthManager] Firebase sign-in failed: " + task.Exception);
+
+                string msg = task.Exception?.InnerException is HttpRequestException
+                          || task.Exception?.InnerException is SocketException
+                    ? "No internet connection."
+                    : "Sign-in failed. Try again.";
+
+                GoogleSignInLoading.Instance.ShowError(msg); // auto-hides
+                return;
+            }
+
+            // All good — hide overlay then proceed
+            GoogleSignInLoading.Instance.Hide();
             OnSignInSuccess(task.Result);
         });
     }
@@ -249,7 +309,7 @@ public class AuthManager : MonoBehaviour {
     // Call when a question is answered correctly. Increments the counter server-side; the live listener will push the updated profile back via OnPlayerStatsLoaded.
     public Task RecordQuestionAnsweredCorrectlyAsync() => IncrementProfileFieldAsync("CorrectAnswers");
 
-    // Call when a question is answered incorrectly. Increments the counter server-side; the live listener will push the updated profile back via OnPlayerStatsLoaded.
+    // >Call when a question is answered incorrectly. Increments the counter server-side; the live listener will push the updated profile back via OnPlayerStatsLoaded.
     public Task RecordQuestionAnsweredIncorrectlyAsync() => IncrementProfileFieldAsync("IncorrectAnswers");
 
     private async Task IncrementProfileFieldAsync(string fieldName) {

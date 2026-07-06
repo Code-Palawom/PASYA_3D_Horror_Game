@@ -37,6 +37,7 @@ public class GoogleSignInLoading : MonoBehaviour {
     // Public API
     public void Show(string message = "Signing in", Action onCancel = null) {
         panel.gameObject.SetActive(true);
+        statusText.color = Color.white;
         statusText.text = message + "...";
         StopAllCoroutines();
         StartCoroutine(AnimateIn());
@@ -50,6 +51,12 @@ public class GoogleSignInLoading : MonoBehaviour {
         if (onCancel != null)
             cancelButton.onClick.AddListener(() => onCancel?.Invoke());
 #endif
+    }
+
+    public void ShowError(string message) {
+        StopAllCoroutines();
+        statusText.color = Color.red;
+        statusText.text = message;
     }
 
     public void Hide() {
