@@ -72,7 +72,7 @@ public class GameSessionManager : NetworkBehaviour {
             NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
 
             string hostName = GameModeManager.Instance != null
-                ? GameModeManager.Instance.LocalPlayerName
+                ? AuthManager.Instance.CurrentProfile?.DisplayName ?? "Host"
                 : "Host";
             AddPlayer(NetworkManager.Singleton.LocalClientId, hostName);
         }

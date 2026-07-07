@@ -256,7 +256,6 @@ public class AuthManager : MonoBehaviour {
                 DisplayName = user.DisplayName ?? "Player",
                 Xp = 0,
                 GamesPlayed = 0,
-                HighScore = 0,
                 CorrectAnswers = 0,
                 IncorrectAnswers = 0,
                 Role = PlayerRole.Player.ToString(),
@@ -306,10 +305,42 @@ public class AuthManager : MonoBehaviour {
         _lastLoginBumpedThisSession = false;
     }
 
+    // Call when the player wants to change their display name.
+    // Enforces a 14-day cooldown client-side for immediate UX feedback — the real
+    // enforcement lives in Firestore Security Rules, since this check alone could
+    // be bypassed by a modified client.
+    // <returns>True if the change was submitted; false if still on cooldown or not signed in.</returns>
+    public async Task<bool> RequestDisplayNameChangeAsync(string newDisplayName) {
+        if (_profileDocRef == null || CurrentProfile == null) {
+            Debug.LogWarning("[AuthManager] Tried to change display name with no active profile (not signed in?).");
+            return false;
+        }
+
+        if (CurrentProfile.LastNameChange is Timestamp lastChange) {
+            var elapsed = DateTime.UtcNow - lastChange.ToDateTime();
+            if (elapsed.TotalDays < 14) {
+                double daysLeft = 14 - elapsed.TotalDays;
+                Debug.LogWarning($"[AuthManager] Display name change blocked — {daysLeft:F1} day(s) remaining on cooldown.");
+                return false;
+            }
+        }
+
+        try {
+            await _profileDocRef.UpdateAsync(new Dictionary<string, object> {
+                { "DisplayName", newDisplayName },
+                { "LastNameChange", FieldValue.ServerTimestamp }
+            });
+            return true;
+        } catch (Exception e) {
+            Debug.LogError($"[AuthManager] Failed to change display name: {e.Message}");
+            return false;
+        }
+    }
+
     // Call when a question is answered correctly. Increments the counter server-side; the live listener will push the updated profile back via OnPlayerStatsLoaded.
     public Task RecordQuestionAnsweredCorrectlyAsync() => IncrementProfileFieldAsync("CorrectAnswers");
 
-    // >Call when a question is answered incorrectly. Increments the counter server-side; the live listener will push the updated profile back via OnPlayerStatsLoaded.
+    // Call when a question is answered incorrectly. Increments the counter server-side; the live listener will push the updated profile back via OnPlayerStatsLoaded.
     public Task RecordQuestionAnsweredIncorrectlyAsync() => IncrementProfileFieldAsync("IncorrectAnswers");
 
     private async Task IncrementProfileFieldAsync(string fieldName) {

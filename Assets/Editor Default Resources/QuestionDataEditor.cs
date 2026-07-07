@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using UnityEditor;
 using UnityEngine;
 
@@ -48,3 +49,4 @@ public class QuestionDataEditor : Editor {
         serializedObject.ApplyModifiedProperties();
     }
 }
+#endif

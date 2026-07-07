@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 // Handles NGO connection approval on the server side.
 // Must register its callback BEFORE StartHost()/StartClient() is called.
@@ -11,10 +12,13 @@ public class ConnectionApprovalHandler : MonoBehaviour {
     public const string ReasonFull = "REASON:FULL";
     public const string ReasonInProgress = "REASON:IN_PROGRESS";
     public const string ReasonCountdown = "REASON:COUNTDOWN";
+    public const string ReasonVersionMismatch = "REASON:VERSION_MISMATCH";
 
     // Server-side cache: clientId → player name, populated during approval,
     // consumed and cleared by GameSessionManager.OnClientConnected.
     public static readonly Dictionary<ulong, string> PendingNames = new();
+    public static readonly Dictionary<ulong, PlayerRole> PendingRoles = new();
+    public static string GameVersion => Application.version;
 
     void Awake() {
         // Must happen before StartHost() — Awake() runs before Start()
@@ -47,59 +51,89 @@ public class ConnectionApprovalHandler : MonoBehaviour {
     void ApprovalCheck(
         NetworkManager.ConnectionApprovalRequest request,
         NetworkManager.ConnectionApprovalResponse response) {
-        // Host always approves itself
+        // Host self‑approval — role comes straight from the host's own signed-in profile.
         if (request.ClientNetworkId == NetworkManager.Singleton.LocalClientId) {
             response.Approved = true;
             response.CreatePlayerObject = false;
+
+            PendingRoles[request.ClientNetworkId] =
+                AuthManager.Instance != null && AuthManager.Instance.CurrentProfile != null
+                    ? AuthManager.Instance.CurrentProfile.RoleEnum
+                    : PlayerRole.Player;
 
             Debug.Log("[ConnectionApproval] Host approved.");
             return;
         }
 
-        int currentPlayers = NetworkManager.Singleton.ConnectedClientsList.Count;
+        // Decode version + name + role from JSON payload
+        string version = "";
+        string playerName = AuthManager.Instance.CurrentProfile?.DisplayName ?? "Player";
+        PlayerRole role = PlayerRole.Player;
 
-        // 1. Max players reached
+        if (request.Payload != null && request.Payload.Length > 0) {
+            string json = System.Text.Encoding.UTF8.GetString(request.Payload);
+            try {
+                var payload = JsonUtility.FromJson<ConnectionPayload>(json);
+                version = payload.version ?? "";
+                playerName = payload.playerName ?? "Player";
+                role = (PlayerRole)payload.role;
+            } catch {
+                Deny(response, ReasonVersionMismatch);
+                Debug.Log($"[ConnectionApproval] Rejected {request.ClientNetworkId} — invalid payload.");
+                return;
+            }
+        }
+
+        // 1. Version mismatch
+        if (version != GameVersion) {
+            Deny(response, ReasonVersionMismatch);
+            Debug.Log($"[ConnectionApproval] Rejected {request.ClientNetworkId} — version mismatch. " +
+                      $"Client: '{version}' Host: '{GameVersion}'");
+            return;
+        }
+
+        // 2. Max players
+        int currentPlayers = NetworkManager.Singleton.ConnectedClientsList.Count;
         if (currentPlayers >= MaxPlayers) {
             Deny(response, ReasonFull);
             Debug.Log($"[ConnectionApproval] Rejected {request.ClientNetworkId} — lobby full.");
             return;
         }
 
-        // 2. Level scene already loaded (game in progress)
-        string activeScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+        // 3. Game in progress
+        string activeScene = SceneManager.GetActiveScene().name;
         bool inLevel = GameSessionManager.Instance != null &&
-                       activeScene == GameSessionManager.Instance
-                           .SelectedLevelSceneName.Value.ToString();
-
+                       activeScene == GameSessionManager.Instance.SelectedLevelSceneName.Value.ToString();
         if (inLevel) {
             Deny(response, ReasonInProgress);
             Debug.Log($"[ConnectionApproval] Rejected {request.ClientNetworkId} — game in progress.");
             return;
         }
 
-        // 3. Countdown has started in the Lobby
+        // 4. Countdown active
         if (LobbyReadyManager.Instance != null && LobbyReadyManager.Instance.IsCountdownActive) {
             Deny(response, ReasonCountdown);
             Debug.Log($"[ConnectionApproval] Rejected {request.ClientNetworkId} — countdown active.");
             return;
         }
 
-        // All checks passed — decode player name from payload
-        string playerName = "Player";
-        if (request.Payload != null && request.Payload.Length > 0)
-            playerName = System.Text.Encoding.UTF8.GetString(request.Payload);
-
-        // Cache it so GameSessionManager can consume it in OnClientConnected
+        // All checks passed
         PendingNames[request.ClientNetworkId] = playerName;
-
+        PendingRoles[request.ClientNetworkId] = role;
         response.Approved = true;
         response.CreatePlayerObject = false;
-
-        Debug.Log($"[ConnectionApproval] Approved {request.ClientNetworkId} as '{playerName}' ({currentPlayers + 1}/{MaxPlayers}).");
+        Debug.Log($"[ConnectionApproval] Approved {request.ClientNetworkId} as '{playerName}' (Role: {role}) ({currentPlayers + 1}/{MaxPlayers}).");
     }
 
     static void Deny(NetworkManager.ConnectionApprovalResponse response, string reason) {
         response.Approved = false;
         response.Reason = reason;
+    }
+
+    [System.Serializable]
+    private class ConnectionPayload {
+        public string version;
+        public string playerName;
+        public byte role; // cast to/from PlayerRole
     }
 }

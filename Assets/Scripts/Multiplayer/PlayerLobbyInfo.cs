@@ -1,4 +1,5 @@
 using System;
+using System.Data;
 using Unity.Collections;
 using Unity.Netcode;
 
@@ -8,10 +9,12 @@ using Unity.Netcode;
 public struct PlayerLobbyInfo : INetworkSerializable, IEquatable<PlayerLobbyInfo> {
     public ulong ClientId;
     public FixedString32Bytes PlayerName;
+    public FixedString32Bytes Role;
 
     public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter {
         serializer.SerializeValue(ref ClientId);
         serializer.SerializeValue(ref PlayerName);
+        serializer.SerializeValue(ref Role);
     }
 
     public bool Equals(PlayerLobbyInfo other) => ClientId == other.ClientId;

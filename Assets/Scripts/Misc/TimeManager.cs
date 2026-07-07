@@ -3,6 +3,8 @@ using Unity.Netcode;
 using UnityEngine;
 
 public class TimeManager : NetworkBehaviour {
+    public static TimeManager Instance { get; private set; }
+
     [SerializeField] private Texture2D skyboxNight;
     [SerializeField] private Texture2D skyboxSunrise;
     [SerializeField] private Texture2D skyboxDay;
@@ -22,6 +24,9 @@ public class TimeManager : NetworkBehaviour {
     [Tooltip("How many in-game minutes each skybox/light transition takes (e.g. 120 = 2 in-game hours).")]
     [SerializeField] private float transitionLengthInGameMinutes = 120f;
 
+    [Header("UI (optional scene-based clock)")]
+    [SerializeField] private TMPro.TMP_Text clockText;
+
     private float SecondsPerGameMinute => (dayLengthInRealMinutes * 60f) / 1440f;
     private float TransitionRealSeconds => transitionLengthInGameMinutes * SecondsPerGameMinute;
 
@@ -32,37 +37,42 @@ public class TimeManager : NetworkBehaviour {
     private readonly NetworkVariable<int> netHours = new NetworkVariable<int>(
         8, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+    // Days start at 1 (Day 1), stored internally as 0-indexed and exposed via DisplayDay
     private readonly NetworkVariable<int> netDays = new NetworkVariable<int>(
         0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     public int Minutes => netMinutes.Value;
     public int Hours => netHours.Value;
     public int Days => netDays.Value;
+    public int DisplayDay => netDays.Value + 1; // "Day 1" on day zero
 
     private float tempSecond;
     private Coroutine skyboxRoutine;
     private Coroutine lightRoutine;
 
-    public static TimeManager Instance { get; private set; }
+    // ---- Event other scripts (e.g. player prefab UI) can subscribe to ----
+    public event System.Action OnTimeUpdated;
+
+    private void Awake() {
+        if (Instance != null && Instance != this) {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+    }
 
     public override void OnNetworkSpawn() {
-        if (Instance != null) { Destroy(gameObject); return; }
-        Instance = this;
-        DontDestroyOnLoad(gameObject);
-
         netHours.OnValueChanged += OnHoursChanged;
-        netMinutes.OnValueChanged += OnMinutesChanged;
+        netMinutes.OnValueChanged += (_, _) => { UpdateLightRotation(); UpdateClockUI(); };
+        netDays.OnValueChanged += (_, _) => UpdateClockUI();
 
-        // Snap instantly to correct visuals — no tween for late joiners / host start
         ApplyInstantState();
+        UpdateClockUI();
     }
 
     public override void OnNetworkDespawn() {
-        if (Instance == this)
-            Instance = null;
-
+        if (Instance == this) Instance = null;
         netHours.OnValueChanged -= OnHoursChanged;
-        netMinutes.OnValueChanged -= OnMinutesChanged;
     }
 
     private void Update() {
@@ -96,10 +106,6 @@ public class TimeManager : NetworkBehaviour {
     }
 
     // ---- Runs on every client (incl. host) whenever synced state changes ----
-    private void OnMinutesChanged(int oldValue, int newValue) {
-        UpdateLightRotation();
-    }
-
     private void OnHoursChanged(int oldValue, int newValue) {
         float t = TransitionRealSeconds;
 
@@ -165,5 +171,61 @@ public class TimeManager : NetworkBehaviour {
             RenderSettings.fogColor = globalLight.color;
             yield return null;
         }
+    }
+
+    // ---- 12-hour formatting: "12:30AM", "9:00PM" ----
+    public string GetFormattedTime() {
+        int h = netHours.Value;
+        int m = netMinutes.Value;
+
+        string period = h >= 12 ? "PM" : "AM";
+        int displayHour = h % 12;
+        if (displayHour == 0) displayHour = 12;
+
+        return $"{displayHour}:{m:00}{period}";
+    }
+
+    // ---- "Day 5" formatting ----
+    public string GetFormattedDay() {
+        return $"Day {DisplayDay}";
+    }
+
+    private void UpdateClockUI() {
+        if (clockText != null) clockText.text = GetFormattedTime();
+        OnTimeUpdated?.Invoke();
+    }
+
+    // ---- Admin: set absolute time ----
+    [ServerRpc(RequireOwnership = false)]
+    public void SetTimeServerRpc(int hour, int minute) {
+        hour = Mathf.Clamp(hour, 0, 23);
+        minute = Mathf.Clamp(minute, 0, 59);
+
+        netMinutes.Value = minute;
+        if (netHours.Value != hour) netHours.Value = hour;
+        else OnHoursChanged(hour, hour); // force re-check even if hour didn't change
+    }
+
+    // ---- Admin: skip forward by a duration ----
+    [ServerRpc(RequireOwnership = false)]
+    public void SkipTimeServerRpc(int hoursToSkip, int minutesToSkip) {
+        int totalMinutes = netHours.Value * 60 + netMinutes.Value + hoursToSkip * 60 + minutesToSkip;
+        int daysToAdd = totalMinutes / 1440;
+        totalMinutes %= 1440;
+        if (totalMinutes < 0) { totalMinutes += 1440; daysToAdd -= 1; }
+
+        int newHour = totalMinutes / 60;
+        int newMinute = totalMinutes % 60;
+
+        if (daysToAdd != 0) netDays.Value += daysToAdd;
+        netMinutes.Value = newMinute;
+        netHours.Value = newHour;
+
+        ApplyInstantStateClientRpc(); // ensures visuals always match, even on no-op hour changes (e.g. exact 24h skip)
+    }
+
+    [ClientRpc]
+    private void ApplyInstantStateClientRpc() {
+        ApplyInstantState();
     }
 }

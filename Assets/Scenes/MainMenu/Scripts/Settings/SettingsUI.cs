@@ -1,10 +1,16 @@
+using Firebase.Firestore;
+using System;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 
 public class SettingsUI : MonoBehaviour {
     [Header("Name")]
     [SerializeField] private TMP_InputField nameField;
+    [SerializeField] private TMP_Text nameChangeStatus;
+    [SerializeField] private Color canCangeNameColor;
+    [SerializeField] private Color cannotChangeNameColor;
+    [SerializeField] private Button nameSaveButton;
 
     [Header("Quality Carousel")]
     [SerializeField] private Button btnQualityPrev;
@@ -34,7 +40,6 @@ public class SettingsUI : MonoBehaviour {
     }
 
     void Start() {
-
         // Quality carousel
         btnQualityPrev.onClick.AddListener(() => StepQuality(-1));
         btnQualityNext.onClick.AddListener(() => StepQuality(+1));
@@ -43,10 +48,19 @@ public class SettingsUI : MonoBehaviour {
         btnFirstPerson.onClick.AddListener(() => SetPOV(true));
         btnThirdPerson.onClick.AddListener(() => SetPOV(false));
 
-        // Name — auto-save on field exit, not on every keystroke
-        nameField.onEndEdit.AddListener(_ => AutoSave());
-
         nameTagToggle.onValueChanged.AddListener((isOn) => SetNameTagVisibility(isOn));
+        nameSaveButton.onClick.AddListener(() => ChangeName());
+
+        AuthManager.Instance.OnPlayerStatsLoaded += RefreshName;
+        AuthManager.Instance.OnAuthStateChanged += (user) => {
+            if (user == null) {
+                nameField.text = "";
+                nameChangeStatus.text = "Sign in to change your name.";
+                nameChangeStatus.color = cannotChangeNameColor;
+                nameSaveButton.interactable = false;
+                nameField.interactable = false;
+            }
+        };
 
         if (SettingsManager.Instance != null)
             Populate(SettingsManager.Instance.Current);
@@ -100,7 +114,29 @@ public class SettingsUI : MonoBehaviour {
 
     // ── Populate from loaded settings ────────────────────────
     private void Populate(GameSettings s) {
-        nameField.text = s.playerName;
+        if(AuthManager.Instance.CurrentProfile != null) {
+            PlayerProfile player = AuthManager.Instance.CurrentProfile;
+            nameField.text = player.DisplayName;
+
+            if (player.LastNameChange is Timestamp lastChange) {
+                var elapsed = DateTime.UtcNow - lastChange.ToDateTime();
+                if (elapsed.TotalDays > 14) {
+                    nameChangeStatus.color = canCangeNameColor;
+                    nameChangeStatus.text = "Name change available";
+                    nameSaveButton.interactable = true;
+                    nameField.interactable = true;
+                } else {
+                    double daysLeft = 14 - elapsed.TotalDays;
+                    nameChangeStatus.color = cannotChangeNameColor;
+                    nameChangeStatus.text = $"Available in {daysLeft:F1} day(s).";
+                }
+            } else {
+                nameChangeStatus.color = canCangeNameColor;
+                nameChangeStatus.text = "Name change available";
+                nameSaveButton.interactable = true;
+                nameField.interactable = true;
+            }
+        }
 
         _qualityIndex = Mathf.Clamp(s.qualityLevel, 0, _qualityNames.Length - 1);
         qualityLabel.text = _qualityNames[_qualityIndex];
@@ -112,6 +148,57 @@ public class SettingsUI : MonoBehaviour {
 
         // Name tag toggle
         nameTagToggle.SetIsOnWithoutNotify(s.showNameTags);
+    }
+
+    private void RefreshName(PlayerProfile profile) {
+        nameField.text = profile.DisplayName;
+
+        if (profile.LastNameChange is Timestamp lastChange) {
+            var elapsed = DateTime.UtcNow - lastChange.ToDateTime();
+            if (elapsed.TotalDays > 14) {
+                nameChangeStatus.color = canCangeNameColor;
+                nameChangeStatus.text = "Name change available";
+                nameSaveButton.interactable = true;
+                nameField.interactable = true;
+            } else {
+                double daysLeft = 14 - elapsed.TotalDays;
+                nameChangeStatus.color = cannotChangeNameColor;
+                nameChangeStatus.text = $"Available in {daysLeft:F1} day(s).";
+            }
+        } else {
+            nameChangeStatus.color = canCangeNameColor;
+            nameChangeStatus.text = "Name change available";
+            nameSaveButton.interactable = true;
+            nameField.interactable = true;
+        }
+    }
+
+    private async void ChangeName() {
+        string newName = nameField.text.Trim();
+
+        if (string.IsNullOrEmpty(newName)) {
+            nameChangeStatus.text = "Please enter a name.";
+            return;
+        }
+
+        nameSaveButton.interactable = false; // prevent double-taps while the request is in flight
+        nameField.interactable = false;
+        nameChangeStatus.text = "Changing name...";
+
+        bool success = await AuthManager.Instance.RequestDisplayNameChangeAsync(newName);
+
+        if (success) {
+            nameChangeStatus.text = "Name changed!";
+            AuthManager.Instance.CurrentProfile.DisplayName = newName;
+        } else {
+            // RequestDisplayNameChangeAsync already logs the specific reason
+            // (cooldown / not signed in / Firestore error) via Debug.LogWarning/LogError.
+            // Since it just returns bool, show a generic message here — or see the
+            // note below if you want the exact cooldown days surfaced in the UI.
+            nameChangeStatus.text = "Couldn't update name. You may still be on cooldown.";
+            nameSaveButton.interactable = true;
+        }
+
     }
 
     // ── Helpers ──────────────────────────────────────────────

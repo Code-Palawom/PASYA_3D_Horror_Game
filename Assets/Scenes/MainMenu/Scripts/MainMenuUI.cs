@@ -515,7 +515,7 @@ public class MainMenuUI : MonoBehaviour {
             .GetSetByName(GameModeManager.Instance.SelectedQuizSetName)?.questions.Count ?? 0;
 
         LanDiscovery.Instance.StartHostBroadcast(
-            hostName: SystemInfo.deviceName,
+            hostName: AuthManager.Instance.CurrentUser?.DisplayName ?? SystemInfo.deviceName,
             quizName: GameModeManager.Instance.SelectedQuizSetName,
             levelSceneName: GameModeManager.Instance.SelectedLevelSceneName,
             questionCount: questionCount,
@@ -627,8 +627,20 @@ public class MainMenuUI : MonoBehaviour {
 
         joinStatusText.text = "";
 
-        // Set player name payload before connecting
-        NetworkManager.Singleton.NetworkConfig.ConnectionData = System.Text.Encoding.UTF8.GetBytes(GameModeManager.Instance.LocalPlayerName);
+        // Resolve this client's role from their signed-in Firebase profile.
+        // Trusted as-is by the host — no server-side verification (see ConnectionApprovalHandler).
+        PlayerRole localRole = AuthManager.Instance != null && AuthManager.Instance.CurrentProfile != null
+            ? AuthManager.Instance.CurrentProfile.RoleEnum
+            : PlayerRole.Player;
+
+        var payload = new ConnectionPayload {
+            version = Application.version,
+            playerName = AuthManager.Instance.CurrentProfile?.DisplayName ?? "Player",
+            role = (byte)localRole
+        };
+
+        string json = JsonUtility.ToJson(payload);
+        NetworkManager.Singleton.NetworkConfig.ConnectionData = System.Text.Encoding.UTF8.GetBytes(json);
 
         LoadingScreenController.Instance.Show($"Joining \"{_selectedHost.HostName}\" Lobby...");
         yield return new WaitForSeconds(1f);
@@ -636,6 +648,15 @@ public class MainMenuUI : MonoBehaviour {
         NetworkManager.Singleton.OnClientConnectedCallback += OnClientJoined;
         NetworkManager.Singleton.OnClientDisconnectCallback += OnClientJoinFailed;
         NetworkManager.Singleton.StartClient();
+    }
+
+    // Must match the private ConnectionPayload class shape expected by
+    // ConnectionApprovalHandler on the host side.
+    [System.Serializable]
+    private class ConnectionPayload {
+        public string version;
+        public string playerName;
+        public byte role;
     }
 
     void OnClientJoined(ulong clientId) {

@@ -7,7 +7,6 @@ public class PlayerProfile {
     [FirestoreProperty] public string DisplayName { get; set; }
     [FirestoreProperty] public long Xp { get; set; }
     [FirestoreProperty] public int GamesPlayed { get; set; }
-    [FirestoreProperty] public int HighScore { get; set; }
     [FirestoreProperty] public long CorrectAnswers { get; set; }
     [FirestoreProperty] public long IncorrectAnswers { get; set; }
 
@@ -26,6 +25,9 @@ public class PlayerProfile {
 
     [FirestoreProperty] public Timestamp CreatedAt { get; set; }
     [FirestoreProperty] public Timestamp LastLoginAt { get; set; }
+    // object, not Timestamp? — the Firebase Unity SDK doesn't support Nullable<T>
+    // for struct types. Holds either null (never changed) or a boxed Timestamp.
+    [FirestoreProperty] public object LastNameChange { get; set; }
 
     // Not a Firestore field — the document ID *is* the uid, populated after fetch.
     public string Uid { get; set; }

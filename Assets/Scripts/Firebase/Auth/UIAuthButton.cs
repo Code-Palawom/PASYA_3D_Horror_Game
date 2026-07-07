@@ -1,4 +1,6 @@
 using Firebase.Auth;
+using Org.BouncyCastle.Cms;
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,9 +20,18 @@ public class UIAuthButton : MonoBehaviour {
     [Tooltip("Optional: a separate label showing the signed-in user's name/email.")]
     [SerializeField] private TMP_Text userInfoLabel;
 
-    [Tooltip("Optional: panels to show/hide based on auth state.")]
+    [Tooltip("Panels to show/hide based on auth state.")]
     [SerializeField] private GameObject signedInPanel;
-    [SerializeField] private GameObject signedOutPanel;
+
+    [Tooltip("Stats")]
+    [SerializeField] private TMP_Text email;
+    [SerializeField] private TMP_Text displayName;
+    [SerializeField] private TMP_Text role;
+    [SerializeField] private TMP_Text xp;
+    [SerializeField] private TMP_Text gamesPlayed;
+    [SerializeField] private TMP_Text correctAnswers;
+    [SerializeField] private TMP_Text incorrectAnswers;
+    [SerializeField] private TMP_Text createdAt;
 
     [Header("Multiplayer Button")]
     [SerializeField] private Button multiplayerBtn;
@@ -36,6 +47,8 @@ public class UIAuthButton : MonoBehaviour {
         authButton.onClick.AddListener(OnAuthButtonClicked);
         signInBtn.onClick.AddListener(OnAuthButtonClicked);
         logoutBtn.onClick.AddListener(OnAuthButtonClicked);
+
+        signedInPanel.SetActive(false);
 
         AuthManager.Instance.OnAuthStateChanged += OnAuthStateChanged;
 
@@ -77,8 +90,10 @@ public class UIAuthButton : MonoBehaviour {
                 : string.Empty;
 
         // Toggle panels
-        if (signedInPanel != null) signedInPanel.SetActive(signedIn);
-        if (signedOutPanel != null) signedOutPanel.SetActive(!signedIn);
+        signedInPanel.SetActive(signedIn);
+        if (signedIn) {
+            AuthManager.Instance.OnPlayerStatsLoaded += UpdateUserStatsUI;
+        }
 
         multiplayerBtn.enabled = signedIn;
         multiplayerBtn.interactable = signedIn;
@@ -86,5 +101,25 @@ public class UIAuthButton : MonoBehaviour {
 
         signInBtn.gameObject.SetActive(!signedIn);
         logoutBtn.gameObject.SetActive(signedIn);
+    }
+
+    private void UpdateUserStatsUI(PlayerProfile profile) {
+        if (profile == null) return;
+
+        email.text = AuthManager.Instance.CurrentUser?.Email ?? "N/A";
+        displayName.text = profile.DisplayName;
+        role.text = profile.Role;
+        xp.text = profile.Xp.ToString();
+        gamesPlayed.text = profile.GamesPlayed.ToString();
+        correctAnswers.text = profile.CorrectAnswers.ToString();
+        incorrectAnswers.text = profile.IncorrectAnswers.ToString();
+
+        DateTime creationDate = profile.CreatedAt.ToDateTime();
+        TimeSpan ageSpan = DateTime.UtcNow - creationDate;
+        double ageInDays = (double)ageSpan.TotalDays;
+        string dayText = ageInDays == 1 ? "day" : "days";
+        string formattedCreationDate = creationDate.ToString("d"); // d for short date format, g for general date/time pattern (short time)
+
+        createdAt.text = $"{formattedCreationDate} ({ageInDays:F2} {dayText})";
     }
 }
