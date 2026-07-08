@@ -177,16 +177,16 @@ public class TimeManager : NetworkBehaviour {
 
         if (newValue == 6) {
             RestartRoutine(ref skyboxRoutine, LerpSkybox(skyboxNight, skyboxSunrise, t));
-            RestartRoutine(ref lightRoutine, LerpLight(gradientNightToSunrise, t));
+            RestartRoutine(ref lightRoutine, LerpLight(gradientNightToSunrise, 20000f, 1500f, t));
         } else if (newValue == 8) {
             RestartRoutine(ref skyboxRoutine, LerpSkybox(skyboxSunrise, skyboxDay, t));
-            RestartRoutine(ref lightRoutine, LerpLight(gradientSunriseToDay, t));
+            RestartRoutine(ref lightRoutine, LerpLight(gradientSunriseToDay, 1500f, 6500f, t));
         } else if (newValue == 18) {
             RestartRoutine(ref skyboxRoutine, LerpSkybox(skyboxDay, skyboxSunset, t));
-            RestartRoutine(ref lightRoutine, LerpLight(gradientDayToSunset, t));
+            RestartRoutine(ref lightRoutine, LerpLight(gradientDayToSunset, 6500f, 1500f, t));
         } else if (newValue == 22) {
             RestartRoutine(ref skyboxRoutine, LerpSkybox(skyboxSunset, skyboxNight, t));
-            RestartRoutine(ref lightRoutine, LerpLight(gradientSunsetToNight, t));
+            RestartRoutine(ref lightRoutine, LerpLight(gradientSunsetToNight, 1500f, 20000f, t));
         }
 
         UpdateClockUI();
@@ -208,12 +208,14 @@ public class TimeManager : NetworkBehaviour {
     private void ApplyInstantStateForHour(int h) {
         Texture2D tex;
         Gradient g;
+        float temp;
 
-        if (h >= 6 && h < 8) { tex = skyboxSunrise; g = gradientNightToSunrise; } else if (h >= 8 && h < 18) { tex = skyboxDay; g = gradientSunriseToDay; } else if (h >= 18 && h < 22) { tex = skyboxSunset; g = gradientDayToSunset; } else { tex = skyboxNight; g = gradientSunsetToNight; }
+        if (h >= 6 && h < 8) { tex = skyboxSunrise; g = gradientNightToSunrise; temp = 1500f; } else if (h >= 8 && h < 18) { tex = skyboxDay; g = gradientSunriseToDay; temp = 6500f; } else if (h >= 18 && h < 22) { tex = skyboxSunset; g = gradientDayToSunset; temp = 1500f; } else { tex = skyboxNight; g = gradientSunsetToNight; temp = 20000f; }
 
         RenderSettings.skybox.SetTexture("_Texture1", tex);
         RenderSettings.skybox.SetFloat("_Blend", 0);
         globalLight.color = g.Evaluate(1f);
+        globalLight.colorTemperature = temp;
         RenderSettings.fogColor = globalLight.color;
     }
 
@@ -256,14 +258,17 @@ public class TimeManager : NetworkBehaviour {
         RenderSettings.skybox.SetTexture("_Texture1", b);
     }
 
-    private IEnumerator LerpLight(Gradient lightGradient, float time) {
+    // startTemp/endTemp let each phase transition use its own Kelvin range,
+    // while keeping the same t*t easing curve used everywhere else.
+    private IEnumerator LerpLight(Gradient lightGradient, float startTemp, float endTemp, float time) {
         for (float i = 0; i < time; i += Time.deltaTime) {
-            globalLight.color = lightGradient.Evaluate(i / time);
             float t = i / time;
             float easedT = t * t;
-            globalLight.colorTemperature = Mathf.Lerp(1500f, 20000f, easedT);
+            globalLight.color = lightGradient.Evaluate(t);
+            globalLight.colorTemperature = Mathf.Lerp(startTemp, endTemp, easedT);
             RenderSettings.fogColor = globalLight.color;
             yield return null;
         }
+        globalLight.colorTemperature = endTemp;
     }
 }
