@@ -50,29 +50,38 @@ public class TimeManager : NetworkBehaviour {
     private Coroutine skyboxRoutine;
     private Coroutine lightRoutine;
 
+    private float absDayLengthInRealMinutes;
+
     // ---- Event other scripts (e.g. player prefab UI) can subscribe to ----
     public event System.Action OnTimeUpdated;
 
-    private void Awake() {
-        if (Instance != null && Instance != this) {
-            Destroy(gameObject);
-            return;
-        }
-        Instance = this;
-    }
+    //private void Awake() {
+    //    if (Instance != null && Instance != this) {
+    //        Destroy(gameObject);
+    //        return;
+    //    }
+    //    Instance = this;
+    //}
 
     public override void OnNetworkSpawn() {
+        Instance = this;
+
+        absDayLengthInRealMinutes = dayLengthInRealMinutes;
+
         netHours.OnValueChanged += OnHoursChanged;
-        netMinutes.OnValueChanged += (_, _) => { UpdateLightRotation(); UpdateClockUI(); };
+        netMinutes.OnValueChanged += OnMinutesChanged;
         netDays.OnValueChanged += (_, _) => UpdateClockUI();
 
+        // Snap instantly to correct visuals — no tween for late joiners / host start
         ApplyInstantState();
         UpdateClockUI();
     }
 
     public override void OnNetworkDespawn() {
-        if (Instance == this) Instance = null;
         netHours.OnValueChanged -= OnHoursChanged;
+        netMinutes.OnValueChanged -= OnMinutesChanged;
+
+        if (Instance == this) Instance = null;
     }
 
     private void Update() {
@@ -105,7 +114,64 @@ public class TimeManager : NetworkBehaviour {
         if (newDays != netDays.Value) netDays.Value = newDays;
     }
 
+    // ---- Admin-only entry points ----
+    // Called server-side, only after ChatCommandProcessor has verified the
+    // caller's role. These bypass tweened transitions and snap instantly.
+
+    // Sets the clock to an exact hour/minute. Does not change the day counter.
+    public void AdminSetTime(int hour, int minute) {
+        if (!IsServer) return;
+
+        hour = Mathf.Clamp(hour, 0, 23);
+        minute = Mathf.Clamp(minute, 0, 59);
+
+        netHours.Value = hour;
+        netMinutes.Value = minute;
+
+        SnapAllClientsRpc(hour, minute);
+    }
+
+    // Advances the clock by a number of hours, rolling over days as needed.
+    public void AdminSkipHours(int hoursToSkip) {
+        if (!IsServer) return;
+
+        int total = netHours.Value * 60 + netMinutes.Value + hoursToSkip * 60;
+        int dayDelta = Mathf.FloorToInt(total / 1440f);
+        int rem = total - dayDelta * 1440;
+        if (rem < 0) rem += 1440; // guard against negative skips
+
+        int newHour = rem / 60;
+        int newMinute = rem % 60;
+
+        netDays.Value += dayDelta;
+        netHours.Value = newHour;
+        netMinutes.Value = newMinute;
+
+        SnapAllClientsRpc(newHour, newMinute);
+    }
+
+    public void AdminSetTimeSpeed(float timeSpeed) {
+        if (!IsServer) return;
+
+        dayLengthInRealMinutes = absDayLengthInRealMinutes / timeSpeed;
+    }
+
+    // Stops any in-progress tween and snaps every client straight to the target hour.
+    [Rpc(SendTo.ClientsAndHost)]
+    private void SnapAllClientsRpc(int hour, int minute) {
+        if (skyboxRoutine != null) { StopCoroutine(skyboxRoutine); skyboxRoutine = null; }
+        if (lightRoutine != null) { StopCoroutine(lightRoutine); lightRoutine = null; }
+
+        ApplyInstantStateForHour(hour);
+        UpdateLightRotation();
+    }
+
     // ---- Runs on every client (incl. host) whenever synced state changes ----
+    private void OnMinutesChanged(int oldValue, int newValue) {
+        UpdateLightRotation();
+        UpdateClockUI();
+    }
+
     private void OnHoursChanged(int oldValue, int newValue) {
         float t = TransitionRealSeconds;
 
@@ -122,6 +188,8 @@ public class TimeManager : NetworkBehaviour {
             RestartRoutine(ref skyboxRoutine, LerpSkybox(skyboxSunset, skyboxNight, t));
             RestartRoutine(ref lightRoutine, LerpLight(gradientSunsetToNight, t));
         }
+
+        UpdateClockUI();
     }
 
     private void RestartRoutine(ref Coroutine slot, IEnumerator routine) {
@@ -132,13 +200,12 @@ public class TimeManager : NetworkBehaviour {
     // Absolute sun angle from current synced time — safe for late joiners, no drift
     private void UpdateLightRotation() {
         float totalMinutes = netHours.Value * 60 + netMinutes.Value;
-        float angle = (totalMinutes / 1440f) * 360f;
+        float angle = (totalMinutes / 1440f) * 180f;
         globalLight.transform.rotation = Quaternion.Euler(angle, -90f, 0f);
     }
 
-    // Snaps skybox + light to the correct phase instantly, no tween — used on spawn
-    private void ApplyInstantState() {
-        int h = netHours.Value;
+    // Snaps skybox + light to the correct phase instantly for a given hour, no tween.
+    private void ApplyInstantStateForHour(int h) {
         Texture2D tex;
         Gradient g;
 
@@ -148,7 +215,34 @@ public class TimeManager : NetworkBehaviour {
         RenderSettings.skybox.SetFloat("_Blend", 0);
         globalLight.color = g.Evaluate(1f);
         RenderSettings.fogColor = globalLight.color;
+    }
+
+    // Snaps skybox + light to the correct phase instantly, no tween — used on spawn
+    private void ApplyInstantState() {
+        ApplyInstantStateForHour(netHours.Value);
         UpdateLightRotation();
+    }
+
+    // ---- 12-hour formatting: "12:30AM", "9:00PM" ----
+    public string GetFormattedTime() {
+        int h = netHours.Value;
+        int m = netMinutes.Value;
+
+        string period = h >= 12 ? "PM" : "AM";
+        int displayHour = h % 12;
+        if (displayHour == 0) displayHour = 12;
+
+        return $"{displayHour}:{m:00} {period}";
+    }
+
+    // ---- "Day 5" formatting ----
+    public string GetFormattedDay() {
+        return $"Day {DisplayDay}";
+    }
+
+    private void UpdateClockUI() {
+        if (clockText != null) clockText.text = GetFormattedTime();
+        OnTimeUpdated?.Invoke();
     }
 
     private IEnumerator LerpSkybox(Texture2D a, Texture2D b, float time) {
@@ -171,61 +265,5 @@ public class TimeManager : NetworkBehaviour {
             RenderSettings.fogColor = globalLight.color;
             yield return null;
         }
-    }
-
-    // ---- 12-hour formatting: "12:30AM", "9:00PM" ----
-    public string GetFormattedTime() {
-        int h = netHours.Value;
-        int m = netMinutes.Value;
-
-        string period = h >= 12 ? "PM" : "AM";
-        int displayHour = h % 12;
-        if (displayHour == 0) displayHour = 12;
-
-        return $"{displayHour}:{m:00}{period}";
-    }
-
-    // ---- "Day 5" formatting ----
-    public string GetFormattedDay() {
-        return $"Day {DisplayDay}";
-    }
-
-    private void UpdateClockUI() {
-        if (clockText != null) clockText.text = GetFormattedTime();
-        OnTimeUpdated?.Invoke();
-    }
-
-    // ---- Admin: set absolute time ----
-    [ServerRpc(RequireOwnership = false)]
-    public void SetTimeServerRpc(int hour, int minute) {
-        hour = Mathf.Clamp(hour, 0, 23);
-        minute = Mathf.Clamp(minute, 0, 59);
-
-        netMinutes.Value = minute;
-        if (netHours.Value != hour) netHours.Value = hour;
-        else OnHoursChanged(hour, hour); // force re-check even if hour didn't change
-    }
-
-    // ---- Admin: skip forward by a duration ----
-    [ServerRpc(RequireOwnership = false)]
-    public void SkipTimeServerRpc(int hoursToSkip, int minutesToSkip) {
-        int totalMinutes = netHours.Value * 60 + netMinutes.Value + hoursToSkip * 60 + minutesToSkip;
-        int daysToAdd = totalMinutes / 1440;
-        totalMinutes %= 1440;
-        if (totalMinutes < 0) { totalMinutes += 1440; daysToAdd -= 1; }
-
-        int newHour = totalMinutes / 60;
-        int newMinute = totalMinutes % 60;
-
-        if (daysToAdd != 0) netDays.Value += daysToAdd;
-        netMinutes.Value = newMinute;
-        netHours.Value = newHour;
-
-        ApplyInstantStateClientRpc(); // ensures visuals always match, even on no-op hour changes (e.g. exact 24h skip)
-    }
-
-    [ClientRpc]
-    private void ApplyInstantStateClientRpc() {
-        ApplyInstantState();
     }
 }

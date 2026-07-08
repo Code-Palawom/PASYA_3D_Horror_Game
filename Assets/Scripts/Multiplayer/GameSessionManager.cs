@@ -74,7 +74,12 @@ public class GameSessionManager : NetworkBehaviour {
             string hostName = GameModeManager.Instance != null
                 ? AuthManager.Instance.CurrentProfile?.DisplayName ?? "Host"
                 : "Host";
-            AddPlayer(NetworkManager.Singleton.LocalClientId, hostName);
+
+            PlayerRole hostRole = AuthManager.Instance != null && AuthManager.Instance.CurrentProfile != null
+                ? AuthManager.Instance.CurrentProfile.RoleEnum
+                : PlayerRole.Player;
+
+            AddPlayer(NetworkManager.Singleton.LocalClientId, hostName, hostRole);
         }
     }
 
@@ -91,14 +96,20 @@ public class GameSessionManager : NetworkBehaviour {
     void OnClientConnected(ulong clientId) {
         if (IsHost && clientId == NetworkManager.Singleton.LocalClientId) return;
 
-        // Consume the name cached by ConnectionApprovalHandler during approval
+        // Consume the name + role cached by ConnectionApprovalHandler during approval
         string name = $"Player {clientId}"; // fallback
-        if (ConnectionApprovalHandler.PendingNames.TryGetValue(clientId, out string cached)) {
-            name = cached;
+        if (ConnectionApprovalHandler.PendingNames.TryGetValue(clientId, out string cachedName)) {
+            name = cachedName;
             ConnectionApprovalHandler.PendingNames.Remove(clientId);
-    }
+        }
 
-        AddPlayer(clientId, name);
+        PlayerRole role = PlayerRole.Player; // fallback
+        if (ConnectionApprovalHandler.PendingRoles.TryGetValue(clientId, out PlayerRole cachedRole)) {
+            role = cachedRole;
+            ConnectionApprovalHandler.PendingRoles.Remove(clientId);
+        }
+
+        AddPlayer(clientId, name, role);
     }
 
     void OnClientDisconnected(ulong clientId) {
@@ -119,10 +130,11 @@ public class GameSessionManager : NetworkBehaviour {
         }
     }
 
-    void AddPlayer(ulong clientId, string name) {
+    void AddPlayer(ulong clientId, string name, PlayerRole role) {
         Players.Add(new PlayerLobbyInfo {
             ClientId = clientId,
-            PlayerName = new FixedString32Bytes(name)
+            PlayerName = new FixedString32Bytes(name),
+            Role = (byte)role
         });
 
         // Initialize stats entry for this player

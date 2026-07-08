@@ -86,6 +86,13 @@ public class ChatManager : NetworkBehaviour {
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]
     void SendChatMessageRpc(ulong senderId, string content) {
         Debug.Log("[RPC][Server] SendChatMessage");
+
+        // Slash-commands are intercepted here and never broadcast as chat.
+        // ChatCommandProcessor checks the sender's role (from GameSessionManager.Players)
+        // before doing anything, and replies privately to the sender only.
+        if (ChatCommandProcessor.TryHandle(senderId, content, reply => SendPrivateSystemMessage(senderId, reply)))
+            return;
+
         string senderName = ResolvePlayerName(senderId);
 
         var msg = new ChatMessage {
@@ -116,6 +123,25 @@ public class ChatManager : NetworkBehaviour {
         Debug.Log("[RPC][ClientsAndHost] ClearChat");
         Messages.Clear();
         OnChatCleared.Invoke();
+    }
+
+    // Sends a system-style message to ONE client only — used for command
+    // feedback/denials so they don't clutter or leak into public chat.
+    void SendPrivateSystemMessage(ulong targetClientId, string content) {
+        var msg = new ChatMessage {
+            SenderId = ulong.MaxValue,
+            SenderName = "[System]",
+            Content = content
+        };
+
+        ReceivePrivateMessageRpc(msg, RpcTarget.Single(targetClientId, RpcTargetUse.Temp));
+    }
+
+    [Rpc(SendTo.SpecifiedInParams)]
+    void ReceivePrivateMessageRpc(ChatMessage msg, RpcParams rpcParams = default) {
+        Debug.Log("[RPC][SpecifiedInParams] ReceivePrivateMessage");
+        // Not added to Messages — this is local-only feedback, not shared chat history.
+        OnMessageReceived.Invoke(msg);
     }
 
     // ─── Helpers ──────────────────────────────────────────────

@@ -2,8 +2,7 @@ using Unity.Netcode;
 using UnityEngine;
 
 public class ClockUI : NetworkBehaviour {
-    [SerializeField] private TMPro.TMP_Text clockText;
-    [SerializeField] private TMPro.TMP_Text dayText;
+    [SerializeField] private TMPro.TMP_Text timeText;
 
     public override void OnNetworkSpawn() {
         if (!IsOwner) {
@@ -23,7 +22,6 @@ public class ClockUI : NetworkBehaviour {
     }
 
     private void Refresh() {
-        if (clockText != null) clockText.text = TimeManager.Instance.GetFormattedTime();
-        if (dayText != null) dayText.text = TimeManager.Instance.GetFormattedDay();
+        timeText.text = $"{TimeManager.Instance.GetFormattedDay()} | {TimeManager.Instance.GetFormattedTime()}";
     }
 }

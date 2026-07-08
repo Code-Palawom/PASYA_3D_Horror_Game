@@ -6544,7 +6544,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
   m_AnchoredPosition: {x: 0, y: -75}
-  m_SizeDelta: {x: 250, y: 50}
+  m_SizeDelta: {x: 350, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5899544374216045446
 CanvasRenderer:
@@ -6659,7 +6659,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TimeController
   ShowTopMostFoldoutHeaderGroup: 1
-  timeDisplay: {fileID: 3200298211054296179}
+  timeText: {fileID: 3200298211054296179}
 --- !u!1 &3197419886802321129
 GameObject:
   m_ObjectHideFlags: 0
@@ -12101,7 +12101,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5900058071888231165}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.18321337, y: 0.7881526, z: 0.27934158, w: 0.51693016}
+  m_LocalRotation: {x: -0.22832246, y: 0.7602825, z: 0.3481182, w: 0.49865127}
   m_LocalPosition: {x: 326.78595, y: 0.34051108, z: 54.46245}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
