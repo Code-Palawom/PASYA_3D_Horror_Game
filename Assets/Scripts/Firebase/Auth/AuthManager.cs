@@ -250,10 +250,41 @@ public class AuthManager : MonoBehaviour {
         if (snapshot.Metadata.HasPendingWrites) return;
 
         if (!snapshot.Exists) {
-            // First-time sign-in: create the doc. The listener fires again automatically
-            // once this write lands, so we don't invoke the event here.
+            // First-time sign-in: create the doc AND claim the username atomically,
+            // so two devices racing to create the same account name can't collide,
+            // and so this default name is properly reserved in usernames/{name}.
+            string defaultName = user.DisplayName ?? "Player";
+            string nameKey = defaultName.Trim().ToLowerInvariant();
+
+            var db = FirebaseFirestore.DefaultInstance;
+            DocumentReference usernameRef = db.Collection("usernames").Document(nameKey);
+
+            // ── Step 1: claim a name (its own transaction, so it fully commits
+            // before we create the profile — get() in rules can't see writes
+            // from earlier in the SAME transaction). ─────────────────────────
+            string finalName = defaultName;
+            try {
+                await db.RunTransactionAsync(async transaction => {
+                    DocumentSnapshot existing = await transaction.GetSnapshotAsync(usernameRef);
+
+                    if (existing.Exists && existing.GetValue<string>("uid") != user.UserId) {
+                        // Collision — fall back to a name guaranteed unique, since
+                        // it's derived from the uid (already the users/{uid} doc ID).
+                        finalName = $"{defaultName}{user.UserId.Substring(0, 6)}";
+                        string finalKey = finalName.ToLowerInvariant();
+                        usernameRef = db.Collection("usernames").Document(finalKey);
+                    }
+
+                    transaction.Set(usernameRef, new Dictionary<string, object> { { "uid", user.UserId } });
+                });
+            } catch (Exception e) {
+                Debug.LogError($"[AuthManager] Failed to claim initial display name: {e.Message}");
+                return;
+            }
+
+            // ── Step 2: create the profile now that the claim is visible to rules. ──
             var defaultProfile = new PlayerProfile {
-                DisplayName = user.DisplayName ?? "Player",
+                DisplayName = finalName,
                 Xp = 0,
                 GamesPlayed = 0,
                 CorrectAnswers = 0,
@@ -268,14 +299,14 @@ public class AuthManager : MonoBehaviour {
             try {
                 await _profileDocRef.SetAsync(defaultProfile);
 
-                // Overwrite with server-resolved timestamps so account age / login time
-                // can't be spoofed via the device's local clock.
                 await _profileDocRef.UpdateAsync(new Dictionary<string, object> {
-                    { "CreatedAt", FieldValue.ServerTimestamp },
-                    { "LastLoginAt", FieldValue.ServerTimestamp }
-                });
+                { "CreatedAt", FieldValue.ServerTimestamp },
+                { "LastLoginAt", FieldValue.ServerTimestamp }
+            });
             } catch (Exception e) {
                 Debug.LogError($"[AuthManager] Failed to create default player profile: {e.Message}");
+                // Compensating action: release the name claim so it isn't orphaned.
+                try { await usernameRef.DeleteAsync(); } catch (Exception cleanupEx) { Debug.LogError($"[AuthManager] Failed to roll back username claim: {cleanupEx.Message}"); }
             }
             return;
         }
@@ -309,11 +340,14 @@ public class AuthManager : MonoBehaviour {
     // Enforces a 14-day cooldown client-side for immediate UX feedback — the real
     // enforcement lives in Firestore Security Rules, since this check alone could
     // be bypassed by a modified client.
-    // <returns>True if the change was submitted; false if still on cooldown or not signed in.</returns>
-    public async Task<bool> RequestDisplayNameChangeAsync(string newDisplayName) {
+    // Uniqueness is enforced via a usernames/{displayNameLower} doc, claimed
+    // atomically in the same transaction as the rename so two players racing
+    // for the same name can't both succeed.
+    // <returns>Result indicating success or the specific failure reason.</returns>
+    public async Task<NameChangeResult> RequestDisplayNameChangeAsync(string newDisplayName) {
         if (_profileDocRef == null || CurrentProfile == null) {
             Debug.LogWarning("[AuthManager] Tried to change display name with no active profile (not signed in?).");
-            return false;
+            return NameChangeResult.NotSignedIn;
         }
 
         if (CurrentProfile.LastNameChange is Timestamp lastChange) {
@@ -321,20 +355,64 @@ public class AuthManager : MonoBehaviour {
             if (elapsed.TotalDays < 14) {
                 double daysLeft = 14 - elapsed.TotalDays;
                 Debug.LogWarning($"[AuthManager] Display name change blocked — {daysLeft:F1} day(s) remaining on cooldown.");
-                return false;
+                return NameChangeResult.OnCooldown;
             }
         }
 
+        string uid = CurrentUser.UserId;
+        string newNameKey = newDisplayName.Trim().ToLowerInvariant();
+        string oldNameKey = CurrentProfile.DisplayName?.Trim().ToLowerInvariant();
+
+        var db = FirebaseFirestore.DefaultInstance;
+        DocumentReference newUsernameRef = db.Collection("usernames").Document(newNameKey);
+
+        // ── Step 1: claim the new name (its own transaction, so it fully commits
+        // before we touch the profile — required because rules' get() calls can't
+        // see writes from earlier in the SAME transaction). ──────────────────
+        try {
+            await db.RunTransactionAsync(async transaction => {
+                DocumentSnapshot existing = await transaction.GetSnapshotAsync(newUsernameRef);
+                if (existing.Exists) {
+                    string ownerUid = existing.GetValue<string>("uid");
+                    if (ownerUid != uid) throw new NameTakenException();
+                    return; // already ours (e.g. retry after a partial prior failure)
+                }
+                transaction.Set(newUsernameRef, new Dictionary<string, object> { { "uid", uid } });
+            });
+        } catch (NameTakenException) {
+            Debug.LogWarning($"[AuthManager] Display name '{newDisplayName}' is already taken.");
+            return NameChangeResult.NameTaken;
+        } catch (Exception e) {
+            Debug.LogError($"[AuthManager] Failed to claim new display name: {e.Message}");
+            return NameChangeResult.Error;
+        }
+
+        // ── Step 2: update the profile now that the claim is visible to rules. ──
         try {
             await _profileDocRef.UpdateAsync(new Dictionary<string, object> {
-                { "DisplayName", newDisplayName },
-                { "LastNameChange", FieldValue.ServerTimestamp }
-            });
-            return true;
+            { "DisplayName", newDisplayName },
+            { "LastNameChange", FieldValue.ServerTimestamp }
+        });
         } catch (Exception e) {
-            Debug.LogError($"[AuthManager] Failed to change display name: {e.Message}");
-            return false;
+            Debug.LogError($"[AuthManager] Failed to update profile after claiming name: {e.Message}");
+            // Compensating action: release the name we just claimed so it doesn't
+            // get orphaned (reserved forever with nobody actually using it).
+            try { await newUsernameRef.DeleteAsync(); } catch (Exception cleanupEx) { Debug.LogError($"[AuthManager] Failed to roll back username claim: {cleanupEx.Message}"); }
+            return NameChangeResult.Error;
         }
+
+        // ── Step 3: release the old name, now that the rename succeeded. ────
+        if (!string.IsNullOrEmpty(oldNameKey) && oldNameKey != newNameKey) {
+            try {
+                await db.Collection("usernames").Document(oldNameKey).DeleteAsync();
+            } catch (Exception e) {
+                // Non-fatal — the rename already succeeded. Worst case the old
+                // name stays reserved and needs a cleanup pass later.
+                Debug.LogWarning($"[AuthManager] Failed to release old display name '{oldNameKey}': {e.Message}");
+            }
+        }
+
+        return NameChangeResult.Success;
     }
 
     // Call when a question is answered correctly. Increments the counter server-side; the live listener will push the updated profile back via OnPlayerStatsLoaded.
@@ -358,3 +436,15 @@ public class AuthManager : MonoBehaviour {
         }
     }
 }
+
+public enum NameChangeResult {
+    Success,
+    NotSignedIn,
+    OnCooldown,
+    NameTaken,
+    Error
+}
+
+// Thrown inside the transaction to signal a name collision without
+// letting Firestore's SDK retry logic mistake it for a normal fault.
+internal class NameTakenException : Exception { }

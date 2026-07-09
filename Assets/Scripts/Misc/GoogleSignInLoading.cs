@@ -53,15 +53,22 @@ public class GoogleSignInLoading : MonoBehaviour {
 #endif
     }
 
-    public void ShowError(string message) {
+    public void ShowError(string message, float autoHideSeconds = 3f) {
         StopAllCoroutines();
+        cancelButton.gameObject.SetActive(false);
         statusText.color = Color.red;
         statusText.text = message;
+        StartCoroutine(AutoHide(autoHideSeconds)); // ← this was missing
     }
 
     public void Hide() {
         StopAllCoroutines();
         StartCoroutine(AnimateOut());
+    }
+
+    private IEnumerator AutoHide(float seconds) {
+        yield return new WaitForSeconds(seconds);
+        Hide();
     }
 
     // Animations
