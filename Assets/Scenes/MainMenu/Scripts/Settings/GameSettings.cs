@@ -7,4 +7,6 @@ public class GameSettings {
     public int qualityLevel = 1;   // index into QualitySettings.names
     public bool showDebugOverlay = false;
     public bool showNameTags = true;
+    public bool vsyncEnabled = true;
+    public int targetFrameRate = 60;
 }

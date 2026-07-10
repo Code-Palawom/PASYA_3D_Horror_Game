@@ -17,6 +17,14 @@ public class SettingsUI : MonoBehaviour {
     [SerializeField] private Button btnQualityNext;
     [SerializeField] private TMP_Text qualityLabel;
 
+    [Header("V Sync")]
+    [SerializeField] private Toggle vsyncToggle;
+
+    [Header("Frame Rate")]
+    [SerializeField] private Slider frameRateSlider;
+    [SerializeField] private TMP_Text frameRateLabel;
+    [SerializeField] private float autoSaveDebounceSeconds = 0.5f;
+
     [Header("POV")]
     [SerializeField] private Button btnFirstPerson;
     [SerializeField] private Button btnThirdPerson;
@@ -33,10 +41,16 @@ public class SettingsUI : MonoBehaviour {
     private int _qualityIndex;
     private string[] _qualityNames;
     private bool _showNameTags;
+    private bool _vsyncEnabled;
+    private int _targetFrameRate;
+    private float _maxRefreshRate;
+    private Coroutine _frameRateDebounceRoutine;
+    private bool _hasPendingFrameRateSave;
 
     // ── Init ────────────────────────────────────────────────
     void Awake() {
         _qualityNames = QualitySettings.names;
+        _maxRefreshRate = DeviceFrameRate.GetMaxRefreshRate();
     }
 
     void Start() {
@@ -50,6 +64,18 @@ public class SettingsUI : MonoBehaviour {
 
         nameTagToggle.onValueChanged.AddListener((isOn) => SetNameTagVisibility(isOn));
         nameSaveButton.onClick.AddListener(() => ChangeName());
+
+        // VSync toggle
+        if (vsyncToggle != null)
+            vsyncToggle.onValueChanged.AddListener((isOn) => SetVSync(isOn));
+
+        // Frame rate slider
+        if (frameRateSlider != null) {
+            frameRateSlider.minValue = 30f;
+            frameRateSlider.maxValue = Mathf.Max(60f, Mathf.Round(_maxRefreshRate));
+            frameRateSlider.value = Mathf.Max(60f, Mathf.Round(_maxRefreshRate));
+            frameRateSlider.onValueChanged.AddListener((value) => SetFrameRate(Mathf.RoundToInt(value)));
+        }
 
         AuthManager.Instance.OnPlayerStatsLoaded += RefreshName;
         AuthManager.Instance.OnAuthStateChanged += (user) => {
@@ -72,7 +98,20 @@ public class SettingsUI : MonoBehaviour {
         Refresh();
     }
 
-    public void Hide() => gameObject.SetActive(false);
+    public void Hide() {
+        // Flush any debounced frame rate save that hasn't fired yet —
+        // otherwise closing the panel mid-drag kills the coroutine and the value is lost.
+        if (_hasPendingFrameRateSave) {
+            if (_frameRateDebounceRoutine != null) {
+                StopCoroutine(_frameRateDebounceRoutine);
+                _frameRateDebounceRoutine = null;
+            }
+            AutoSave();
+            _hasPendingFrameRateSave = false;
+        }
+
+        gameObject.SetActive(false);
+    }
 
     public void Refresh() {
         if (SettingsManager.Instance != null)
@@ -100,21 +139,60 @@ public class SettingsUI : MonoBehaviour {
         AutoSave();
     }
 
+    // ── VSync toggle ─────────────────────────────────────────
+    private void SetVSync(bool isOn) {
+        _vsyncEnabled = isOn;
+        QualitySettings.vSyncCount = isOn ? 1 : 0;
+
+        // On desktop/editor, VSync overrides targetFrameRate while enabled.
+        // Re-apply the slider's frame rate immediately if VSync gets turned off
+        // so the cap takes effect without needing another slider interaction.
+        if (!isOn)
+            Application.targetFrameRate = _targetFrameRate;
+
+        AutoSave();
+    }
+
+    // ── Frame rate slider ────────────────────────────────────
+    private void SetFrameRate(int fps) {
+        _targetFrameRate = fps;
+        Application.targetFrameRate = fps; // apply immediately, feels responsive while dragging
+
+        if (frameRateLabel != null)
+            frameRateLabel.text = $"{fps} FPS";
+
+        // Debounce the save, not the apply — restart the timer on every slider move
+        _hasPendingFrameRateSave = true;
+        if (_frameRateDebounceRoutine != null)
+            StopCoroutine(_frameRateDebounceRoutine);
+
+        if (gameObject.activeInHierarchy)
+            _frameRateDebounceRoutine = StartCoroutine(DebouncedFrameRateSave());
+    }
+
+    private System.Collections.IEnumerator DebouncedFrameRateSave() {
+        yield return new WaitForSecondsRealtime(autoSaveDebounceSeconds);
+        AutoSave();
+        _hasPendingFrameRateSave = false;
+        _frameRateDebounceRoutine = null;
+    }
+
     // ── Auto-save ────────────────────────────────────────────
     private void AutoSave() {
         if (SettingsManager.Instance == null) return;
 
         SettingsManager.Instance.Save(new GameSettings {
-            playerName = nameField.text.Trim(),
             isFirstPerson = _isFirstPerson,
             qualityLevel = _qualityIndex,
-            showNameTags = _showNameTags
+            showNameTags = _showNameTags,
+            vsyncEnabled = _vsyncEnabled,
+            targetFrameRate = _targetFrameRate
         });
     }
 
     // ── Populate from loaded settings ────────────────────────
     private void Populate(GameSettings s) {
-        if(AuthManager.Instance.CurrentProfile != null) {
+        if (AuthManager.Instance.CurrentProfile != null) {
             PlayerProfile player = AuthManager.Instance.CurrentProfile;
             nameField.text = player.DisplayName;
 
@@ -148,6 +226,29 @@ public class SettingsUI : MonoBehaviour {
 
         // Name tag toggle
         nameTagToggle.SetIsOnWithoutNotify(s.showNameTags);
+
+        // VSync toggle — apply without triggering AutoSave during populate
+        _vsyncEnabled = s.vsyncEnabled;
+        QualitySettings.vSyncCount = s.vsyncEnabled ? 1 : 0;
+        if (vsyncToggle != null)
+            vsyncToggle.SetIsOnWithoutNotify(s.vsyncEnabled);
+
+        // Frame rate slider — default to max refresh rate if no saved value yet.
+        // Clamp against current slider bounds in case the saved value came from
+        // a different device/refresh rate than the one currently running.
+        if (s.targetFrameRate > 0) {
+            _targetFrameRate = frameRateSlider != null
+                ? Mathf.Clamp(s.targetFrameRate, Mathf.RoundToInt(frameRateSlider.minValue), Mathf.RoundToInt(frameRateSlider.maxValue))
+                : s.targetFrameRate;
+        } else {
+            _targetFrameRate = Mathf.RoundToInt(_maxRefreshRate);
+        }
+
+        Application.targetFrameRate = _targetFrameRate;
+        if (frameRateSlider != null)
+            frameRateSlider.SetValueWithoutNotify(_targetFrameRate);
+        if (frameRateLabel != null)
+            frameRateLabel.text = $"{_targetFrameRate} FPS";
     }
 
     private void RefreshName(PlayerProfile profile) {
@@ -194,10 +295,10 @@ public class SettingsUI : MonoBehaviour {
         nameSaveButton.interactable = true;
         switch (result) {
             case NameChangeResult.Success:
-                nameChangeStatus.text = "Name changed!";
+            nameChangeStatus.text = "Name changed!";
                 nameField.interactable = false;
                 nameSaveButton.interactable = false;
-                AuthManager.Instance.CurrentProfile.DisplayName = newName;
+            AuthManager.Instance.CurrentProfile.DisplayName = newName;
                 break;
 
             case NameChangeResult.NameTaken:

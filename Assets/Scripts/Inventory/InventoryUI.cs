@@ -10,7 +10,10 @@ using UnityEngine.InputSystem;
 //   - Assign them to slotUIs in order
 //   - The hotbar can be a separate always-visible bar outside InventoryPanel
 public class InventoryUI : MonoBehaviour {
+    [Tooltip("Leave empty to auto-resolve the current scene's registry via " +
+             "ItemRegistry.Instance (set by that scene's GameBootstrap).")]
     [SerializeField] private ItemRegistry itemRegistry;
+    private ItemRegistry Registry => itemRegistry != null ? itemRegistry : ItemRegistry.Instance;
     [SerializeField] private InventorySlotUI[] slotUIs; // 36 elements, set in Inspector
     [SerializeField] private GameObject inventoryPanel; // Shown/hidden with Tab
 
@@ -55,7 +58,7 @@ public class InventoryUI : MonoBehaviour {
     private void RefreshSlot(int index) {
         if (index < 0 || index >= slotUIs.Length) return;
         var slot = _inventory.GetSlot(index);
-        var item = slot.IsEmpty ? null : itemRegistry.Get(slot.ItemID.ToString());
+        var item = slot.IsEmpty ? null : Registry.Get(slot.ItemID.ToString());
         slotUIs[index].UpdateDisplay(item, slot.Quantity);
     }
 

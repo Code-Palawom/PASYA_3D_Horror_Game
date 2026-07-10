@@ -33,6 +33,9 @@ public class Player : NetworkBehaviour {
     [SerializeField] private Canvas playerCanvas;
     [SerializeField] private AudioListener audioListener;
 
+    [Header("Player Inventory UI")]
+    [SerializeField] private InventoryUI inventoryUI;
+
     private float originalBasePlayerSpeed;
     private float originalSprintSpeed;
     private float originalCrouchSpeed;
@@ -85,6 +88,13 @@ public class Player : NetworkBehaviour {
             playerCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
             playerCanvas.worldCamera = playerCamera;
             playerCanvas.gameObject.SetActive(true);
+
+            var inventory = GetComponent<PlayerInventory>();
+            if (inventoryUI != null && inventory != null) {
+                inventoryUI.Init(inventory);
+            } else {
+                Debug.LogWarning("[NetworkSetup] Missing InventoryUI or PlayerInventory reference.");
+            }
 
             // --- Input ---
             playerInput = new PlayerInput();

@@ -11,7 +11,9 @@ using UnityEngine;
 // - On wrong answer: side effects applied to every interacting player
 // - Cooldown after wrong answer, visible to all
 // - Interacting player can allow others to join
-public class NetworkedQuizGate : NetworkBehaviour, IInteractable {
+// - Optionally gated by an InteractionRequirements component (key items,
+//   other doors unlocked, etc) checked BEFORE the quiz even starts
+public class NetworkedQuizGate : NetworkBehaviour, IInteractable, IUnlockable {
     [Header("Quiz")]
     [SerializeField] QuestionDifficulty difficulty = QuestionDifficulty.Easy;
     [SerializeField] bool oneTimeUnlock = true;
@@ -20,6 +22,9 @@ public class NetworkedQuizGate : NetworkBehaviour, IInteractable {
     [Header("Side Effects (Wrong Answer — applied to ALL interacting players)")]
     [SerializeField] SideEffectRegistry registry;
     [SerializeField] List<QuizSideEffect> wrongSideEffects;
+
+    // Optional — if present on this GameObject, checked before Attempt() runs.
+    private InteractionRequirements _requirements;
 
     // ── Networked state ───────────────────────────────────────
     private NetworkVariable<bool> _unlocked = new(
@@ -56,8 +61,18 @@ public class NetworkedQuizGate : NetworkBehaviour, IInteractable {
     public string InteractPrompt => "Open Gate";
     public bool IsLocked => (HasInteractingPlayer && !_allowOthers.Value) || IsCooldownActive;
 
-    public void OnInteract(GameObject interactor) =>
-        Attempt(interactor, onSuccess: OpenGate, onFail: null);
+    public void OnInteract(GameObject interactor) {
+        if (_requirements != null && _requirements.HasRequirements
+            && !_requirements.CheckAll(interactor, out string failMsg)) {
+            PlayerInteractionUI.ShowMessageForPlayer(interactor, failMsg);
+            return;
+        }
+
+        Attempt(interactor, onSuccess: () => {
+            _requirements?.NotifyConsumed(interactor);
+            OpenGate();
+        }, onFail: null);
+    }
 
     public void OnFocus(PlayerInteractionUI ui) {
         if (_unlocked.Value) {
@@ -90,6 +105,8 @@ public class NetworkedQuizGate : NetworkBehaviour, IInteractable {
             NetworkVariableReadPermission.Everyone,
             NetworkVariableWritePermission.Server
         );
+
+        _requirements = GetComponent<InteractionRequirements>();
     }
 
     // ─────────────────────────────────────────────────────────

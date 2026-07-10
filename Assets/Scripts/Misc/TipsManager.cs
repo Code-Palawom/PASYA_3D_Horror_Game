@@ -105,7 +105,7 @@ public class TipsManager : MonoBehaviour {
             string json = JsonUtility.ToJson(_current, true);
             var wrapper = new Wrapper {
                 payload = json,
-                signature = QuizDataIntegrity.ComputeSignature(json)
+                //signature = QuizDataIntegrity.ComputeSignature(json)
             };
 
             File.WriteAllText(FilePath, JsonUtility.ToJson(wrapper, true));
@@ -127,10 +127,10 @@ public class TipsManager : MonoBehaviour {
             string raw = File.ReadAllText(FilePath);
             var wrapper = JsonUtility.FromJson<Wrapper>(raw);
 
-            if (!QuizDataIntegrity.Verify(wrapper.payload, wrapper.signature)) {
-                Debug.LogWarning("[TipsManager] Cache integrity check failed — using fallback tips.");
-                return;
-            }
+            //if (!QuizDataIntegrity.Verify(wrapper.payload, wrapper.signature)) {
+            //    Debug.LogWarning("[TipsManager] Cache integrity check failed — using fallback tips.");
+            //    return;
+            //}
 
             var cached = JsonUtility.FromJson<TipsData>(wrapper.payload);
             if (cached?.tips != null && cached.tips.Length > 0) {

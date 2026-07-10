@@ -7,8 +7,12 @@ public class PickupInteractable : MonoBehaviour, IInteractable {
     [SerializeField] string itemName = "Item";
 
     private NetworkedQuizGate _gate;
+    private InteractionRequirements _requirements;
 
-    void Awake() => _gate = GetComponent<NetworkedQuizGate>();
+    void Awake() {
+        _gate = GetComponent<NetworkedQuizGate>();
+        _requirements = GetComponent<InteractionRequirements>();
+    }
 
     public string InteractPrompt {
         get {
@@ -29,9 +33,18 @@ public class PickupInteractable : MonoBehaviour, IInteractable {
     }
 
     public void OnInteract(GameObject interactor) {
+        if (_requirements != null && _requirements.HasRequirements
+            && !_requirements.CheckAll(interactor, out string failMsg)) {
+            PlayerInteractionUI.ShowMessageForPlayer(interactor, failMsg);
+            return;
+        }
+
         _gate.Attempt(
             interactor,
-            onSuccess: () => Destroy(gameObject),
+            onSuccess: () => {
+                _requirements?.NotifyConsumed(interactor);
+                Destroy(gameObject);
+            },
             onFail: () => { }
         );
     }

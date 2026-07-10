@@ -5,10 +5,12 @@ using UnityEngine;
 public class DoorHandleInteractable : MonoBehaviour, IInteractable {
     private NetworkedDoorController _door;
     private NetworkedQuizGate _gate;
+    private InteractionRequirements _requirements;
 
     void Awake() {
         _door = GetComponentInParent<NetworkedDoorController>();
         _gate = GetComponentInParent<NetworkedQuizGate>();
+        _requirements = GetComponentInParent<InteractionRequirements>();
 
         if (_door == null) Debug.LogError("[DoorHandleInteractable] Missing NetworkedDoorController.");
         if (_gate == null) Debug.LogError("[DoorHandleInteractable] Missing NetworkedQuizGate.");
@@ -52,9 +54,21 @@ public class DoorHandleInteractable : MonoBehaviour, IInteractable {
             return;
         }
 
+        // Requirement check (key items, other doors unlocked, etc) happens
+        // BEFORE the quiz starts — no point answering a question you can't
+        // actually use the result of yet.
+        if (_requirements != null && _requirements.HasRequirements
+            && !_requirements.CheckAll(interactor, out string failMsg)) {
+            PlayerInteractionUI.ShowMessageForPlayer(interactor, failMsg);
+            return;
+        }
+
         _gate.Attempt(
             interactor,
-            onSuccess: () => _door.RequestToggle(),
+            onSuccess: () => {
+                _requirements?.NotifyConsumed(interactor);
+                _door.RequestToggle();
+            },
             onFail: () => { }
         );
     }

@@ -8,11 +8,19 @@ using UnityEngine;
 // Slot layout:
 //   Index 0–8   → Hotbar  (the "active/held" slot is hotbar[ActiveHotbarIndex])
 //   Index 9–35  → Main inventory
-public class PlayerInventory : NetworkBehaviour {
+//
+// Implements IInventoryQuery so any InteractionRequirement (ItemRequirement,
+// KeyRequirement, etc) can check this player's inventory without knowing
+// about NetworkList/slot layout internals.
+public class PlayerInventory : NetworkBehaviour, IInventoryQuery {
     public const int HotbarSize = 9;
     public const int InventorySize = 36;
 
+    [Tooltip("Leave empty to auto-resolve the current scene's registry via " +
+             "ItemRegistry.Instance (set by that scene's GameBootstrap). Only " +
+             "assign this directly if this prefab should always use one fixed registry.")]
     [SerializeField] private ItemRegistry itemRegistry;
+    private ItemRegistry Registry => itemRegistry != null ? itemRegistry : ItemRegistry.Instance;
 
     // ── Networked State ───────────────────────────────────────────────────────
 
@@ -67,7 +75,7 @@ public class PlayerInventory : NetworkBehaviour {
     // Call only from server (e.g. inside a ServerRpc or host game logic).
     public bool AddItem(string itemID, int qty = 1) {
         if (!IsServer) return false;
-        var data = itemRegistry.Get(itemID);
+        var data = Registry.Get(itemID);
         if (data == null) {
             Debug.LogWarning($"[Inventory] Unknown itemID: {itemID}");
             return false;
@@ -101,6 +109,7 @@ public class PlayerInventory : NetworkBehaviour {
     }
 
     // Remove qty of itemID. Returns true if fully removed.
+    // Call only from server. IInventoryQuery.RemoveItem routes here.
     public bool RemoveItem(string itemID, int qty = 1) {
         if (!IsServer) return false;
 
@@ -119,20 +128,31 @@ public class PlayerInventory : NetworkBehaviour {
         return remaining == 0;
     }
 
+    // True if itemID exists anywhere in inventory (any slot, not just active).
+    // Read-only — safe to call on client for UI/requirement previews, since
+    // the NetworkList is Everyone-readable.
+    public bool HasItem(string itemID) {
+        if (string.IsNullOrEmpty(itemID)) return false;
+        for (int i = 0; i < InventorySize; i++) {
+            var s = _slots[i];
+            if (!s.IsEmpty && s.ItemID.ToString() == itemID) return true;
+        }
+        return false;
+    }
+
     // Returns true if the item in the active hotbar slot is a key
     // matching the given keyID.
     public bool HasKeyInActiveSlot(string keyID) {
-        if (!IsServer) return false;
         var slot = _slots[_activeHotbarIndex.Value];
         if (slot.IsEmpty) return false;
-        var item = itemRegistry.Get(slot.ItemID.ToString());
+        var item = Registry.Get(slot.ItemID.ToString());
         return item != null && item.isKey && item.keyID == keyID;
     }
 
     // Get the InventoryItem definition for the active hotbar slot.
     public InventoryItem GetActiveSlotItem() {
         var slot = _slots[_activeHotbarIndex.Value];
-        return slot.IsEmpty ? null : itemRegistry.Get(slot.ItemID.ToString());
+        return slot.IsEmpty ? null : Registry.Get(slot.ItemID.ToString());
     }
 
     // ── Read-Only (Client-Safe) ───────────────────────────────────────────────
@@ -142,14 +162,14 @@ public class PlayerInventory : NetworkBehaviour {
     // ── Client → Server RPCs ──────────────────────────────────────────────────
 
     // Select a hotbar slot (0–8). Only the owner may call this.
-    [ServerRpc(RequireOwnership = true)]
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
     public void SetActiveSlotServerRpc(int index) {
         if (index < 0 || index >= HotbarSize) return;
         _activeHotbarIndex.Value = index;
     }
 
     // Swap two inventory slots. Only the owner may call this.
-    [ServerRpc(RequireOwnership = true)]
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
     public void MoveSlotServerRpc(int fromIndex, int toIndex) {
         if (fromIndex < 0 || fromIndex >= InventorySize) return;
         if (toIndex < 0 || toIndex >= InventorySize) return;
@@ -161,7 +181,7 @@ public class PlayerInventory : NetworkBehaviour {
     }
 
     // Drop item at slotIndex into the world. Only the owner may call this.
-    [ServerRpc(RequireOwnership = true)]
+    [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
     public void DropItemServerRpc(int slotIndex) {
         if (slotIndex < 0 || slotIndex >= InventorySize) return;
         if (_slots[slotIndex].IsEmpty) return;

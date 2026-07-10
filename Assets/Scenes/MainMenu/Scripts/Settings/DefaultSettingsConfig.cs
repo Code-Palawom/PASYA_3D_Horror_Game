@@ -1,9 +1,7 @@
 using UnityEngine;
 
-/// <summary>
-/// Tweak default settings from the Inspector without touching code.
-/// Create via: Assets → Create → Settings → Default Config
-/// </summary>
+// Tweak default settings from the Inspector without touching code.
+// Create via: Assets → Create → Settings → Default Config
 [CreateAssetMenu(fileName = "DefaultSettingsConfig", menuName = "Settings/Default Config")]
 public class DefaultSettingsConfig : ScriptableObject {
     [Header("Player")]
@@ -17,15 +15,19 @@ public class DefaultSettingsConfig : ScriptableObject {
     [Range(0, 2)]
     public int qualityLevel = 2;
 
+    [Header("Frame Rate")]
+    public int targetFrameRate = 60;
+
+    [Header("VSync")]
+    public int vsyncEnabled = 1;
+
     [Header("Show Name Tag")]
     public bool showNameTags = true;
 
     [Header("Debug Mode")]
     public bool showDebug = false;
 
-    /// <summary>
-    /// Converts this config into a GameSettings instance.
-    /// </summary>
+    // Converts this config into a GameSettings instance.
     public GameSettings ToGameSettings() => new GameSettings {
         playerName = playerName,
         isFirstPerson = isFirstPerson,
