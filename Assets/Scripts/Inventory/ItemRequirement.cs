@@ -1,4 +1,3 @@
-using System.Net.Mail;
 using UnityEngine;
 
 // Requires the interacting player to hold a given inventory item anywhere

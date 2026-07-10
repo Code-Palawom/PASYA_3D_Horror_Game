@@ -7,7 +7,12 @@ public class InventoryItem : ScriptableObject {
     [Header("Identity")]
     public string itemID; // Unique string, e.g. "key_red_door"
     public string displayName;
+
+    [Header("Visuals")]
+    [Tooltip("2D icon shown in inventory/UI slots.")]
     public Sprite icon;
+    [Tooltip("3D model prefab instantiated for the physical pickup in the world (WorldItem).")]
+    public GameObject worldModelPrefab;
 
     [Header("Stacking")]
     public bool stackable = true;

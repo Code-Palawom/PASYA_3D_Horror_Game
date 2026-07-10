@@ -2,20 +2,32 @@ using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
 
-// A physical item lying in the world that players can pick up directly
-// (no quiz gate — for a quiz-gated pickup, use PickupInteractable instead).
+// A physical item lying in the world. Requires a correct quiz answer
+// (via NetworkedQuizGate) before the item is actually added to inventory —
+// same flow as your doors, just gating a pickup instead of an open/unlock.
 //
 // Spawn workflow (server-side):
 //   var go = Instantiate(worldItemPrefab, position, rotation);
 //   go.GetComponent<NetworkObject>().Spawn();
 //   go.GetComponent<WorldItem>().Setup("key_red_door", 1);
 [RequireComponent(typeof(NetworkObject))]
+[RequireComponent(typeof(NetworkedQuizGate))]
 public class WorldItem : NetworkBehaviour, IInteractable {
     [Tooltip("Leave empty to auto-resolve the current scene's registry via " +
              "ItemRegistry.Instance (set by that scene's GameBootstrap).")]
     [SerializeField] private ItemRegistry itemRegistry;
-    [SerializeField] private MeshRenderer meshRenderer; // swap for MeshRenderer in 3D
+    [Tooltip("Empty child transform where the item's 3D worldModelPrefab gets instantiated.")]
+    [SerializeField] private Transform modelAnchor;
     private ItemRegistry Registry => itemRegistry != null ? itemRegistry : ItemRegistry.Instance;
+
+    private GameObject _currentModelInstance;
+    private NetworkedQuizGate _gate;
+    private InteractionRequirements _requirements; // optional — e.g. "need a lockpick to even attempt this"
+
+    void Awake() {
+        _gate = GetComponent<NetworkedQuizGate>();
+        _requirements = GetComponent<InteractionRequirements>();
+    }
 
     private NetworkVariable<FixedString64Bytes> _itemID = new(
         default,
@@ -47,29 +59,61 @@ public class WorldItem : NetworkBehaviour, IInteractable {
     [ClientRpc]
     private void RefreshVisualClientRpc(string itemID) {
         var item = Registry.Get(itemID);
-        if (item != null && meshRenderer != null) Debug.Log($"WorldItem: would set meshRenderer for {itemID} to {item.displayName}");
-        //meshRenderer.sprite = item.icon;
+        if (item == null) return;
+
+        // Clear any previous model (e.g. re-Setup on a pooled/reused WorldItem)
+        if (_currentModelInstance != null) {
+            Destroy(_currentModelInstance);
+            _currentModelInstance = null;
+        }
+
+        if (item.worldModelPrefab == null) {
+            Debug.LogWarning($"[WorldItem] '{item.itemID}' has no worldModelPrefab assigned.");
+            return;
+        }
+
+        Transform parent = modelAnchor != null ? modelAnchor : transform;
+        _currentModelInstance = Instantiate(item.worldModelPrefab, parent);
+        _currentModelInstance.transform.localPosition = Vector3.zero;
+        _currentModelInstance.transform.localRotation = Quaternion.identity;
     }
 
     // ── IInteractable ─────────────────────────────────────────────────────────
 
     public string InteractPrompt {
         get {
+            if (_gate.IsCooldownActive) return "Locked";
+            if (_gate.HasInteractingPlayer && !_gate.AllowOthers) return "Someone is answering...";
             var item = Registry.Get(_itemID.Value.ToString());
             string name = item != null ? item.displayName : "Item";
             return $"Press E to pick up {name}";
         }
     }
 
-    // A world pickup is never "locked" in the requirement sense — it's either
-    // there to grab or it's already been despawned.
-    public bool IsLocked => false;
+    public bool IsLocked => !_gate.IsUnlocked;
 
-    public void OnFocus(PlayerInteractionUI ui) => ui.Show(InteractPrompt);
+    public void OnFocus(PlayerInteractionUI ui) {
+        if (_gate.IsCooldownActive)
+            ui.ShowWithCooldown(_gate.CooldownRemaining, _gate.WrongAnswerCooldown);
+        else
+            ui.Show(InteractPrompt);
+    }
 
     public void OnInteract(GameObject interactor) {
-        // Called locally on the interacting client → fire ServerRpc
-        RequestPickupServerRpc();
+        if (_requirements != null && _requirements.HasRequirements
+            && !_requirements.CheckAll(interactor, out string failMsg)) {
+            PlayerInteractionUI.ShowMessageForPlayer(interactor, failMsg);
+            return;
+        }
+
+        _gate.Attempt(
+            interactor,
+            onSuccess: () => {
+                _requirements?.NotifyConsumed(interactor);
+                RequestPickupServerRpc();
+            },
+            onFail: () => { }
+        );
     }
 
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Everyone)]

@@ -1,4 +1,3 @@
-using System.Net.Mail;
 using UnityEngine;
 
 // Requires the interacting player to have a matching key equipped in their
