@@ -1,3 +1,4 @@
+using Unity.Netcode;
 using UnityEngine;
 
 // Sits on DoorHandle child.
@@ -16,6 +17,15 @@ public class DoorHandleInteractable : MonoBehaviour, IInteractable {
         if (_gate == null) Debug.LogError("[DoorHandleInteractable] Missing NetworkedQuizGate.");
     }
 
+    // IInteractable.OnFocus/InteractPrompt don't receive the interactor, so
+    // we resolve the local player directly to preview requirement state.
+    // Only ever meaningful for the local client anyway — remote players'
+    // interactables aren't focused/prompted on your screen.
+    private static GameObject LocalPlayer =>
+        NetworkManager.Singleton != null && NetworkManager.Singleton.LocalClient != null
+            ? NetworkManager.Singleton.LocalClient.PlayerObject?.gameObject
+            : null;
+
     // ─────────────────────────────────────────────────────────
     // Prompt text — used as fallback / console label
     // ─────────────────────────────────────────────────────────
@@ -25,6 +35,15 @@ public class DoorHandleInteractable : MonoBehaviour, IInteractable {
                 return "Locked";
             if (_gate.HasInteractingPlayer && !_gate.AllowOthers)
                 return "Someone is answering...";
+
+            // Preview requirement state so the prompt doesn't just say "Open"
+            // when the player can't actually pass the requirement check yet.
+            if (_requirements != null && _requirements.HasRequirements) {
+                var local = LocalPlayer;
+                if (local != null && !_requirements.CheckAll(local, out string failMsg))
+                    return failMsg;
+            }
+
             return _door.IsOpen ? "Close" : "Open";
         }
     }

@@ -22,4 +22,9 @@ public class InventoryItem : ScriptableObject {
     public bool isKey = false;
     public string keyID; // Must match LockedDoor.requiredKeyID exactly
     public bool consumeOnUnlock = false;
+
+    [Header("Pickup Quiz")]
+    [Tooltip("Quiz difficulty required to pick this item up via WorldItem. " +
+             "Applied to the spawned WorldItem's NetworkedQuizGate before it spawns.")]
+    public QuestionDifficulty pickupDifficulty = QuestionDifficulty.Easy;
 }

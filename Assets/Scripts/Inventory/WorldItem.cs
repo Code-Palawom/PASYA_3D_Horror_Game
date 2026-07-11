@@ -58,6 +58,13 @@ public class WorldItem : NetworkBehaviour, IInteractable {
 
     [ClientRpc]
     private void RefreshVisualClientRpc(string itemID) {
+        if (Registry == null) {
+            Debug.LogError("[WorldItem] No ItemRegistry available — ItemRegistry.Instance is null " +
+                            "and no explicit itemRegistry was assigned. Check that GameBootstrap is " +
+                            "present in this scene and ran before this WorldItem spawned.");
+            return;
+        }
+
         var item = Registry.Get(itemID);
         if (item == null) return;
 
@@ -69,6 +76,14 @@ public class WorldItem : NetworkBehaviour, IInteractable {
 
         if (item.worldModelPrefab == null) {
             Debug.LogWarning($"[WorldItem] '{item.itemID}' has no worldModelPrefab assigned.");
+            return;
+        }
+
+        if (item.worldModelPrefab.GetComponent<NetworkObject>() != null) {
+            Debug.LogError($"[WorldItem] '{item.itemID}'.worldModelPrefab is itself a NetworkObject " +
+                            "(likely the WorldItem prefab assigned by mistake). worldModelPrefab must " +
+                            "be a plain visual-only prefab — mesh/renderer only, no NetworkObject or " +
+                            "scripts. Fix the assignment on the InventoryItem asset.");
             return;
         }
 
@@ -84,9 +99,16 @@ public class WorldItem : NetworkBehaviour, IInteractable {
         get {
             if (_gate.IsCooldownActive) return "Locked";
             if (_gate.HasInteractingPlayer && !_gate.AllowOthers) return "Someone is answering...";
-            var item = Registry.Get(_itemID.Value.ToString());
+
+            if (_requirements != null && _requirements.HasRequirements) {
+                var local = NetworkManager?.LocalClient?.PlayerObject?.gameObject;
+                if (local != null && !_requirements.CheckAll(local, out string failMsg))
+                    return failMsg;
+            }
+
+            var item = Registry?.Get(_itemID.Value.ToString());
             string name = item != null ? item.displayName : "Item";
-            return $"Press E to pick up {name}";
+            return $"Pick up {name}";
         }
     }
 
@@ -100,6 +122,13 @@ public class WorldItem : NetworkBehaviour, IInteractable {
     }
 
     public void OnInteract(GameObject interactor) {
+        // Guards against a race where this item was already picked up/despawned
+        // (by another player, or a duplicate input event) between the raycast
+        // that found it and this interaction actually firing. Without this,
+        // _gate.Attempt below tries to send an RPC on a despawned NetworkObject,
+        // which throws inside Netcode's internal RPC machinery.
+        if (!IsSpawned) return;
+
         if (_requirements != null && _requirements.HasRequirements
             && !_requirements.CheckAll(interactor, out string failMsg)) {
             PlayerInteractionUI.ShowMessageForPlayer(interactor, failMsg);

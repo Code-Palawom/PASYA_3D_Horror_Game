@@ -13,8 +13,8 @@ using UnityEngine;
 // KeyRequirement, etc) can check this player's inventory without knowing
 // about NetworkList/slot layout internals.
 public class PlayerInventory : NetworkBehaviour, IInventoryQuery {
-    public const int HotbarSize = 9;
-    public const int InventorySize = 36;
+    public const int HotbarSize = 8; // 9
+    public const int InventorySize = 36; // 36
 
     [Tooltip("Leave empty to auto-resolve the current scene's registry via " +
              "ItemRegistry.Instance (set by that scene's GameBootstrap). Only " +

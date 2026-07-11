@@ -67,6 +67,11 @@ public class WorldItemSpawner : MonoBehaviour {
                 continue;
             }
 
+            // Must happen BEFORE Spawn() — NetworkedQuizGate claims its question
+            // inside OnNetworkSpawn using whatever difficulty is set at that moment.
+            var gate = go.GetComponent<NetworkedQuizGate>();
+            gate?.SetDifficulty(item.pickupDifficulty);
+
             netObj.Spawn();
             go.GetComponent<WorldItem>().Setup(item.itemID, 1);
             spawned++;

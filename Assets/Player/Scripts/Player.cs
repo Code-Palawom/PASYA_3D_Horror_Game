@@ -152,7 +152,7 @@ public class Player : NetworkBehaviour {
             moveInput = moveInput.normalized;
         }
 
-        Debug.Log($"Move Input: {moveInput}");
+        //Debug.Log($"Move Input: {moveInput}");
     }
 
     public void OnJump(InputAction.CallbackContext context) {
@@ -160,7 +160,7 @@ public class Player : NetworkBehaviour {
             verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
             Debug.Log("Jump!");
         }
-        Debug.Log($"Jumping {context.performed} - Is on ground: {controller.isGrounded}");
+        //Debug.Log($"Jumping {context.performed} - Is on ground: {controller.isGrounded}");
     }
 
     public void OnSprint(InputAction.CallbackContext context) {
@@ -175,7 +175,7 @@ public class Player : NetworkBehaviour {
         if (context.canceled) {
             if (isCrouching == false) playerSpeed = basePlayerSpeed;
             isRunning = false;
-            Debug.Log("Done sprinting!");
+            //Debug.Log("Done sprinting!");
         }
     }
 
@@ -202,7 +202,7 @@ public class Player : NetworkBehaviour {
         }
 
         SetCharacter(isFirstPerson);
-        Debug.Log($"POV Switch is First Person: {isFirstPerson}");
+        //Debug.Log($"POV Switch is First Person: {isFirstPerson}");
     }
 
     private void SetCharacter(bool mode) {

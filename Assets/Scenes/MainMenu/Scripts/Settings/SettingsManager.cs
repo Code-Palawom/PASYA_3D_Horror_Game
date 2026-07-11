@@ -47,8 +47,7 @@ public class SettingsManager : MonoBehaviour {
     private void Load() {
         if (!File.Exists(FilePath)) {
             Debug.Log("[SettingsManager] No file found — using defaults.");
-            Apply(Current);
-            OnSettingsLoaded?.Invoke(Current);
+            Save(Current); // Save defaults to file for future loads)
             return;
         }
 
@@ -62,6 +61,7 @@ public class SettingsManager : MonoBehaviour {
             Current = defaultConfig != null
                 ? defaultConfig.ToGameSettings()
                 : new GameSettings();
+            Save(Current); // Save defaults to file for future loads)
         }
 
         Apply(Current);

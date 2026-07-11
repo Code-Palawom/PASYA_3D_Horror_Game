@@ -14,6 +14,7 @@ using UnityEngine;
 //      BEFORE Default Time, or simply ensure its GameObject is higher in
 //      the hierarchy / loads in an earlier-loaded scene than any player
 //      or networked object that reads from ItemRegistry.
+[DefaultExecutionOrder(-100)]
 public class InventoryBootstrap : MonoBehaviour {
     [SerializeField] private ItemRegistry itemRegistry;
 

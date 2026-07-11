@@ -96,6 +96,21 @@ public class NetworkedQuizGate : NetworkBehaviour, IInteractable, IUnlockable {
     // Override in subclass or wire via UnityEvent for door animation/trigger
     protected virtual void OpenGate() { }
 
+    // Sets the quiz difficulty for THIS instance before it spawns. Must be
+    // called after Instantiate() but before NetworkObject.Spawn() — the
+    // question is claimed inside OnNetworkSpawn using whatever difficulty
+    // is set at that point. Calling this after spawn has no effect (the
+    // question is already claimed) and logs a warning instead of silently
+    // doing nothing.
+    public void SetDifficulty(QuestionDifficulty newDifficulty) {
+        if (IsSpawned) {
+            Debug.LogWarning($"[NetworkedQuizGate] '{name}': SetDifficulty called after spawn — " +
+                              "too late, the question was already claimed. Call this before Spawn().");
+            return;
+        }
+        difficulty = newDifficulty;
+    }
+
     // ─────────────────────────────────────────────────────────
     // NetworkList must be created in Awake
     // ─────────────────────────────────────────────────────────

@@ -1872,7 +1872,7 @@ MonoBehaviour:
   m_PreserveMeshAssetOnDestroy: 0
   assetGuid: 
   m_Mesh: {fileID: 0}
-  m_VersionIndex: 5861
+  m_VersionIndex: 5894
   m_IsSelectable: 1
   m_SelectedFaces: 
   m_SelectedEdges: []
@@ -1998,7 +1998,7 @@ GameObject:
   - component: {fileID: 1537707709014424892}
   - component: {fileID: 3328394084278557223}
   m_Layer: 0
-  m_Name: Door
+  m_Name: DoorRight
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -3014,7 +3014,7 @@ MonoBehaviour:
   m_PreserveMeshAssetOnDestroy: 0
   assetGuid: 
   m_Mesh: {fileID: 0}
-  m_VersionIndex: 3230
+  m_VersionIndex: 3263
   m_IsSelectable: 1
   m_SelectedFaces: 
   m_SelectedEdges: []
@@ -3167,7 +3167,6 @@ MonoBehaviour:
   wrongSideEffects:
   - {fileID: 11400000, guid: 6905f195c1b92ae47b4b9e3e82ad55d1, type: 2}
   - {fileID: 11400000, guid: 396627f8faa14134db4759ee88dfe125, type: 2}
-  cooldownDisplay: {fileID: 0}
 --- !u!114 &3328394084278557223
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3435,7 +3434,7 @@ MonoBehaviour:
   m_PreserveMeshAssetOnDestroy: 0
   assetGuid: 
   m_Mesh: {fileID: 0}
-  m_VersionIndex: 1169
+  m_VersionIndex: 1202
   m_IsSelectable: 1
   m_SelectedFaces: 
   m_SelectedEdges: []
@@ -3826,7 +3825,7 @@ MonoBehaviour:
   m_PreserveMeshAssetOnDestroy: 0
   assetGuid: 
   m_Mesh: {fileID: 0}
-  m_VersionIndex: 2001
+  m_VersionIndex: 2034
   m_IsSelectable: 1
   m_SelectedFaces: 
   m_SelectedEdges: []
@@ -4183,7 +4182,7 @@ MonoBehaviour:
   m_PreserveMeshAssetOnDestroy: 0
   assetGuid: 
   m_Mesh: {fileID: 0}
-  m_VersionIndex: 1378
+  m_VersionIndex: 1411
   m_IsSelectable: 1
   m_SelectedFaces: 
   m_SelectedEdges: []

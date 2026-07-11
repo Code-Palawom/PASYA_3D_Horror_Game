@@ -7,15 +7,17 @@ using UnityEngine.InputSystem;
 // Scene setup:
 //   - Create a Canvas with an "InventoryPanel" (hidden by default)
 //   - Inside it: 36 InventorySlotUI children (index 0–8 = hotbar, 9–35 = main)
-//   - Assign them to slotUIs in order
+//   - Assign them to UISlots in order
 //   - The hotbar can be a separate always-visible bar outside InventoryPanel
 public class InventoryUI : MonoBehaviour {
     [Tooltip("Leave empty to auto-resolve the current scene's registry via " +
              "ItemRegistry.Instance (set by that scene's GameBootstrap).")]
     [SerializeField] private ItemRegistry itemRegistry;
     private ItemRegistry Registry => itemRegistry != null ? itemRegistry : ItemRegistry.Instance;
-    [SerializeField] private InventorySlotUI[] slotUIs; // 36 elements, set in Inspector
+    [SerializeField] private InventorySlotUI[] UISlots; // 36 elements, set in Inspector
     [SerializeField] private GameObject inventoryPanel; // Shown/hidden with Tab
+
+    [SerializeField] private InputAction action;
 
     private PlayerInventory _inventory;
     private bool _isOpen;
@@ -23,23 +25,26 @@ public class InventoryUI : MonoBehaviour {
 
     // ── Initialization ────────────────────────────────────────────────────────
 
+    void Awake() {
+        action.performed += _ => SetOpen(!_isOpen);
+        action.Enable();
+    }
+
+    void OnDestroy() {
+        action.Disable();
+        action.Dispose();
+    }
+
     public void Init(PlayerInventory inventory) {
         _inventory = inventory;
         _inventory.OnSlotChanged += RefreshSlot;
         _inventory.OnActiveSlotChanged += RefreshActiveHighlight;
 
-        for (int i = 0; i < slotUIs.Length; i++)
-            slotUIs[i].Init(i, i < PlayerInventory.HotbarSize, this);
+        for (int i = 0; i < UISlots.Length; i++)
+            UISlots[i].Init(i, i < PlayerInventory.HotbarSize, this);
 
         RefreshAll();
-        inventoryPanel.SetActive(false);
-    }
-
-    // ── Input ─────────────────────────────────────────────────────────────────
-
-    private void Update() {
-        if (Keyboard.current.tabKey.wasPressedThisFrame)
-            SetOpen(!_isOpen);
+        //inventoryPanel.SetActive(false);
     }
 
     private void SetOpen(bool open) {
@@ -56,15 +61,15 @@ public class InventoryUI : MonoBehaviour {
     }
 
     private void RefreshSlot(int index) {
-        if (index < 0 || index >= slotUIs.Length) return;
+        if (index < 0 || index >= UISlots.Length) return;
         var slot = _inventory.GetSlot(index);
         var item = slot.IsEmpty ? null : Registry.Get(slot.ItemID.ToString());
-        slotUIs[index].UpdateDisplay(item, slot.Quantity);
+        UISlots[index].UpdateDisplay(item, slot.Quantity);
     }
 
     private void RefreshActiveHighlight(int activeIndex) {
         for (int i = 0; i < PlayerInventory.HotbarSize; i++)
-            slotUIs[i].SetHighlight(i == activeIndex);
+            UISlots[i].SetHighlight(i == activeIndex);
     }
 
     // ── Drag & Drop (called by InventorySlotUI) ───────────────────────────────
