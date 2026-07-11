@@ -221,7 +221,7 @@ public class MainMenuUI : MonoBehaviour {
     // CATEGORY DROPDOWN
     // ─────────────────────────────────────────────────────────
 
-    /// <summary>Builds dropdown from known categories. Always "All" at index 0.</summary>
+    // Builds dropdown from known categories. Always "All" at index 0.
     void InitDropdown(List<QuizSetMetaEntry> entries) {
         _categories.Clear();
 
@@ -236,10 +236,8 @@ public class MainMenuUI : MonoBehaviour {
         RebuildDropdownOptions();
     }
 
-    /// <summary>
-    /// Adds a category to the dropdown if not already present.
-    /// Called when a new set arrives via OnSetReady.
-    /// </summary>
+    // Adds a category to the dropdown if not already present.
+    // Called when a new set arrives via OnSetReady.
     void TryAddCategory(string category) {
         if (string.IsNullOrWhiteSpace(category)) return;
         if (_categories.Contains(category)) return;
