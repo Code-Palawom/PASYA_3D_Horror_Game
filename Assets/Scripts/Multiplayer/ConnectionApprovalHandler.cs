@@ -13,11 +13,20 @@ public class ConnectionApprovalHandler : MonoBehaviour {
     public const string ReasonInProgress = "REASON:IN_PROGRESS";
     public const string ReasonCountdown = "REASON:COUNTDOWN";
     public const string ReasonVersionMismatch = "REASON:VERSION_MISMATCH";
+    public const string ReasonDuplicateName = "REASON:DUPLICATE_NAME";
 
     // Server-side cache: clientId → player name, populated during approval,
     // consumed and cleared by GameSessionManager.OnClientConnected.
     public static readonly Dictionary<ulong, string> PendingNames = new();
     public static readonly Dictionary<ulong, PlayerRole> PendingRoles = new();
+
+    // Names currently claimed this session — covers players mid-handshake
+    // (in PendingNames) AND players already fully connected. Kept separate
+    // from PendingNames because that dictionary is cleared once
+    // GameSessionManager consumes it, so it can't be used alone to detect
+    // a name collision against an already-connected player.
+    public static readonly Dictionary<ulong, string> ActiveNames = new();
+
     public static string GameVersion => Application.version;
 
     void Awake() {
@@ -44,7 +53,24 @@ public class ConnectionApprovalHandler : MonoBehaviour {
 
     void Register() {
         NetworkManager.Singleton.ConnectionApprovalCallback = ApprovalCheck;
+        NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
         Debug.Log("[ConnectionApprovalHandler] Approval callback registered.");
+    }
+
+    void OnDisable() {
+        if (NetworkManager.Singleton != null) {
+            NetworkManager.Singleton.ConnectionApprovalCallback = null;
+            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
+        }
+    }
+
+    // Keep ActiveNames in sync — PendingNames/PendingRoles are consumed
+    // elsewhere (GameSessionManager), but ActiveNames must persist for the
+    // full duration a client stays connected, then clear on disconnect.
+    void OnClientDisconnected(ulong clientId) {
+        ActiveNames.Remove(clientId);
+        PendingNames.Remove(clientId);
+        PendingRoles.Remove(clientId);
     }
 
     // ─────────────────────────────────────────────────────────
@@ -56,12 +82,19 @@ public class ConnectionApprovalHandler : MonoBehaviour {
             response.Approved = true;
             response.CreatePlayerObject = false;
 
+            string hostName = AuthManager.Instance != null && AuthManager.Instance.CurrentProfile != null
+                ? AuthManager.Instance.CurrentProfile.DisplayName
+                : "Player";
+
             PendingRoles[request.ClientNetworkId] =
                 AuthManager.Instance != null && AuthManager.Instance.CurrentProfile != null
                     ? AuthManager.Instance.CurrentProfile.RoleEnum
                     : PlayerRole.Player;
 
-            Debug.Log("[ConnectionApproval] Host approved.");
+            PendingNames[request.ClientNetworkId] = hostName;
+            ActiveNames[request.ClientNetworkId] = hostName;
+
+            Debug.Log($"[ConnectionApproval] Host approved as '{hostName}'.");
             return;
         }
 
@@ -117,9 +150,20 @@ public class ConnectionApprovalHandler : MonoBehaviour {
             return;
         }
 
+        // 5. Duplicate name — same Firestore account signed in on another
+        // client already connected (or mid-handshake) this session.
+        foreach (var kvp in ActiveNames) {
+            if (string.Equals(kvp.Value, playerName, System.StringComparison.OrdinalIgnoreCase)) {
+                Deny(response, ReasonDuplicateName);
+                Debug.Log($"[ConnectionApproval] Rejected {request.ClientNetworkId} — duplicate name '{playerName}'.");
+                return;
+            }
+        }
+
         // All checks passed
         PendingNames[request.ClientNetworkId] = playerName;
         PendingRoles[request.ClientNetworkId] = role;
+        ActiveNames[request.ClientNetworkId] = playerName;
         response.Approved = true;
         response.CreatePlayerObject = false;
         Debug.Log($"[ConnectionApproval] Approved {request.ClientNetworkId} as '{playerName}' (Role: {role}) ({currentPlayers + 1}/{MaxPlayers}).");

@@ -688,6 +688,8 @@ public class MainMenuUI : MonoBehaviour {
             ConnectionApprovalHandler.ReasonFull => "Cannot join - lobby is full.",
             ConnectionApprovalHandler.ReasonInProgress => "Cannot join - game is already in progress.",
             ConnectionApprovalHandler.ReasonCountdown => "Cannot join - game is about to start.",
+            ConnectionApprovalHandler.ReasonVersionMismatch => "Cannot join - version mismatch.",
+            ConnectionApprovalHandler.ReasonDuplicateName => "Cannot join - duplicate player name.",
             _ => "Failed to connect."
         }, LoadingScreenController.MessageColor.Error);
 
