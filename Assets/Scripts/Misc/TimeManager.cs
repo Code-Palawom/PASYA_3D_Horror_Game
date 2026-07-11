@@ -55,6 +55,13 @@ public class TimeManager : NetworkBehaviour {
     // ---- Event other scripts (e.g. player prefab UI) can subscribe to ----
     public event System.Action OnTimeUpdated;
 
+    // Static, scene-independent: fires whenever a TimeManager becomes available
+    // (e.g. on Level scene load, after the Lobby had none). Anything spawned
+    // before this scene — like a player object carried over via DontDestroyOnLoad —
+    // won't have OnNetworkSpawn() run again, so it needs this instead to know
+    // a TimeManager now exists.
+    public static event System.Action<TimeManager> OnAnyTimeManagerReady;
+
     //private void Awake() {
     //    if (Instance != null && Instance != this) {
     //        Destroy(gameObject);
@@ -75,6 +82,8 @@ public class TimeManager : NetworkBehaviour {
         // Snap instantly to correct visuals — no tween for late joiners / host start
         ApplyInstantState();
         UpdateClockUI();
+
+        OnAnyTimeManagerReady?.Invoke(this);
     }
 
     public override void OnNetworkDespawn() {
