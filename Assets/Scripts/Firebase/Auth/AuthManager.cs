@@ -226,6 +226,7 @@ public class AuthManager : MonoBehaviour {
 
     private void OnSignInSuccess(FirebaseUser user) {
         Debug.Log($"[AuthManager] Signed in → {user.DisplayName} | UID: {user.UserId}");
+        ToastNotification.Instance.ShowLocalToast($"Welcome {user.DisplayName}", ToastType.Info);
         OnAuthStateChanged?.Invoke(user);
         AttachPlayerProfileListener(user);
     }
