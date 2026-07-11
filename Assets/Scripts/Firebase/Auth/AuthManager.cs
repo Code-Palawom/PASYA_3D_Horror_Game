@@ -52,8 +52,8 @@ public class AuthManager : MonoBehaviour {
     }
 
     private void Start() {
-        if (ConfirmFirebaseServices.Instance.IsReady) InitAuth();
-        else ConfirmFirebaseServices.Instance.OnFirebaseReady += InitAuth;
+        if (FirebaseManager.Instance.IsReady) InitAuth();
+        else FirebaseManager.Instance.OnFirebaseReady += InitAuth;
     }
 
     private void OnDestroy() {
@@ -227,7 +227,7 @@ public class AuthManager : MonoBehaviour {
     private void OnSignInSuccess(FirebaseUser user) {
         Debug.Log($"[AuthManager] Signed in → {user.DisplayName} | UID: {user.UserId}");
         ToastNotification.Instance.ShowLocalToast($"Welcome {user.DisplayName}", ToastType.Info);
-        OnAuthStateChanged?.Invoke(user);
+            OnAuthStateChanged?.Invoke(user);
         AttachPlayerProfileListener(user);
     }
 
@@ -236,7 +236,7 @@ public class AuthManager : MonoBehaviour {
     private void AttachPlayerProfileListener(FirebaseUser user) {
         DetachPlayerProfileListener(); // guard against double-attach on re-sign-in
 
-        _profileDocRef = FirebaseFirestore.DefaultInstance.Collection("users").Document(user.UserId);
+        _profileDocRef = FirebaseManager.Instance.Db.Collection("users").Document(user.UserId);
         _lastLoginBumpedThisSession = false;
 
         _profileListener = _profileDocRef.Listen(snapshot => {
@@ -257,7 +257,7 @@ public class AuthManager : MonoBehaviour {
             string defaultName = user.DisplayName ?? "Player";
             string nameKey = defaultName.Trim().ToLowerInvariant();
 
-            var db = FirebaseFirestore.DefaultInstance;
+            var db = FirebaseManager.Instance.Db;
             DocumentReference usernameRef = db.Collection("usernames").Document(nameKey);
 
             // ── Step 1: claim a name (its own transaction, so it fully commits
@@ -364,7 +364,7 @@ public class AuthManager : MonoBehaviour {
         string newNameKey = newDisplayName.Trim().ToLowerInvariant();
         string oldNameKey = CurrentProfile.DisplayName?.Trim().ToLowerInvariant();
 
-        var db = FirebaseFirestore.DefaultInstance;
+        var db = FirebaseManager.Instance.Db;
         DocumentReference newUsernameRef = db.Collection("usernames").Document(newNameKey);
 
         // ── Step 1: claim the new name (its own transaction, so it fully commits

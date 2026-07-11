@@ -1,10 +1,12 @@
+using System;
+using UnityEngine;
 using Firebase;
 using Firebase.Extensions;
 using Firebase.Firestore;
-using System;
-using UnityEngine;
 
-public class ConfirmFirebaseServices : MonoBehaviour {
+// The ONLY place that calls CheckAndFixDependenciesAsync.
+// Runs once on launch, then exposes Db for everything else to read.
+public class FirebaseManager : MonoBehaviour {
     //private void Start() {
     //    Firebase.FirebaseApp.CheckAndFixDependenciesAsync().ContinueWithOnMainThread(task => {
     //        var dependencyStatus = task.Result;
@@ -23,25 +25,48 @@ public class ConfirmFirebaseServices : MonoBehaviour {
     //    });
     //}
     // FirebaseBootstrapper.cs — the ONLY place that calls CheckAndFixDependenciesAsync
-    public static ConfirmFirebaseServices Instance { get; private set; }
+    //public static ConfirmFirebaseServices Instance { get; private set; }
+    //public bool IsReady { get; private set; }
+    //public event Action OnFirebaseReady;
+
+    //private void Awake() {
+    //    if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+    //    Instance = this;
+    //}
+
+    //private async void Start() {
+    //    var status = await FirebaseApp.CheckAndFixDependenciesAsync();
+    //    if (status == DependencyStatus.Available) {
+    //        IsReady = true;
+    //        Debug.Log("[ConfirmFirebaseServices] Firebase ready.");
+    //        OnFirebaseReady?.Invoke();
+    //        var db = FirebaseFirestore.DefaultInstance;
+    //        QuizFetcher.Instance.Init(db);
+    //    } else {
+    //        Debug.LogError($"[ConfirmFirebaseServices] Dependency error: {status}");
+    //    }
+    //}
+
+    public static FirebaseManager Instance { get; private set; }
+
     public bool IsReady { get; private set; }
+    public FirebaseFirestore Db { get; private set; }
     public event Action OnFirebaseReady;
 
-    private void Awake() {
+    void Awake() {
         if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
     }
 
-    private async void Start() {
+    async void Start() {
         var status = await FirebaseApp.CheckAndFixDependenciesAsync();
         if (status == DependencyStatus.Available) {
+            Db = FirebaseFirestore.DefaultInstance;
             IsReady = true;
-            Debug.Log("[ConfirmFirebaseServices] Firebase ready.");
+            Debug.Log("[FirebaseManager] Firebase ready.");
             OnFirebaseReady?.Invoke();
-            var db = FirebaseFirestore.DefaultInstance;
-            QuizFetcher.Instance.Init(db);
         } else {
-            Debug.LogError($"[ConfirmFirebaseServices] Dependency error: {status}");
+            Debug.LogError($"[FirebaseManager] Dependency error: {status}");
         }
     }
 }

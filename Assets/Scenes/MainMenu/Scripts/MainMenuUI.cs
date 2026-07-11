@@ -140,18 +140,16 @@ public class MainMenuUI : MonoBehaviour {
         QuizFetcher.Instance.OnSetReady -= HandleSetReady;
         QuizFetcher.Instance.OnFetchStatus -= HandleFetchStatus;
 
-        if (QuizFetcher.Instance != null)
-            QuizFetcher.Instance.OnFirebaseInit -= OnFirebaseReady;
+        if (FirebaseManager.Instance != null)
+            FirebaseManager.Instance.OnFirebaseReady -= OnFirebaseReady;
     }
 
-    /// <summary>
-    /// Called once when Firebase finishes initializing.
-    /// Populates Firestore-backed quiz sets and attaches the _meta listener.
-    /// </summary>
+    // Called once when Firebase finishes initializing.
+    // Populates Firestore-backed quiz sets and attaches the _meta listener.
     void OnFirebaseReady() {
         // Unsubscribe — only needs to fire once
         Debug.Log("[MainMenuUI] Firebase ready, loading Firestore-backed quiz sets...");
-        QuizFetcher.Instance.OnFirebaseInit -= OnFirebaseReady;
+        FirebaseManager.Instance.OnFirebaseReady -= OnFirebaseReady;
 
         // Load Firestore cache and merge with local SO dropdown
         List<QuizSetMetaEntry> cached = QuizFetcher.Instance.LoadCacheImmediately();
@@ -211,10 +209,10 @@ public class MainMenuUI : MonoBehaviour {
         foreach (var entry in localMeta)
             SpawnQuizCard(entry);
 
-        if(ConfirmFirebaseServices.Instance.IsReady) OnFirebaseReady();
+        if(FirebaseManager.Instance.IsReady) OnFirebaseReady();
 
         // Step 2: wait for Firebase — Firestore cache + listener start after Init() completes
-        QuizFetcher.Instance.OnFirebaseInit += OnFirebaseReady;
+        FirebaseManager.Instance.OnFirebaseReady += OnFirebaseReady;
 
         ShowMainPanel();
     }
