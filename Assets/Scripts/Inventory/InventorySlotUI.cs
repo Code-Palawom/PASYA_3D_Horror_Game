@@ -16,10 +16,18 @@ public class InventorySlotUI : MonoBehaviour,
     [SerializeField] private Color inventoryBgColor = new Color(0.55f, 0.55f, 0.55f, 0.9f);
     [SerializeField] private Color highlightColor = new Color(1f, 0.85f, 0.1f, 1f);
 
+    [Header("Active Item Name Popup (hotbar slots only)")]
+    [Tooltip("Positioned above the icon in the prefab. Only wired up on hotbar " +
+             "slots — leave empty on main inventory slot prefabs.")]
+    [SerializeField] private TMP_Text itemNameLabel;
+    [SerializeField] private float nameHoldDuration = 0.4f; // full-alpha hold before fading
+    [SerializeField] private float nameFadeDuration = 1.6f; // fade-out length (hold + fade ≈ 2s total)
+
     public int SlotIndex { get; private set; }
 
     private bool _isHotbar;
     private InventoryUI _ui;
+    private Coroutine _namePopupCoroutine;
 
     // ── Init ──────────────────────────────────────────────────────────────────
 
@@ -31,6 +39,7 @@ public class InventorySlotUI : MonoBehaviour,
         background.color = isHotbar ? hotbarBgColor : inventoryBgColor;
         SetHighlight(false);
         ClearDisplay();
+        HideNamePopupImmediate();
     }
 
     // ── Display ───────────────────────────────────────────────────────────────
@@ -56,6 +65,68 @@ public class InventorySlotUI : MonoBehaviour,
         if (highlightBorder == null) return;
         highlightBorder.enabled = active;
         highlightBorder.color = highlightColor;
+    }
+
+    // ── Active Item Name Popup ───────────────────────────────────────────────
+    // Called by InventoryUI whenever this slot becomes the active hotbar slot
+    // (or its contents change while already active). Shows the item's name
+    // at full alpha, holds briefly, then fades out over ~2s total. Switching
+    // to a DIFFERENT slot calls HideNamePopupImmediate on this one instead,
+    // so only one name is ever visible/fading at a time.
+
+    public void PlayActiveNamePopup(string itemDisplayName) {
+        if (itemNameLabel == null) return;
+
+        if (_namePopupCoroutine != null) {
+            StopCoroutine(_namePopupCoroutine);
+            _namePopupCoroutine = null;
+        }
+
+        if (string.IsNullOrEmpty(itemDisplayName)) {
+            HideNamePopupImmediate();
+            return;
+        }
+
+        itemNameLabel.text = itemDisplayName;
+        var c = itemNameLabel.color;
+        itemNameLabel.color = new Color(c.r, c.g, c.b, 1f);
+        itemNameLabel.enabled = true;
+
+        if (gameObject.activeInHierarchy)
+            _namePopupCoroutine = StartCoroutine(FadeNameRoutine());
+    }
+
+    public void HideNamePopupImmediate() {
+        if (_namePopupCoroutine != null) {
+            StopCoroutine(_namePopupCoroutine);
+            _namePopupCoroutine = null;
+        }
+        if (itemNameLabel != null) itemNameLabel.enabled = false;
+    }
+
+    private System.Collections.IEnumerator FadeNameRoutine() {
+        yield return new WaitForSeconds(nameHoldDuration);
+
+        float t = 0f;
+        Color start = itemNameLabel.color;
+        while (t < nameFadeDuration) {
+            t += Time.deltaTime;
+            itemNameLabel.color = new Color(start.r, start.g, start.b,
+                Mathf.Lerp(1f, 0f, t / nameFadeDuration));
+            yield return null;
+        }
+
+        itemNameLabel.enabled = false;
+        _namePopupCoroutine = null;
+    }
+
+    private void OnDisable() {
+        // Panel toggled off (e.g. Tab menu) or object pooled — drop any
+        // in-flight coroutine so it doesn't try to run against a disabled object.
+        if (_namePopupCoroutine != null) {
+            StopCoroutine(_namePopupCoroutine);
+            _namePopupCoroutine = null;
+        }
     }
 
     // ── Drag & Drop ───────────────────────────────────────────────────────────

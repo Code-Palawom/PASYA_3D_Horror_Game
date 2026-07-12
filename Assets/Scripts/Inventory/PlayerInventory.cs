@@ -73,6 +73,11 @@ public class PlayerInventory : NetworkBehaviour, IInventoryQuery {
 
     // Add items to inventory. Returns true if ALL qty was placed.
     // Call only from server (e.g. inside a ServerRpc or host game logic).
+    //
+    // If the item lands in a hotbar slot (new placement OR stacking into an
+    // existing hotbar stack), that slot becomes the active slot — picking
+    // something up effectively "equips" it. If it only lands in the main
+    // inventory (hotbar full), the active slot is left untouched.
     public bool AddItem(string itemID, int qty = 1) {
         if (!IsServer) return false;
         var data = Registry.Get(itemID);
@@ -82,6 +87,7 @@ public class PlayerInventory : NetworkBehaviour, IInventoryQuery {
         }
 
         int remaining = qty;
+        int firstTouchedSlot = -1;
 
         // 1) Stack into existing slots
         if (data.stackable) {
@@ -92,6 +98,7 @@ public class PlayerInventory : NetworkBehaviour, IInventoryQuery {
                     int toAdd = Mathf.Min(space, remaining);
                     _slots[i] = new NetworkInventorySlot { ItemID = itemID, Quantity = s.Quantity + toAdd };
                     remaining -= toAdd;
+                    if (firstTouchedSlot < 0) firstTouchedSlot = i;
                 }
             }
         }
@@ -102,10 +109,16 @@ public class PlayerInventory : NetworkBehaviour, IInventoryQuery {
                 int toPlace = data.stackable ? Mathf.Min(data.maxStack, remaining) : 1;
                 _slots[i] = new NetworkInventorySlot { ItemID = itemID, Quantity = toPlace };
                 remaining -= toPlace;
+                if (firstTouchedSlot < 0) firstTouchedSlot = i;
             }
         }
 
-        return remaining == 0;
+        bool success = remaining == 0;
+
+        if (success && firstTouchedSlot >= 0 && firstTouchedSlot < HotbarSize)
+            _activeHotbarIndex.Value = firstTouchedSlot;
+
+        return success;
     }
 
     // Remove qty of itemID. Returns true if fully removed.
@@ -143,7 +156,7 @@ public class PlayerInventory : NetworkBehaviour, IInventoryQuery {
     // Returns true if the item in the active hotbar slot is a key
     // matching the given keyID.
     public bool HasKeyInActiveSlot(string keyID) {
-        var slot = _slots[_activeHotbarIndex.Value];
+        var slot = GetSlot(_activeHotbarIndex.Value);
         if (slot.IsEmpty) return false;
         var item = Registry.Get(slot.ItemID.ToString());
         return item != null && item.isKey && item.keyID == keyID;
@@ -151,13 +164,19 @@ public class PlayerInventory : NetworkBehaviour, IInventoryQuery {
 
     // Get the InventoryItem definition for the active hotbar slot.
     public InventoryItem GetActiveSlotItem() {
-        var slot = _slots[_activeHotbarIndex.Value];
+        var slot = GetSlot(_activeHotbarIndex.Value);
         return slot.IsEmpty ? null : Registry.Get(slot.ItemID.ToString());
     }
 
     // ── Read-Only (Client-Safe) ───────────────────────────────────────────────
 
-    public NetworkInventorySlot GetSlot(int index) => _slots[index];
+    // Bounds-checked: returns Empty rather than throwing if called before the
+    // server has populated slots, or before a client's NetworkList sync has
+    // arrived (both can legitimately happen for a frame or two around spawn).
+    public NetworkInventorySlot GetSlot(int index) {
+        if (index < 0 || index >= _slots.Count) return NetworkInventorySlot.Empty;
+        return _slots[index];
+    }
 
     // ── Client → Server RPCs ──────────────────────────────────────────────────
 

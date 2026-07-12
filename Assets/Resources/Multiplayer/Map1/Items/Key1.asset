@@ -21,3 +21,4 @@ MonoBehaviour:
   isKey: 1
   keyID: key1
   consumeOnUnlock: 0
+  pickupDifficulty: 0

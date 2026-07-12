@@ -22,6 +22,7 @@ public class InventoryUI : MonoBehaviour {
     private PlayerInventory _inventory;
     private bool _isOpen;
     private int _dragSourceIndex = -1;
+    private bool _hasInitialized;
 
     // ── Initialization ────────────────────────────────────────────────────────
 
@@ -34,7 +35,7 @@ public class InventoryUI : MonoBehaviour {
         action.Disable();
         action.Dispose();
     }
-    
+
     public void Init(PlayerInventory inventory) {
         _inventory = inventory;
         _inventory.OnSlotChanged += RefreshSlot;
@@ -65,6 +66,7 @@ public class InventoryUI : MonoBehaviour {
         for (int i = 0; i < _inventory.SlotCount; i++)
             RefreshSlot(i);
         RefreshActiveHighlight(_inventory.ActiveHotbarIndex);
+        _hasInitialized = true;
     }
 
     private void RefreshSlot(int index) {
@@ -72,11 +74,38 @@ public class InventoryUI : MonoBehaviour {
         var slot = _inventory.GetSlot(index);
         var item = slot.IsEmpty ? null : Registry.Get(slot.ItemID.ToString());
         UISlots[index].UpdateDisplay(item, slot.Quantity);
+
+        // Also re-trigger the popup if this is the slot you're currently
+        // holding — e.g. picking an item up directly into your active slot,
+        // or its stack count changing. Skipped during the very first
+        // RefreshAll() so joining doesn't flash a name immediately; see
+        // _hasInitialized below.
+        if (_hasInitialized && index < PlayerInventory.HotbarSize
+            && index == _inventory.ActiveHotbarIndex) {
+            UISlots[index].PlayActiveNamePopup(item?.displayName);
+        }
     }
 
     private void RefreshActiveHighlight(int activeIndex) {
-        for (int i = 0; i < PlayerInventory.HotbarSize; i++)
-            UISlots[i].SetHighlight(i == activeIndex);
+        for (int i = 0; i < PlayerInventory.HotbarSize; i++) {
+            bool isActive = i == activeIndex;
+            UISlots[i].SetHighlight(isActive);
+
+            // i < _inventory.SlotCount guards against this firing before slots
+            // are populated/synced (e.g. before PlayerInventory's own
+            // OnNetworkSpawn has run, or before a client's initial NetworkList
+            // sync arrives) — GetSlot is bounds-safe now too, but checking
+            // here avoids doing the Registry lookup on data we know is stale.
+            if (isActive && i < _inventory.SlotCount) {
+                var slot = _inventory.GetSlot(i);
+                var item = slot.IsEmpty ? null : Registry.Get(slot.ItemID.ToString());
+                if (_hasInitialized) UISlots[i].PlayActiveNamePopup(item?.displayName);
+            } else {
+                // Immediately kills any name still fading on the slot we just
+                // switched away from — only one name is ever visible at a time.
+                UISlots[i].HideNamePopupImmediate();
+            }
+        }
     }
 
     // ── Drag & Drop (called by InventorySlotUI) ───────────────────────────────
