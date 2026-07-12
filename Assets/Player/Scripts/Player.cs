@@ -351,6 +351,7 @@ public class Player : NetworkBehaviour {
     }
 
     IEnumerator HideLoadingScreen() {
+        if (!IsOwner) yield break;
         yield return new WaitForSeconds(1f);
         LoadingScreenController.Instance.Hide();
     }

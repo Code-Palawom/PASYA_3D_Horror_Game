@@ -34,7 +34,7 @@ public class InventoryUI : MonoBehaviour {
         action.Disable();
         action.Dispose();
     }
-
+    
     public void Init(PlayerInventory inventory) {
         _inventory = inventory;
         _inventory.OnSlotChanged += RefreshSlot;
@@ -44,7 +44,14 @@ public class InventoryUI : MonoBehaviour {
             UISlots[i].Init(i, i < PlayerInventory.HotbarSize, this);
 
         RefreshAll();
-        //inventoryPanel.SetActive(false);
+        inventoryPanel.SetActive(false);
+    }
+
+    // ── Input ─────────────────────────────────────────────────────────────────
+
+    private void Update() {
+        if (Keyboard.current.tabKey.wasPressedThisFrame)
+            SetOpen(!_isOpen);
     }
 
     private void SetOpen(bool open) {
@@ -81,5 +88,15 @@ public class InventoryUI : MonoBehaviour {
         if (_dragSourceIndex < 0 || _dragSourceIndex == targetIndex) return;
         _inventory.MoveSlotServerRpc(_dragSourceIndex, targetIndex);
         _dragSourceIndex = -1;
+    }
+
+    // ── Touch/Click Slot Selection (called by InventorySlotUI) ─────────────────
+
+    // Tapping a hotbar slot selects it — same effect as HotbarInput's number
+    // keys, just routed through UI instead of Keyboard. Safe to call even if
+    // it's already the active slot (PlayerInventory's RPC is idempotent).
+    public void OnHotbarSlotTapped(int slotIndex) {
+        if (slotIndex == _inventory.ActiveHotbarIndex) return;
+        _inventory.SetActiveSlotServerRpc(slotIndex);
     }
 }

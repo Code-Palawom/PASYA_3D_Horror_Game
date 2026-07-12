@@ -214,6 +214,13 @@ public class MainMenuUI : MonoBehaviour {
         // Step 2: wait for Firebase — Firestore cache + listener start after Init() completes
         FirebaseManager.Instance.OnFirebaseReady += OnFirebaseReady;
 
+        AuthManager.Instance.OnAuthStateChanged += (user) => {
+            if (user == null) {
+                ShowMainPanel();
+                ActionbarToastNotification.Instance.ShowLocalToast("Logged out.", ToastType.Info);
+            }
+        };
+
         ShowMainPanel();
     }
 

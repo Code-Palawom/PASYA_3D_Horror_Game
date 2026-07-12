@@ -9,6 +9,8 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
+using static Unity.Burst.Intrinsics.X86;
+using static UnityEngine.UIElements.UxmlAttributeDescription;
 
 // Central auth controller. Handles:
 //   - Android: Google Sign-In via native plugin
@@ -226,7 +228,7 @@ public class AuthManager : MonoBehaviour {
 
     private void OnSignInSuccess(FirebaseUser user) {
         Debug.Log($"[AuthManager] Signed in → {user.DisplayName} | UID: {user.UserId}");
-        ToastNotification.Instance.ShowLocalToast($"Welcome {user.DisplayName}", ToastType.Info);
+        ActionbarToastNotification.Instance.ShowLocalToast($"Welcome {user.DisplayName}", ToastType.Info);
             OnAuthStateChanged?.Invoke(user);
         AttachPlayerProfileListener(user);
     }

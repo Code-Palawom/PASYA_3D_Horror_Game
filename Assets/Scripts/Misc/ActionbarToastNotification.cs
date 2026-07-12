@@ -4,6 +4,7 @@ using TMPro;
 using System.Collections;
 using System.Collections.Generic;
 
+[DefaultExecutionOrder(-100)]
 public class ActionbarToastNotification : NetworkBehaviour {
     public static ActionbarToastNotification Instance { get; private set; }
 

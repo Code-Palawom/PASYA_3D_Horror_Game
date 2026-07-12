@@ -6,7 +6,7 @@ using TMPro;
 // Visual representation of one inventory slot.
 // Supports drag-and-drop between slots.
 public class InventorySlotUI : MonoBehaviour,
-    IBeginDragHandler, IEndDragHandler, IDropHandler, IPointerEnterHandler {
+    IBeginDragHandler, IEndDragHandler, IDropHandler, IPointerEnterHandler, IPointerClickHandler {
     [SerializeField] private Image iconImage;
     [SerializeField] private TextMeshProUGUI quantityText;
     [SerializeField] private Image highlightBorder; // Active slot yellow border
@@ -74,5 +74,16 @@ public class InventorySlotUI : MonoBehaviour,
 
     public void OnPointerEnter(PointerEventData eventData) {
         // TODO: show item tooltip
+    }
+
+    // Tap/click a hotbar slot to make it active — this is the touch
+    // equivalent of pressing 1–9 on desktop. Fires alongside the drag
+    // handlers with no conflict: uGUI only raises OnPointerClick if the
+    // pointer didn't move past the drag threshold, so a tap selects and
+    // a drag still reorders as before. Main inventory slots (9–35) ignore
+    // taps here since only the hotbar has an "active" concept.
+    public void OnPointerClick(PointerEventData eventData) {
+        if (!_isHotbar) return;
+        _ui.OnHotbarSlotTapped(SlotIndex);
     }
 }
