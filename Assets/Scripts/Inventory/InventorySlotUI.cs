@@ -6,7 +6,7 @@ using TMPro;
 // Visual representation of one inventory slot.
 // Supports drag-and-drop between slots.
 public class InventorySlotUI : MonoBehaviour,
-    IBeginDragHandler, IEndDragHandler, IDropHandler, IPointerEnterHandler, IPointerClickHandler {
+    IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler, IPointerEnterHandler, IPointerClickHandler {
     [SerializeField] private Image iconImage;
     [SerializeField] private TextMeshProUGUI quantityText;
     [SerializeField] private Image highlightBorder; // Active slot yellow border
@@ -22,6 +22,10 @@ public class InventorySlotUI : MonoBehaviour,
     [SerializeField] private TMP_Text itemNameLabel;
     [SerializeField] private float nameHoldDuration = 0.4f; // full-alpha hold before fading
     [SerializeField] private float nameFadeDuration = 1.6f; // fade-out length (hold + fade ≈ 2s total)
+
+    [Header("Drag Feedback")]
+    [Tooltip("Icon alpha on the slot you're dragging FROM, while the drag is in progress.")]
+    [SerializeField] private float draggingIconOpacity = 0.35f;
 
     public int SlotIndex { get; private set; }
 
@@ -40,6 +44,7 @@ public class InventorySlotUI : MonoBehaviour,
         SetHighlight(false);
         ClearDisplay();
         HideNamePopupImmediate();
+        SetIconOpacity(1f);
     }
 
     // ── Display ───────────────────────────────────────────────────────────────
@@ -127,14 +132,45 @@ public class InventorySlotUI : MonoBehaviour,
             StopCoroutine(_namePopupCoroutine);
             _namePopupCoroutine = null;
         }
+        // Also guards against a slot staying dimmed forever if it's disabled
+        // mid-drag (e.g. main inventory panel closed via Tab while dragging).
+        SetIconOpacity(1f);
     }
 
     // ── Drag & Drop ───────────────────────────────────────────────────────────
 
-    public void OnBeginDrag(PointerEventData eventData)
-        => _ui.OnBeginDrag(SlotIndex);
+    public void OnBeginDrag(PointerEventData eventData) {
+        if (!iconImage.enabled) {
+            // No item here — explicitly cancel rather than silently letting
+            // InventoryUI's _dragSourceIndex carry over a stale value from a
+            // previous drag. UpdateDragVisual/EndDragVisual still get called
+            // every frame after this (interfaces require the methods exist),
+            // but they no-op safely since the ghost was never enabled below.
+            _ui.CancelDrag();
+            return;
+        }
+        SetIconOpacity(draggingIconOpacity);
+        _ui.OnBeginDrag(SlotIndex, iconImage.sprite);
+    }
 
-    public void OnEndDrag(PointerEventData eventData) { /* handled by target OnDrop */ }
+    // Required for uGUI to populate pointerEventData.pointerDrag at all (see
+    // previous explanation) — also now does real work: moves the ghost icon
+    // to follow the pointer every frame while dragging.
+    public void OnDrag(PointerEventData eventData)
+        => _ui.UpdateDragVisual(eventData.position);
+
+    public void OnEndDrag(PointerEventData eventData) {
+        // Fires on THIS slot (the source) regardless of whether the drop
+        // landed on a valid target, so restoring full opacity here always
+        // matches up with the dim applied in OnBeginDrag above.
+        SetIconOpacity(1f);
+        _ui.EndDragVisual();
+    }
+
+    private void SetIconOpacity(float alpha) {
+        var c = iconImage.color;
+        iconImage.color = new Color(c.r, c.g, c.b, alpha);
+    }
 
     public void OnDrop(PointerEventData eventData) {
         // The slot that was dragged from

@@ -90,7 +90,7 @@ public class ReadyButtonUI : NetworkBehaviour {
 
         _isReady = !_isReady;
         SetButtonState(_isReady, locked: false);
-        LobbyReadyManager.Instance.SetReadyRpc(NetworkManager.Singleton.LocalClientId, _isReady);
+        LobbyReadyManager.Instance.SetReadyRpc(NetworkManager.Singleton.LocalClientId, _isReady, AuthManager.Instance.CurrentProfile.DisplayName);
     }
 
     // ─────────────────────────────────────────────────────────

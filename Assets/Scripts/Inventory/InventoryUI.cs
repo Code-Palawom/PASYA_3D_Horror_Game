@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 // Client-side inventory UI. Wire this to the local player's PlayerInventory
 // by calling Init() from PlayerSetup after network spawn.
@@ -16,6 +17,14 @@ public class InventoryUI : MonoBehaviour {
     private ItemRegistry Registry => itemRegistry != null ? itemRegistry : ItemRegistry.Instance;
     [SerializeField] private InventorySlotUI[] UISlots; // 36 elements, set in Inspector
     [SerializeField] private GameObject inventoryPanel; // Shown/hidden with Tab
+
+    [Header("Drag Ghost")]
+    [Tooltip("A plain UI Image that follows the pointer while dragging. Must sit on a " +
+             "Screen Space - Overlay canvas (or one rendered above the inventory panel/hotbar) " +
+             "so it's never occluded. Set its Raycast Target OFF in the Inspector — this is " +
+             "also enforced in code at Init() — so it never steals the OnDrop hit test from " +
+             "the slot underneath the cursor. Leave disabled/inactive by default in the scene.")]
+    [SerializeField] private Image dragGhost;
 
     [SerializeField] private InputAction action;
 
@@ -44,16 +53,16 @@ public class InventoryUI : MonoBehaviour {
         for (int i = 0; i < UISlots.Length; i++)
             UISlots[i].Init(i, i < PlayerInventory.HotbarSize, this);
 
+        if (dragGhost != null) {
+            dragGhost.raycastTarget = false; // belt-and-suspenders alongside the Inspector setting
+            dragGhost.enabled = false;
+        }
+
         RefreshAll();
         inventoryPanel.SetActive(false);
     }
 
     // ── Input ─────────────────────────────────────────────────────────────────
-
-    private void Update() {
-        if (Keyboard.current.tabKey.wasPressedThisFrame)
-            SetOpen(!_isOpen);
-    }
 
     private void SetOpen(bool open) {
         _isOpen = open;
@@ -110,12 +119,48 @@ public class InventoryUI : MonoBehaviour {
 
     // ── Drag & Drop (called by InventorySlotUI) ───────────────────────────────
 
-    public void OnBeginDrag(int slotIndex)
-        => _dragSourceIndex = slotIndex;
+    public void OnBeginDrag(int slotIndex, Sprite icon) {
+        _dragSourceIndex = slotIndex;
+
+        if (dragGhost == null) return;
+        if (icon == null) return; // empty slot — nothing to show, but the move itself still works
+
+        dragGhost.sprite = icon;
+        dragGhost.enabled = true;
+    }
+
+    // Called instead of OnBeginDrag when the slot being dragged from is
+    // empty. Resets the source index so a stale value from an earlier,
+    // successful drag can't accidentally be reused by OnDrop.
+    public void CancelDrag() => _dragSourceIndex = -1;
+
+    // Called every frame while dragging (InventorySlotUI.OnDrag). screenPosition
+    // comes straight from PointerEventData.position, which is already in screen
+    // space — this only lines up correctly if dragGhost's canvas is Screen Space
+    // - Overlay. If you switch to Screen Space - Camera or World Space, convert
+    // via RectTransformUtility.ScreenPointToLocalPointInRectangle first.
+    public void UpdateDragVisual(Vector2 screenPosition) {
+        if (dragGhost != null && dragGhost.enabled)
+            dragGhost.rectTransform.position = screenPosition;
+    }
+
+    // Called on release regardless of whether the drop landed on a valid
+    // target — always hide the ghost so it never gets stuck on screen.
+    public void EndDragVisual() {
+        if (dragGhost != null) dragGhost.enabled = false;
+    }
 
     public void OnDrop(int targetIndex) {
         if (_dragSourceIndex < 0 || _dragSourceIndex == targetIndex) return;
         _inventory.MoveSlotServerRpc(_dragSourceIndex, targetIndex);
+
+        // If the item landed in a hotbar slot, make that the active slot —
+        // same "picking it up equips it" feel as AddItem's auto-select.
+        // Server-side SetActiveSlotServerRpc already bounds-checks this too,
+        // but checking here avoids sending a pointless RPC for main-inventory drops.
+        if (targetIndex < PlayerInventory.HotbarSize)
+            _inventory.SetActiveSlotServerRpc(targetIndex);
+
         _dragSourceIndex = -1;
     }
 

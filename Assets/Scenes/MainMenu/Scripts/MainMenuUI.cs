@@ -518,7 +518,7 @@ public class MainMenuUI : MonoBehaviour {
             .GetSetByName(GameModeManager.Instance.SelectedQuizSetName)?.questions.Count ?? 0;
 
         LanDiscovery.Instance.StartHostBroadcast(
-            hostName: AuthManager.Instance.CurrentUser?.DisplayName ?? SystemInfo.deviceName,
+            hostName: AuthManager.Instance.CurrentProfile?.DisplayName ?? SystemInfo.deviceName,
             quizName: GameModeManager.Instance.SelectedQuizSetName,
             levelSceneName: GameModeManager.Instance.SelectedLevelSceneName,
             questionCount: questionCount,
@@ -697,6 +697,8 @@ public class MainMenuUI : MonoBehaviour {
         }, LoadingScreenController.MessageColor.Error);
 
         LoadingScreenController.Instance.Hide(3f);
+        ToastNotification.Instance.ShowLocalToast("Failed to join game" + reason, ToastType.Error);
+        Debug.Log(reason);
     }
 
     // ─────────────────────────────────────────────────────────

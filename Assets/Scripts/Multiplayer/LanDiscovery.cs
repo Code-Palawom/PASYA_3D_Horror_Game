@@ -64,7 +64,7 @@ public class LanDiscovery : MonoBehaviour {
         Func<List<string>> playerNamesProvider) {
         StopHostBroadcast();
 
-        _hostNameToBroadcast = AuthManager.Instance.CurrentUser?.DisplayName ?? hostName;
+        _hostNameToBroadcast = AuthManager.Instance.CurrentProfile?.DisplayName ?? hostName;
         _quizNameToBroadcast = quizName;
         _levelSceneNameToBroadcast = levelSceneName;
         _questionCountToBroadcast = questionCount;

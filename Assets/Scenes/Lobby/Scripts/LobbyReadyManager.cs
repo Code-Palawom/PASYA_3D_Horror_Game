@@ -99,7 +99,7 @@ public class LobbyReadyManager : NetworkBehaviour {
     // Called by ReadyButtonUI (local player only)
     // ─────────────────────────────────────────────────────────
     [Rpc(SendTo.Server)]
-    public void SetReadyRpc(ulong clientId, bool ready) {
+    public void SetReadyRpc(ulong clientId, bool ready, string playerName) {
         Debug.Log("[RPC][Server] SetReady");
         if (_countdownLocked.Value) return;   // can't change after lock
 
@@ -109,9 +109,13 @@ public class LobbyReadyManager : NetworkBehaviour {
                 if (id == clientId) { alreadyIn = true; break; }
 
             if (!alreadyIn) _readyPlayers.Add(clientId);
+            string nameToShow = string.IsNullOrEmpty(playerName) ? clientId.ToString() : playerName;
+            ToastNotification.Instance.BroadcastToast($"{nameToShow} is ready!", ToastType.Info);
         } else {
             _readyPlayers.Remove(clientId);
             CancelCountdown();
+            string nameToShow = string.IsNullOrEmpty(playerName) ? clientId.ToString() : playerName;
+            ToastNotification.Instance.BroadcastToast($"{nameToShow} is no longer ready.", ToastType.Error);
         }
     }
 
