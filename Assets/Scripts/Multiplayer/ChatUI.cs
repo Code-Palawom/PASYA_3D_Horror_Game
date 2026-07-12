@@ -77,6 +77,8 @@ public class ChatUI : NetworkBehaviour {
     // ─── Callbacks ────────────────────────────────────────────
 
     void WillTypeInChat(bool willType) {
+        if(GameManager.Instance.IsControlFrozen) return;
+
         if (willType)
             inputField.ActivateInputField();
         else

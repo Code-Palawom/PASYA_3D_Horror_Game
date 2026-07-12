@@ -34,7 +34,6 @@ public class ItemRegistry : ScriptableObject {
     // Returns null if not found. Self-heals if Initialize() hasn't run yet
     // (e.g. a script execution order slip) rather than staying broken.
     public InventoryItem Get(string itemID) {
-        Debug.Log($"ItemRegistry.Get('{itemID}') called.");
         if (string.IsNullOrEmpty(itemID)) return null;
         if (_lookup == null) {
             Debug.LogWarning($"[ItemRegistry] '{name}' queried before Initialize() ran — " +

@@ -5,6 +5,10 @@ using UnityEngine;
 using UnityEngine.UI;
 
 public class QuizCanvasController : MonoBehaviour {
+    [Header("Panel")]
+    [SerializeField] GameObject mainPanel;
+    [SerializeField] GameObject chatUI;
+
     [Header("Root")]
     [SerializeField] GameObject quizPanel;
     //[SerializeField] Animator panelAnimator;
@@ -24,7 +28,6 @@ public class QuizCanvasController : MonoBehaviour {
 
     [Header("Feedback")]
     [SerializeField] TMP_Text feedbackText;
-    [SerializeField] float feedbackDuration = 1.5f;
 
     [Header("Multiple Choice")]
     [SerializeField] GameObject multipleChoicePanel;
@@ -37,7 +40,7 @@ public class QuizCanvasController : MonoBehaviour {
     [Header("Text Answer")]
     [SerializeField] GameObject textAnswerPanel;
     [SerializeField] TextAnswerInputUI textAnswerInput;
-
+    
     private Action<QuizAnswer> _onAnswer;
     private bool _answered;
 
@@ -46,6 +49,8 @@ public class QuizCanvasController : MonoBehaviour {
         _onAnswer = onAnswer;
         _answered = false;
 
+        mainPanel.SetActive(false);
+        chatUI.SetActive(false);
         quizPanel.SetActive(true);
         feedbackText.gameObject.SetActive(false);
         //panelAnimator.SetTrigger("Open");
@@ -56,12 +61,15 @@ public class QuizCanvasController : MonoBehaviour {
         timer.OnTimeUp += OnTimerUp;
         timer.StartTimer(question.timeLimit);
     }
-
+    
     public void ShowFeedback(bool isCorrect, Action afterFeedback) {
         feedbackText.gameObject.SetActive(true);
         feedbackText.text = isCorrect ? "Correct!" : "Wrong!";
         feedbackText.color = isCorrect ? Color.green : Color.red;
-        StartCoroutine(FeedbackRoutine(afterFeedback));
+
+        if (isCorrect) ScreenFlashController.Local?.FlashCorrect(); else ScreenFlashController.Local?.FlashWrong();
+        ActionbarToastNotification.Instance.ShowLocalToast(feedbackText.text, isCorrect ? ToastType.Success : ToastType.Error);
+        afterFeedback?.Invoke();
     }
 
     public void Hide() {
@@ -73,7 +81,9 @@ public class QuizCanvasController : MonoBehaviour {
         timer.OnTimeUp -= OnTimerUp;
 
         //panelAnimator.SetTrigger("Close");
-        StartCoroutine(HideAfterAnimation());
+        quizPanel.SetActive(false);
+        mainPanel.SetActive(true);
+        chatUI.SetActive(true);
     }
 
     // ─────────────────────────────────────────────────────────
@@ -170,16 +180,6 @@ public class QuizCanvasController : MonoBehaviour {
         foreach (var btn in choiceButtons) btn.SetInteractable(false);
         trueFalseButtons.SetInteractable(false);
         textAnswerInput.SetInteractable(false);
-    }
-
-    IEnumerator FeedbackRoutine(Action after) {
-        yield return new WaitForSeconds(feedbackDuration);
-        after?.Invoke();
-    }
-
-    IEnumerator HideAfterAnimation() {
-        yield return new WaitForSeconds(0.3f);
-        quizPanel.SetActive(false);
     }
 
     void Update() {

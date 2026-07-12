@@ -110,8 +110,7 @@ public class QuizManager : MonoBehaviour {
         _activeCanvas = null;
     }
 
-    /// Force-closes any active quiz session (e.g. gate cooldown fires mid-answer).
-    /// </summary>
+    // Force-closes any active quiz session (e.g. gate cooldown fires mid-answer).
     public void ForceClose() {
         if (!_isActive) return;
         _activeCanvas?.Hide();
