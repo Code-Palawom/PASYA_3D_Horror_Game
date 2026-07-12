@@ -16,6 +16,9 @@ public static class ChatCommandProcessor {
             case "time":
                 HandleTime(senderId, parts, replyToSender);
                 return true;
+            case "culling":
+                HandleCulling(senderId, replyToSender);
+                return true;
             default:
                 replyToSender($"Unknown command: /{parts[0]}");
                 return true;
@@ -85,6 +88,18 @@ public static class ChatCommandProcessor {
             default:
                 reply("Unknown /time subcommand. Use 'set' or 'skip'.");
                 break;
+        }
+    }
+
+    static void HandleCulling(ulong senderId, Action<string> reply) {
+        if (!HasPermission(senderId)) {
+            reply("You don't have permission to use this command.");
+            return;
+        }
+
+        if (DevTools.Instance != null) {
+            reply("Toggling culling.");
+            DevTools.Instance.ToggleCulling();
         }
     }
 }
