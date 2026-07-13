@@ -110655,7 +110655,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   toastPrefab: {fileID: 5993066548976186404, guid: f5ec6e92e9166dc49aa85fb43ea9969e, type: 3}
   toastContainer: {fileID: 850488363}
-  displayDuration: 3
+  displayDuration: 4
   fadeDuration: 0.3
   maxVisibleToasts: 5
   infoColor: {r: 1, g: 1, b: 1, a: 1}
@@ -110760,7 +110760,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   toastPrefab: {fileID: 2124194362272084304, guid: ad43247e27597ec4e8fb58dfda89086d, type: 3}
   toastContainer: {fileID: 742592929}
-  displayDuration: 3
+  displayDuration: 5
   fadeDuration: 0.3
   maxVisibleToasts: 3
   infoColor: {r: 1, g: 1, b: 1, a: 1}

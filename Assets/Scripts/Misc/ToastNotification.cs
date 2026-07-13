@@ -3,6 +3,7 @@ using UnityEngine;
 using TMPro;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.UI;
 
 public enum ToastType { Info, Success, Error }
 
@@ -26,6 +27,7 @@ public class ToastNotification : NetworkBehaviour {
     private class ActiveToast {
         public GameObject GameObject;
         public CanvasGroup CanvasGroup;
+        public RectTransform TimeBar;
         public Coroutine LifecycleCoroutine;
     }
 
@@ -73,23 +75,41 @@ public class ToastNotification : NetworkBehaviour {
 
         TMP_Text text = toastObj.GetComponentInChildren<TMP_Text>();
         text.text = message;
-        text.color = type switch {
+        Color typeColor = type switch {
             ToastType.Success => successColor,
             ToastType.Error => errorColor,
             _ => infoColor
         };
+        text.color = typeColor;
 
         CanvasGroup cg = toastObj.GetComponent<CanvasGroup>();
         cg.alpha = 0f;
 
-        var entry = new ActiveToast { GameObject = toastObj, CanvasGroup = cg };
+        // Find and set up the time bar
+        Transform barTransform = toastObj.transform.Find("TimeBar");
+        RectTransform timeBar = barTransform.GetComponent<RectTransform>();
+        timeBar.localScale = new Vector3(1f, 1f, 1f);
+        Image barImage = barTransform.GetComponent<Image>();
+        barImage.color = typeColor;
+
+        var entry = new ActiveToast { GameObject = toastObj, CanvasGroup = cg, TimeBar = timeBar };
         entry.LifecycleCoroutine = StartCoroutine(ToastLifecycle(entry));
         activeToasts.Add(entry);
     }
 
     private IEnumerator ToastLifecycle(ActiveToast entry) {
         yield return Fade(entry.CanvasGroup, 0f, 1f);
-        yield return new WaitForSeconds(displayDuration);
+
+        // Shrink the time bar over displayDuration
+        float t = 0f;
+        while (t < displayDuration) {
+            t += Time.deltaTime;
+            float remaining = 1f - (t / displayDuration);
+            entry.TimeBar.localScale = new Vector3(remaining, 1f, 1f);
+            yield return null;
+        }
+        entry.TimeBar.localScale = new Vector3(0f, 1f, 1f);
+
         yield return Fade(entry.CanvasGroup, 1f, 0f);
         activeToasts.Remove(entry);
         Destroy(entry.GameObject);
