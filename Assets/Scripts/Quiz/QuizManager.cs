@@ -33,7 +33,7 @@ public class QuizManager : MonoBehaviour {
 
     // ─────────────────────────────────────────────────────────
     public void AskQuestion(NetworkedQuizGate gate, GameObject interactor,
-                            Action onCorrect, Action onWrong) {
+                        Action<QuizAnswer> onCorrect, Action<QuizAnswer> onWrong) {
         if (_isActive) { Debug.LogWarning("[QuizManager] Already active."); return; }
 
         // Find the quiz canvas that belongs to THIS interacting player's own UI.
@@ -85,7 +85,7 @@ public class QuizManager : MonoBehaviour {
         // Report to server for end-game stats
         GameSessionManager.Instance.RecordAnswerRpc(isCorrect, score);
 
-        _activeCanvas.ShowFeedback(isCorrect, () => ResolveSession(isCorrect));
+        _activeCanvas.ShowFeedback(isCorrect, () => ResolveSession(isCorrect, answer));
     }
 
     public void OnTimerExpired() {
@@ -93,7 +93,7 @@ public class QuizManager : MonoBehaviour {
         OnAnswerReceived(new QuizAnswer());
     }
 
-    void ResolveSession(bool isCorrect) {
+    void ResolveSession(bool isCorrect, QuizAnswer answer) {
         _activeCanvas.Hide();
 
         if (GameManager.Instance != null)
@@ -102,8 +102,8 @@ public class QuizManager : MonoBehaviour {
         _isActive = false;
         OnQuizEnded?.Invoke(isCorrect);
 
-        if (isCorrect) _session.onCorrect?.Invoke();
-        else _session.onWrong?.Invoke();
+        if (isCorrect) _session.onCorrect?.Invoke(answer);
+        else _session.onWrong?.Invoke(answer);
 
         _session = null;
         _currentGate = null;

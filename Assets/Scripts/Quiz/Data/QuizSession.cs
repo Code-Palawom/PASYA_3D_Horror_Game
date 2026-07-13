@@ -4,7 +4,7 @@ using UnityEngine;
 public class QuizSession {
     public QuestionRuntime question;
     public GameObject interactor;
-    public Action onCorrect;
-    public Action onWrong;
+    public Action<QuizAnswer> onCorrect;
+    public Action<QuizAnswer> onWrong;
     public float startTime;
 }

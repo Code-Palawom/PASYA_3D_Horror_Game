@@ -72,8 +72,8 @@ public class GameSessionManager : NetworkBehaviour {
             NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
 
             string hostName = GameModeManager.Instance != null
-                ? AuthManager.Instance.CurrentProfile?.DisplayName ?? "Host"
-                : "Host";
+                ? AuthManager.Instance.CurrentProfile?.DisplayName ?? SettingsManager.Instance.PlayerName
+                : SettingsManager.Instance.PlayerName;
 
             PlayerRole hostRole = AuthManager.Instance != null && AuthManager.Instance.CurrentProfile != null
                 ? AuthManager.Instance.CurrentProfile.RoleEnum

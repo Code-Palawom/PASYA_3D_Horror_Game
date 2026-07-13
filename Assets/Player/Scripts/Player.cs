@@ -11,7 +11,7 @@ public class Player : NetworkBehaviour {
     [SerializeField] private bool shouldFaceMoveDirection = false;
     [SerializeField] private bool onlyLookForward = false;
     [SerializeField] private float basePlayerSpeed = 4f;
-    [SerializeField] private float sprintTreshold = 0.70f;
+    //[SerializeField] private float sprintTreshold = 0.70f;
     [SerializeField] private float sprintSpeed = 8f;
     [SerializeField] private float crouchSpeed = 1.5f;
     [SerializeField] private float jumpHeight = 2f;
@@ -127,27 +127,26 @@ public class Player : NetworkBehaviour {
     public void OnMove(InputAction.CallbackContext context) {
         moveInput = context.ReadValue<Vector2>();
 
-        var device = context.control.device;
-        if (device is Gamepad) {
-            Debug.Log($"X: {moveInput.x}");
-            Debug.Log($"Y: {moveInput.y}");
-            if (moveInput.x > sprintTreshold || moveInput.y > sprintTreshold || moveInput.x < -sprintTreshold) {
-                if (isCrouching == false && moveInput.y > -0.50f) {
-                    isRunning = true;
-                    playerSpeed = sprintSpeed;
-                    Debug.Log("Sprinting!");
-                } else {
-                    isRunning = false;
-                    playerSpeed = basePlayerSpeed;
-                    Debug.Log("Done sprinting!");
-                }
-            } else {
-                if (isCrouching == false) {
-                    isRunning = false;
-                    playerSpeed = basePlayerSpeed;
-                    Debug.Log("Done sprinting!");
-                }
-            }
+        if (context.control.device is Gamepad) {
+            //Debug.Log($"X: {moveInput.x}");
+            //Debug.Log($"Y: {moveInput.y}");
+            //if (moveInput.x > sprintTreshold || moveInput.y > sprintTreshold || moveInput.x < -sprintTreshold) {
+            //    if (isCrouching == false && moveInput.y > -0.50f) {
+            //        isRunning = true;
+            //        playerSpeed = sprintSpeed;
+            //        Debug.Log("Sprinting!");
+            //    } else {
+            //        isRunning = false;
+            //        playerSpeed = basePlayerSpeed;
+            //        Debug.Log("Done sprinting!");
+            //    }
+            //} else {
+            //    if (isCrouching == false) {
+            //        isRunning = false;
+            //        playerSpeed = basePlayerSpeed;
+            //        Debug.Log("Done sprinting!");
+            //    }
+            //}
 
             moveInput = moveInput.normalized;
         }
@@ -166,6 +165,7 @@ public class Player : NetworkBehaviour {
     public void OnSprint(InputAction.CallbackContext context) {
         if (moveInput.y == -1) return;
 
+#if UNITY_STANDALONE || UNITY_EDITOR
         if (context.started) {
             isRunning = true;
             if (isCrouching == false) playerSpeed = sprintSpeed;
@@ -175,8 +175,20 @@ public class Player : NetworkBehaviour {
         if (context.canceled) {
             if (isCrouching == false) playerSpeed = basePlayerSpeed;
             isRunning = false;
-            //Debug.Log("Done sprinting!");
+            Debug.Log("Done sprinting!");
         }
+#else
+        if (context.performed) {
+            isRunning = !isRunning;
+
+            if (isRunning) {
+                if (isCrouching == false) playerSpeed = sprintSpeed;
+            } else {
+                if (isCrouching == false) playerSpeed = basePlayerSpeed;
+            }
+            Debug.Log("Toggle Sprint!");
+        }
+#endif
     }
 
     public void OnCrouch(InputAction.CallbackContext context) {

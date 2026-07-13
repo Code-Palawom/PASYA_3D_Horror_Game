@@ -7,6 +7,8 @@ public class SettingsManager : MonoBehaviour {
     public static SettingsManager Instance { get; private set; }
     public GameSettings Current { get; private set; }
 
+    public string PlayerName => Current.playerName;
+
     [Header("Defaults")]
     [Tooltip("Assign the DefaultSettingsConfig asset here")]
     [SerializeField] private DefaultSettingsConfig defaultConfig;

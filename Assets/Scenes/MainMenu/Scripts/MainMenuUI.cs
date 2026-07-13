@@ -511,14 +511,13 @@ public class MainMenuUI : MonoBehaviour {
         );
         SpawnChatManager();
 
-        // Call this when the game ends, not on start:
-        // QuizFetcher.Instance.IncrementPlayCount(_selectedQuizSetId);
+        QuizFetcher.Instance.IncrementPlayCount(_selectedQuizSetId);
 
         int questionCount = QuizRepository.Instance
             .GetSetByName(GameModeManager.Instance.SelectedQuizSetName)?.questions.Count ?? 0;
 
         LanDiscovery.Instance.StartHostBroadcast(
-            hostName: AuthManager.Instance.CurrentProfile?.DisplayName ?? SystemInfo.deviceName,
+            hostName: AuthManager.Instance.CurrentProfile?.DisplayName ?? SettingsManager.Instance.PlayerName,
             quizName: GameModeManager.Instance.SelectedQuizSetName,
             levelSceneName: GameModeManager.Instance.SelectedLevelSceneName,
             questionCount: questionCount,
@@ -552,9 +551,7 @@ public class MainMenuUI : MonoBehaviour {
         );
         SpawnChatManager();
 
-        // No LAN broadcast, no Lobby — straight to the chosen level
-        // Call this when the game ends, not on start:
-        // QuizFetcher.Instance.IncrementPlayCount(_selectedQuizSetId);
+        QuizFetcher.Instance.IncrementPlayCount(_selectedQuizSetId);
 
         NetworkManager.Singleton.SceneManager.LoadScene(
             GameModeManager.Instance.SelectedLevelSceneName, LoadSceneMode.Single);
@@ -638,7 +635,7 @@ public class MainMenuUI : MonoBehaviour {
 
         var payload = new ConnectionPayload {
             version = Application.version,
-            playerName = AuthManager.Instance.CurrentProfile?.DisplayName ?? "Player",
+            playerName = AuthManager.Instance.CurrentProfile?.DisplayName ?? SettingsManager.Instance.PlayerName,
             role = (byte)localRole
         };
 

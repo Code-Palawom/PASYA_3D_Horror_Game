@@ -14,7 +14,7 @@ public class DevTools : NetworkBehaviour {
             return;
         }
 
-        if (AuthManager.Instance != null && AuthManager.Instance.CurrentProfile.Role == "Developer") {
+        if (AuthManager.Instance != null && AuthManager.Instance.CurrentProfile != null && AuthManager.Instance.CurrentProfile.Role == "Developer") {
             Instance = this;
         }
     }

@@ -196,26 +196,29 @@ public class NetworkedQuizGate : NetworkBehaviour, IInteractable, IUnlockable {
         QuizManager.Instance.AskQuestion(
             this,
             interactor,
-            onCorrect: () => {
+            onCorrect: (QuizAnswer answer) => {
                 RequestUnlockRpc();
 
                 var q = GetQuestion();
                 string playerName = ResolveLocalPlayerName(interactor);
-                ChatManager.Instance.SendSystemMessage($"{playerName} answered correctly!\nQ: \"{q.questionText}\"\nA: \"{q.correctAnswer}\"");
+                string answerText = answer.ToDisplayString(q);
+                ChatManager.Instance.SendSystemMessage($"{playerName} answered correctly!\nQ: \"{q.questionText}\"\nA: \"{answerText}\"");
 
-                // Remove only this player from the list on correct
                 if (interactor.TryGetComponent<NetworkObject>(out var n))
                     RemoveInteractingPlayerRpc(n.NetworkObjectId);
 
                 onSuccess?.Invoke();
             },
-            onWrong: () => {
+            onWrong: (QuizAnswer answer) => {
                 // Apply side effects to ALL currently interacting players
                 ApplyWrongSideEffectsToAllRpc(BuildIndices(wrongSideEffects));
 
                 var q = GetQuestion();
                 string playerName = ResolveLocalPlayerName(interactor);
-                ChatManager.Instance.SendSystemMessage($"{playerName} answered incorrectly.\nQ: \"{q.questionText}\"");
+                // optional: same treatment for wrong answers, e.g.
+                // string answerText = answer.ToDisplayString(q);
+                ChatManager.Instance.SendSystemMessage(
+                    $"{playerName} answered incorrectly.\nQ: \"{q.questionText}\"");
 
                 // Start cooldown — clears entire interacting list when done
                 StartCooldownRpc();
