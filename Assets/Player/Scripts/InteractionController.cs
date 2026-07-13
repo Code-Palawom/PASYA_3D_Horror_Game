@@ -44,6 +44,8 @@ public class InteractionController : NetworkBehaviour {
     void Update() => DetectInteractable();
 
     void DetectInteractable() {
+        if (interactionUI.IsShowingCooldown) return;
+
         Vector3 origin = transform.position + Vector3.up * eyeHeight;
         Vector3 direction = playerCamera.transform.forward;
 
@@ -69,8 +71,9 @@ public class InteractionController : NetworkBehaviour {
         _currentTarget?.OnInteract(gameObject);
     }
 
-    public void TriggerInteract() =>
+    public void TriggerInteract() {
         _currentTarget?.OnInteract(gameObject);
+    }
 
     // ─────────────────────────────────────────────────────────
     void OnDrawGizmosSelected() {

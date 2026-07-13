@@ -19,6 +19,11 @@ public class PlayerInteractionUI : MonoBehaviour {
     [SerializeField] TMP_Text cooldownLabel;       // "Locked — 9.5s"
     [SerializeField] Image cooldownBar;         // Filled Horizontal
 
+    [Header("Actionabr Cooldown Indicator")]
+    [SerializeField] GameObject cooldownIndicator;
+    [SerializeField] TMP_Text cooldownIndicatorLabel;
+    [SerializeField] Image cooldownIndicatorBar;
+
     [Header("Temp Message")]
     [SerializeField] TMP_Text messageText;
     [SerializeField] float messageDuration = 3f;
@@ -28,6 +33,8 @@ public class PlayerInteractionUI : MonoBehaviour {
     private float _cooldownTotal;
     private bool _showingCooldown;
 
+    public bool IsShowingCooldown => _showingCooldown;
+
     void Awake() => Hide();
 
     // ─────────────────────────────────────────────────────────
@@ -35,14 +42,18 @@ public class PlayerInteractionUI : MonoBehaviour {
     // ─────────────────────────────────────────────────────────
     public void Show(string message, string keyHint = "E") {
         panel.SetActive(true);
-
-        // Prompt text is active, cooldown row is not — no overlap
-        if (promptText != null) {
-            promptText.gameObject.SetActive(true);
-            promptText.text = message;
+        if (_showingCooldown) {
+            SetCooldownRowVisible(true);
+            return;
         }
 
-        if (keyHintText != null && keyHintText.CompareTag("PlatformPC")) {
+
+        // Prompt text is active, cooldown row is not — no overlap
+        promptText.gameObject.SetActive(true);
+        interactButton.gameObject.SetActive(true);
+        promptText.text = message;
+
+        if (keyHintText.CompareTag("PlatformPC")) {
             keyHintText.gameObject.SetActive(true);
             keyHintText.text = $"[{keyHint}]";
         }
@@ -56,11 +67,11 @@ public class PlayerInteractionUI : MonoBehaviour {
     // so "Locked" never appears twice
     // ─────────────────────────────────────────────────────────
     public void ShowWithCooldown(double cooldownRemaining, float cooldownTotal) {
-        panel.SetActive(true);
-
+        panel.SetActive(false);
+        
         // Hide normal prompt text entirely — cooldown row covers messaging
-        if (interactButton != null) interactButton.gameObject.SetActive(false);
-        if (keyHintWrapper != null) keyHintWrapper.gameObject.SetActive(false);
+        interactButton.gameObject.SetActive(false);
+        keyHintWrapper.SetActive(false);
 
         _cooldownEnd = Time.time + (float)cooldownRemaining;
         _cooldownTotal = cooldownTotal;
@@ -73,7 +84,7 @@ public class PlayerInteractionUI : MonoBehaviour {
     public void Hide() {
         panel.SetActive(false);
         SetCooldownRowVisible(false);
-        _showingCooldown = false;
+        //_showingCooldown = false;
 
         if (messageText != null)
             messageText.text = "";
@@ -100,25 +111,27 @@ public class PlayerInteractionUI : MonoBehaviour {
         float remaining = Mathf.Max(0f, _cooldownEnd - Time.time);
         float t = _cooldownTotal > 0f ? remaining / _cooldownTotal : 0f;
 
-        if (cooldownLabel != null)
-            cooldownLabel.text = $"Locked — {remaining:F1}s";
+        cooldownLabel.text = $"Locked — {remaining:F1}s";
+        cooldownBar.fillAmount = t;
 
-        if (cooldownBar != null)
-            cooldownBar.fillAmount = t;
+        cooldownIndicator.SetActive(true);
+        cooldownIndicatorLabel.text = $"Cannot interact for {remaining:F1}s";
+        cooldownIndicatorBar.rectTransform.localScale = new Vector3(t, 1f, 1f);
 
         if (remaining <= 0f) {
             _showingCooldown = false;
             SetCooldownRowVisible(false);
+            cooldownIndicator.SetActive(false);
 
             // Restore normal prompt visibility for next Show() call
-            if (interactButton != null) interactButton.gameObject.SetActive(true);
-            if (keyHintWrapper != null) keyHintWrapper.gameObject.SetActive(true);
+            interactButton.gameObject.SetActive(true);
+            keyHintWrapper.SetActive(true);
         }
     }
 
     // ─────────────────────────────────────────────────────────
     void SetCooldownRowVisible(bool visible) {
-        if (cooldownRow != null) cooldownRow.SetActive(visible);
+        cooldownRow.SetActive(visible);
     }
 
     // ─────────────────────────────────────────────────────────

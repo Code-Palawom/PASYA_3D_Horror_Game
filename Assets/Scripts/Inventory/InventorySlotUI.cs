@@ -156,8 +156,10 @@ public class InventorySlotUI : MonoBehaviour,
     // Required for uGUI to populate pointerEventData.pointerDrag at all (see
     // previous explanation) — also now does real work: moves the ghost icon
     // to follow the pointer every frame while dragging.
-    public void OnDrag(PointerEventData eventData)
-        => _ui.UpdateDragVisual(eventData.position);
+    public void OnDrag(PointerEventData eventData) {
+        _ui.UpdateDragVisual(eventData.position);
+        PlayActiveNamePopup(itemNameLabel.text);
+    }
 
     public void OnEndDrag(PointerEventData eventData) {
         // Fires on THIS slot (the source) regardless of whether the drop
@@ -192,5 +194,6 @@ public class InventorySlotUI : MonoBehaviour,
     public void OnPointerClick(PointerEventData eventData) {
         if (!_isHotbar) return;
         _ui.OnHotbarSlotTapped(SlotIndex);
+        PlayActiveNamePopup(itemNameLabel.text);
     }
 }

@@ -69,6 +69,7 @@ public class QuizCanvasController : MonoBehaviour {
 
         if (isCorrect) ScreenFlashController.Local?.FlashCorrect(); else ScreenFlashController.Local?.FlashWrong();
         ActionbarToastNotification.Instance.ShowLocalToast(feedbackText.text, isCorrect ? ToastType.Success : ToastType.Error);
+        if (!isCorrect) ActionbarToastNotification.Instance.ShowLocalToast("Door/Item Locked", ToastType.Error);
         afterFeedback?.Invoke();
     }
 
