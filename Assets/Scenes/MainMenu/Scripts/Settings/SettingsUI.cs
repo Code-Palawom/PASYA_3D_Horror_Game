@@ -36,6 +36,9 @@ public class SettingsUI : MonoBehaviour {
     [Header("Name Tag Toggle")]
     [SerializeField] private Toggle nameTagToggle;
 
+    [Header("Download Button")]
+    [SerializeField] private Button downloadUpdate;
+
     // ── State ────────────────────────────────────────────────
     private bool _isFirstPerson;
     private int _qualityIndex;
@@ -90,6 +93,10 @@ public class SettingsUI : MonoBehaviour {
 
         if (SettingsManager.Instance != null)
             Populate(SettingsManager.Instance.Current);
+
+        if(VersionChecker.Instance.DownloadURL != "") {
+            downloadUpdate.gameObject.SetActive(true);
+        }
     }
 
     // ── Called by your panel manager ─────────────────────────
@@ -318,6 +325,10 @@ public class SettingsUI : MonoBehaviour {
                 break;
         }
 
+    }
+
+    public void DownloadLatestVersion() {
+        Application.OpenURL(VersionChecker.Instance.DownloadURL);
     }
 
     // ── Helpers ──────────────────────────────────────────────
