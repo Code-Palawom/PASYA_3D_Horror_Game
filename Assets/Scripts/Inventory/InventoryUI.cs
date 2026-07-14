@@ -167,10 +167,19 @@ public class InventoryUI : MonoBehaviour {
     // ── Touch/Click Slot Selection (called by InventorySlotUI) ─────────────────
 
     // Tapping a hotbar slot selects it — same effect as HotbarInput's number
-    // keys, just routed through UI instead of Keyboard. Safe to call even if
-    // it's already the active slot (PlayerInventory's RPC is idempotent).
+    // keys, just routed through UI instead of Keyboard. If it's already the
+    // active slot, no RPC is sent (nothing would change server-side), but we
+    // still re-trigger the name popup locally using the slot's real current
+    // data, so tapping the held slot lets you "peek" at the name again even
+    // after the previous popup already faded out.
     public void OnHotbarSlotTapped(int slotIndex) {
-        if (slotIndex == _inventory.ActiveHotbarIndex) return;
+        if (slotIndex == _inventory.ActiveHotbarIndex) {
+            if (slotIndex < 0 || slotIndex >= _inventory.SlotCount) return;
+            var slot = _inventory.GetSlot(slotIndex);
+            var item = slot.IsEmpty ? null : Registry.Get(slot.ItemID.ToString());
+            UISlots[slotIndex].PlayActiveNamePopup(item?.displayName);
+            return;
+        }
         _inventory.SetActiveSlotServerRpc(slotIndex);
     }
 }

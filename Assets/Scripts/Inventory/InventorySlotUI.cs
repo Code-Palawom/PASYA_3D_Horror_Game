@@ -32,6 +32,7 @@ public class InventorySlotUI : MonoBehaviour,
     private bool _isHotbar;
     private InventoryUI _ui;
     private Coroutine _namePopupCoroutine;
+    private string _currentItemName; // authoritative source for "what's actually in this slot right now"
 
     // ── Init ──────────────────────────────────────────────────────────────────
 
@@ -54,6 +55,7 @@ public class InventorySlotUI : MonoBehaviour,
 
         iconImage.enabled = hasItem;
         quantityText.enabled = hasItem && quantity > 1;
+        _currentItemName = hasItem ? item.displayName : null;
 
         if (hasItem) {
             iconImage.sprite = item.icon;
@@ -64,6 +66,7 @@ public class InventorySlotUI : MonoBehaviour,
     private void ClearDisplay() {
         iconImage.enabled = false;
         quantityText.enabled = false;
+        _currentItemName = null;
     }
 
     public void SetHighlight(bool active) {
@@ -150,16 +153,24 @@ public class InventorySlotUI : MonoBehaviour,
             return;
         }
         SetIconOpacity(draggingIconOpacity);
+
+        // Show the name once at drag-start. PlayActiveNamePopup no-ops safely
+        // if itemNameLabel isn't assigned (main inventory slots), so this is
+        // safe to call unconditionally regardless of slot type.
+        PlayActiveNamePopup(_currentItemName);
+
         _ui.OnBeginDrag(SlotIndex, iconImage.sprite);
     }
 
     // Required for uGUI to populate pointerEventData.pointerDrag at all (see
-    // previous explanation) — also now does real work: moves the ghost icon
-    // to follow the pointer every frame while dragging.
-    public void OnDrag(PointerEventData eventData) {
-        _ui.UpdateDragVisual(eventData.position);
-        PlayActiveNamePopup(itemNameLabel.text);
-    }
+    // previous explanation) — also moves the ghost icon to follow the pointer
+    // every frame while dragging. Deliberately does NOT re-trigger the name
+    // popup here — that already happened once in OnBeginDrag above; calling
+    // it again every frame would restart the fade coroutine 60+ times/sec
+    // and would throw on main-inventory slots where itemNameLabel is null
+    // if read directly instead of through PlayActiveNamePopup's own guard.
+    public void OnDrag(PointerEventData eventData)
+        => _ui.UpdateDragVisual(eventData.position);
 
     public void OnEndDrag(PointerEventData eventData) {
         // Fires on THIS slot (the source) regardless of whether the drop
@@ -194,6 +205,5 @@ public class InventorySlotUI : MonoBehaviour,
     public void OnPointerClick(PointerEventData eventData) {
         if (!_isHotbar) return;
         _ui.OnHotbarSlotTapped(SlotIndex);
-        PlayActiveNamePopup(itemNameLabel.text);
     }
 }
