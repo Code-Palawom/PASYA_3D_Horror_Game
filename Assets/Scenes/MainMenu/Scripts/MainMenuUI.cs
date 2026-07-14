@@ -694,7 +694,14 @@ public class MainMenuUI : MonoBehaviour {
         }, LoadingScreenController.MessageColor.Error);
 
         LoadingScreenController.Instance.Hide(3f);
-        ToastNotification.Instance.ShowLocalToast("Failed to join game" + reason, ToastType.Error);
+        ToastNotification.Instance.ShowLocalToast(reason switch {
+            ConnectionApprovalHandler.ReasonFull => "Cannot join - lobby is full.",
+            ConnectionApprovalHandler.ReasonInProgress => "Cannot join - game is already in progress.",
+            ConnectionApprovalHandler.ReasonCountdown => "Cannot join - game is about to start.",
+            ConnectionApprovalHandler.ReasonVersionMismatch => "Cannot join - version mismatch.",
+            ConnectionApprovalHandler.ReasonDuplicateName => "Cannot join - duplicate player name.",
+            _ => "Failed to connect."
+        }, ToastType.Error);
         Debug.Log(reason);
     }
 
