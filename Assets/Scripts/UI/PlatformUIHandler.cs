@@ -17,17 +17,17 @@ public class PlatformUIHandler : MonoBehaviour {
         isMobile = overrideMobilePlatform;
 #endif
         isMobile = true;
-        foreach (GameObject button in mobileUIButtons) {
-            if (button != null) {
-                button.tag = isMobile ? "PlatformMobile" : "Untagged";
-                button.SetActive(isMobile);
+        foreach (GameObject ui in mobileUIButtons) {
+            if (ui != null) {
+                ui.tag = isMobile ? "PlatformMobile" : "Untagged";
+                ui.SetActive(isMobile);
             }
         }
 
-        foreach (GameObject button in pcUIButtons) {
-            if (button != null) {
-                button.tag = !isMobile ? "PlatformPC" : "Untagged";
-                button.SetActive(!isMobile);
+        foreach (GameObject ui in pcUIButtons) {
+            if (ui != null) {
+                ui.tag = !isMobile ? "PlatformPC" : "Untagged";
+                ui.SetActive(!isMobile);
             }
         }
 
