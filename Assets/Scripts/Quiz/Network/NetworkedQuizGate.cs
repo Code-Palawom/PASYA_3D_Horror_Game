@@ -217,8 +217,7 @@ public class NetworkedQuizGate : NetworkBehaviour, IInteractable, IUnlockable {
                 string playerName = ResolveLocalPlayerName(interactor);
                 // optional: same treatment for wrong answers, e.g.
                 // string answerText = answer.ToDisplayString(q);
-                ChatManager.Instance.SendSystemMessage(
-                    $"{playerName} answered incorrectly.\nQ: \"{q.questionText}\"");
+                ChatManager.Instance.SendSystemMessage($"{playerName} answered incorrectly.\nQ: \"{q.questionText}\"");
 
                 // Start cooldown — clears entire interacting list when done
                 StartCooldownRpc();

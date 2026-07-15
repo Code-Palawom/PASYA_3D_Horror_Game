@@ -39,8 +39,6 @@ public class ChatManager : NetworkBehaviour {
     }
 
     public void SendSystemMessage(string content) {
-        if (!IsServer) return;
-
         var msg = new ChatMessage {
             SenderId = ulong.MaxValue,
             SenderName = "[System]",
