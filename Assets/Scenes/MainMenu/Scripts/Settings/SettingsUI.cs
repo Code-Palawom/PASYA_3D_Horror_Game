@@ -94,7 +94,7 @@ public class SettingsUI : MonoBehaviour {
         if (SettingsManager.Instance != null)
             Populate(SettingsManager.Instance.Current);
 
-        if(VersionChecker.Instance.DownloadURL != "") {
+        if(VersionChecker.Instance.IsNotOnLastestVersion && VersionChecker.Instance.DownloadURL != "") {
             downloadUpdate.gameObject.SetActive(true);
         }
     }
