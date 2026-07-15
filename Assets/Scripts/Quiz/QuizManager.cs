@@ -96,8 +96,7 @@ public class QuizManager : MonoBehaviour {
     void ResolveSession(bool isCorrect, QuizAnswer answer) {
         _activeCanvas.Hide();
 
-        if (GameManager.Instance != null)
-            GameManager.Instance.SetPlayerInputEnabled(true);
+        GameManager.Instance.SetPlayerInputEnabled(true);
 
         _isActive = false;
         OnQuizEnded?.Invoke(isCorrect);
@@ -114,8 +113,7 @@ public class QuizManager : MonoBehaviour {
     public void ForceClose() {
         if (!_isActive) return;
         _activeCanvas?.Hide();
-        if (GameManager.Instance != null)
-            GameManager.Instance.SetPlayerInputEnabled(true);
+        GameManager.Instance.SetPlayerInputEnabled(true);
         _isActive = false;
         _session = null;
         _currentGate = null;

@@ -1,5 +1,6 @@
 using Unity.Cinemachine;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 // Freezes or restores player input while the quiz canvas is open.
 // Hook into your actual input/movement system here.
@@ -21,6 +22,9 @@ public class GameManager : MonoBehaviour {
             ic.enabled = enabled;
 
         localPlayer.GetComponent<Player>().enabled = enabled;
+
+        if (localPlayer.TryGetComponent<UnityEngine.InputSystem.PlayerInput>(out var pi))
+            pi.enabled = enabled;
 
         if (!enabled) {
             var list = new System.Collections.Generic.List<MonoBehaviour>();

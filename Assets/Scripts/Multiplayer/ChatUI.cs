@@ -24,8 +24,8 @@ public class ChatUI : NetworkBehaviour {
 
         sendButton.onClick.AddListener(OnSend);
         inputField.onSubmit.AddListener(_ => OnSend());
-        inputField.onSelect.AddListener(_ => PlayerInputBlocker.IsBlocked = true);
-        inputField.onDeselect.AddListener(_ => PlayerInputBlocker.IsBlocked = false);
+        inputField.onSelect.AddListener(_ => GameManager.Instance.SetPlayerInputEnabled(true));
+        inputField.onDeselect.AddListener(_ => GameManager.Instance.SetPlayerInputEnabled(false));
 
         _typeInChat.performed += _ => WillTypeInChat(true); ;
         _typeInChat.Enable();

@@ -1509,6 +1509,7 @@ MonoBehaviour:
   firstPersonPOV: {fileID: 2141992304890565519}
   thirdPersonLook: {fileID: 7927800081545042535}
   firstPersonLook: {fileID: 4960347632880926090}
+  inputComponent: {fileID: 3602966004385802097}
   playerCamera: {fileID: 8510386908001443229}
   playerCanvas: {fileID: 5121607388586486269}
   audioListener: {fileID: 8921939597549269087}
@@ -13623,7 +13624,7 @@ MonoBehaviour:
   - {fileID: 6988890070871970668}
   - {fileID: 3346713928579691070}
   screenCursor: {fileID: 4746832841231728062}
-  overrideMobilePlatform: 0
+  overrideMobilePlatform: 1
 --- !u!114 &7772765542932355834
 MonoBehaviour:
   m_ObjectHideFlags: 0

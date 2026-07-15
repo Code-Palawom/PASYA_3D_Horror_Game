@@ -29,6 +29,7 @@ public class Player : NetworkBehaviour {
     [SerializeField] private FirstPersonCameraLook firstPersonLook;
 
     [Header("Player Setup")]
+    [SerializeField] private UnityEngine.InputSystem.PlayerInput inputComponent;
     [SerializeField] private Camera playerCamera;
     [SerializeField] private Canvas playerCanvas;
     [SerializeField] private AudioListener audioListener;
@@ -98,9 +99,12 @@ public class Player : NetworkBehaviour {
             }
 
             // --- Input ---
+            inputComponent.enabled = true;
             playerInput = new PlayerInput();
             playerInput.POV.Enable();
             playerInput.POV.SwitchPOV.performed += OnSwitchPOV;
+            playerInput.Interactions.Enable();
+            playerInput.Movements.Enable();
 
             // --- POV restore from SettingsManager ---
             playerSpeed = basePlayerSpeed;
@@ -114,6 +118,12 @@ public class Player : NetworkBehaviour {
             playerCamera.tag = "Untagged"; // Prevents hijacking Camera.main
             audioListener.enabled = false;
             playerCanvas.gameObject.SetActive(false);
+
+            inputComponent.enabled = false;
+            playerInput = new PlayerInput();
+            playerInput.POV.Disable();
+            playerInput.Interactions.Disable();
+            playerInput.Movements.Disable();
         }
     }
 
@@ -126,6 +136,8 @@ public class Player : NetworkBehaviour {
     }
 
     public void OnMove(InputAction.CallbackContext context) {
+        if (!IsOwner) return;
+
         moveInput = context.ReadValue<Vector2>();
 
         if (context.control.device is Gamepad) moveInput = moveInput.normalized;
@@ -142,6 +154,8 @@ public class Player : NetworkBehaviour {
     }
 
     public void OnSprint(InputAction.CallbackContext context) {
+        if (!IsOwner) return;
+
         if (moveInput.y == -1) return;
 
 #if UNITY_STANDALONE && UNITY_EDITOR
@@ -180,6 +194,8 @@ public class Player : NetworkBehaviour {
     }
 
     public void OnCrouch(InputAction.CallbackContext context) {
+        if (!IsOwner) return;
+
         if (context.started) {
             playerSpeed = crouchSpeed;
             isCrouching = true;
@@ -193,6 +209,8 @@ public class Player : NetworkBehaviour {
     }
 
     public void OnSwitchPOV(InputAction.CallbackContext context) {
+        if (!IsOwner) return;
+
         isFirstPerson = !isFirstPerson;
 
         if (SettingsManager.Instance != null) {
@@ -228,14 +246,16 @@ public class Player : NetworkBehaviour {
     }
 
     public void RefreshPOV() {
+        if (!IsOwner) return;
+
         if (SettingsManager.Instance == null) return;
         isFirstPerson = SettingsManager.Instance.Current.isFirstPerson;
         SetCharacter(isFirstPerson);
     }
 
     void Update() {
-        if (PlayerInputBlocker.IsBlocked) return;
         if (!IsOwner) return;
+        Debug.Log($"Move {moveInput.x} {moveInput.y}");
 
         playerAnimation.UpdateAnimationState(moveInput, controller.isGrounded);
 
@@ -332,12 +352,16 @@ public class Player : NetworkBehaviour {
     }
 
     public void SetSpeedMultiplier(float multiplier) {
+        if (!IsOwner) return;
+
         basePlayerSpeed *= multiplier;
         sprintSpeed *= multiplier;
         crouchSpeed *= multiplier;
     }
 
     public void RestoreSpeedMultiplier() {
+        if (!IsOwner) return;
+
         basePlayerSpeed = originalBasePlayerSpeed;
         sprintSpeed = originalSprintSpeed;
         crouchSpeed = originalCrouchSpeed;

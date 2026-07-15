@@ -110,7 +110,7 @@ public class GameSessionManager : NetworkBehaviour {
         }
 
         AddPlayer(clientId, name, role);
-        ChatManager.Instance.SendSystemMessage($"Player '{name}' joined the game.");
+        ChatManager.Instance.SendSystemMessage($"<b>{name}</b> joined the game.");
     }
 
     void OnClientDisconnected(ulong clientId) {
