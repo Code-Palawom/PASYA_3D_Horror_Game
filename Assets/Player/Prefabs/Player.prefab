@@ -13615,7 +13615,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HandleMobile
   mobileUIButtons:
-  - {fileID: 0}
+  - {fileID: 3203534369014249282}
   - {fileID: 8312702049084202793}
   - {fileID: 4355301472380621332}
   - {fileID: 4739581927018558069}
@@ -19680,7 +19680,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 07fc22e4c819ba140a4c43db963f4854, type: 3}
+  m_Sprite: {fileID: 0}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -21529,7 +21529,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 19.955, y: -25}
-  m_SizeDelta: {x: 39.91, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2860899010911999256
 CanvasRenderer:

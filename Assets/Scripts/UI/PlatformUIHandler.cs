@@ -16,7 +16,7 @@ public class PlatformUIHandler : MonoBehaviour {
 #if UNITY_EDITOR
         isMobile = overrideMobilePlatform;
 #endif
-        isMobile = true;
+
         foreach (GameObject ui in mobileUIButtons) {
             if (ui != null) {
                 ui.tag = isMobile ? "PlatformMobile" : "Untagged";

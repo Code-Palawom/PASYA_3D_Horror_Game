@@ -47,6 +47,7 @@ public class Player : NetworkBehaviour {
     private float verticalVelocity = 0f;
     private bool isRunning = false;
     private bool isCrouching = false;
+    private bool isToggledRunning = false;
 
     private float standHeight;
     private Vector3 standCenter;
@@ -127,29 +128,7 @@ public class Player : NetworkBehaviour {
     public void OnMove(InputAction.CallbackContext context) {
         moveInput = context.ReadValue<Vector2>();
 
-        if (context.control.device is Gamepad) {
-            //Debug.Log($"X: {moveInput.x}");
-            //Debug.Log($"Y: {moveInput.y}");
-            //if (moveInput.x > sprintTreshold || moveInput.y > sprintTreshold || moveInput.x < -sprintTreshold) {
-            //    if (isCrouching == false && moveInput.y > -0.50f) {
-            //        isRunning = true;
-            //        playerSpeed = sprintSpeed;
-            //        Debug.Log("Sprinting!");
-            //    } else {
-            //        isRunning = false;
-            //        playerSpeed = basePlayerSpeed;
-            //        Debug.Log("Done sprinting!");
-            //    }
-            //} else {
-            //    if (isCrouching == false) {
-            //        isRunning = false;
-            //        playerSpeed = basePlayerSpeed;
-            //        Debug.Log("Done sprinting!");
-            //    }
-            //}
-
-            moveInput = moveInput.normalized;
-        }
+        if (context.control.device is Gamepad) moveInput = moveInput.normalized;
 
         //Debug.Log($"Move Input: {moveInput}");
     }
@@ -165,28 +144,37 @@ public class Player : NetworkBehaviour {
     public void OnSprint(InputAction.CallbackContext context) {
         if (moveInput.y == -1) return;
 
-#if UNITY_STANDALONE || UNITY_EDITOR
+#if UNITY_STANDALONE && UNITY_EDITOR
         if (context.started) {
+            isToggledRunning = true;
             isRunning = true;
             if (isCrouching == false) playerSpeed = sprintSpeed;
             Debug.Log("Sprinting!");
         }
 
         if (context.canceled) {
-            if (isCrouching == false) playerSpeed = basePlayerSpeed;
+            isToggledRunning = false;
             isRunning = false;
+            if (isCrouching == false) playerSpeed = basePlayerSpeed;
             Debug.Log("Done sprinting!");
         }
 #else
         if (context.performed) {
-            isRunning = !isRunning;
+            isToggledRunning = !isToggledRunning;
 
-            if (isRunning) {
-                if (isCrouching == false) playerSpeed = sprintSpeed;
+            if (isToggledRunning) {
+                if (isCrouching == false) {
+                    isRunning = true;
+                    playerSpeed = sprintSpeed;
+                    Debug.Log("Sprint!");
+                }
             } else {
-                if (isCrouching == false) playerSpeed = basePlayerSpeed;
+                if (isCrouching == false) {
+                    isRunning = false;
+                    playerSpeed = basePlayerSpeed;
+                    Debug.Log("Not Sprint!");
+                }
             }
-            Debug.Log("Toggle Sprint!");
         }
 #endif
     }
@@ -277,11 +265,18 @@ public class Player : NetworkBehaviour {
                 transform.rotation = Quaternion.Slerp(transform.rotation, rotation, 10f * Time.deltaTime);
             }
         }
-
-        if (moveInput.y < -0.50f) {
+        if (isCrouching) {
             playerSpeed = crouchSpeed;
-        } else if (!isRunning && !isCrouching) {
-            playerSpeed = basePlayerSpeed;
+        } else {
+            if (moveInput.y < -0.50f) {
+                if (isToggledRunning) isRunning = false;
+                playerSpeed = crouchSpeed;
+            } else if (!isRunning && !isCrouching && !isToggledRunning) {
+                playerSpeed = basePlayerSpeed;
+            } else if (isToggledRunning) {
+                isRunning = true;
+                playerSpeed = sprintSpeed;
+            }
         }
 
         if (controller.isGrounded && verticalVelocity < 0) verticalVelocity = 0;
