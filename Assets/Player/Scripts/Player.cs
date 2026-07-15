@@ -158,7 +158,7 @@ public class Player : NetworkBehaviour {
 
         if (moveInput.y == -1) return;
 
-#if UNITY_STANDALONE && UNITY_EDITOR
+#if UNITY_STANDALONE || UNITY_EDITOR
         if (context.started) {
             isToggledRunning = true;
             isRunning = true;
@@ -255,7 +255,6 @@ public class Player : NetworkBehaviour {
 
     void Update() {
         if (!IsOwner) return;
-        Debug.Log($"Move {moveInput.x} {moveInput.y}");
 
         playerAnimation.UpdateAnimationState(moveInput, controller.isGrounded);
 

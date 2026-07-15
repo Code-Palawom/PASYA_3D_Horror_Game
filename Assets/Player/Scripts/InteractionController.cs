@@ -12,6 +12,7 @@ using UnityEngine.InputSystem;
 public class InteractionController : NetworkBehaviour {
     [Header("Detection")]
     [SerializeField] float interactRange = 3f;
+    [SerializeField] float maxRangeMultiplier = 2.5f; // cap how much extra range downward looks get
     [SerializeField] LayerMask interactLayer;
 
     [Header("References")]
@@ -44,19 +45,16 @@ public class InteractionController : NetworkBehaviour {
     void Update() => DetectInteractable();
 
     void DetectInteractable() {
-        if (interactionUI.IsShowingCooldown) return;
-
         Vector3 origin = transform.position + Vector3.up * eyeHeight;
         Vector3 direction = playerCamera.transform.forward;
 
-        Debug.DrawRay(origin, direction * interactRange, Color.cyan);
+        float effectiveRange = GetEffectiveRange(direction);
 
-        if (Physics.Raycast(origin, direction, out RaycastHit hit, interactRange, interactLayer)) {
+        Debug.DrawRay(origin, direction * effectiveRange, Color.cyan);
+
+        if (Physics.Raycast(origin, direction, out RaycastHit hit, effectiveRange, interactLayer)) {
             if (hit.collider.TryGetComponent(out IInteractable interactable)) {
                 _currentTarget = interactable;
-
-                // Let the interactable decide what to show
-                // (normal prompt, cooldown, "someone answering", etc.)
                 _currentTarget.OnFocus(interactionUI);
                 return;
             }
@@ -64,6 +62,20 @@ public class InteractionController : NetworkBehaviour {
 
         _currentTarget = null;
         interactionUI.Hide();
+    }
+
+    float GetEffectiveRange(Vector3 direction) {
+        // Angle between look direction and the horizontal plane
+        Vector3 flatDir = new Vector3(direction.x, 0f, direction.z).normalized;
+        float pitchAngle = Vector3.Angle(direction, flatDir); // 0 = flat, 90 = straight down
+
+        // Only extend range when looking down (positive pitch below horizon)
+        if (direction.y >= 0f) return interactRange;
+
+        float cos = Mathf.Cos(pitchAngle * Mathf.Deg2Rad);
+        cos = Mathf.Max(cos, 1f / maxRangeMultiplier); // clamp so it doesn't go infinite near straight-down
+
+        return interactRange / cos;
     }
 
     // ─────────────────────────────────────────────────────────

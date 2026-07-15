@@ -202,7 +202,7 @@ public class NetworkedQuizGate : NetworkBehaviour, IInteractable, IUnlockable {
                 var q = GetQuestion();
                 string playerName = ResolveLocalPlayerName(interactor);
                 string answerText = answer.ToDisplayString(q);
-                ChatManager.Instance.SendSystemMessage($"{playerName} answered correctly!\nQ: \"{q.questionText}\"\nA: \"{answerText}\"");
+                ChatManager.Instance.SendSystemMessage($"<b>{playerName}</b> answered correctly!\n<b>Q: \"{q.questionText}\"\nA: \"{answerText}\"</b>");
 
                 if (interactor.TryGetComponent<NetworkObject>(out var n))
                     RemoveInteractingPlayerRpc(n.NetworkObjectId);
@@ -217,7 +217,7 @@ public class NetworkedQuizGate : NetworkBehaviour, IInteractable, IUnlockable {
                 string playerName = ResolveLocalPlayerName(interactor);
                 // optional: same treatment for wrong answers, e.g.
                 // string answerText = answer.ToDisplayString(q);
-                ChatManager.Instance.SendSystemMessage($"{playerName} answered incorrectly.\nQ: \"{q.questionText}\"");
+                ChatManager.Instance.SendSystemMessage($"<b>{playerName}</b> answered incorrectly.\n<b>Q: \"{q.questionText}\"</b>");
 
                 // Start cooldown — clears entire interacting list when done
                 StartCooldownRpc();
