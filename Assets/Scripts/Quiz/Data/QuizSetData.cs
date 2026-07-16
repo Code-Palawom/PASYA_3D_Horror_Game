@@ -28,7 +28,7 @@ public class QuizSetData : ScriptableObject {
         return runtime;
     }
 
-    /// <summary>Converts this SO to a QuizSetMetaEntry for menu display.</summary>
+    // Converts this SO to a QuizSetMetaEntry for menu display.
     public QuizSetMetaEntry ToMetaEntry() {
         return new QuizSetMetaEntry {
             setId = name,    // use asset name as setId for local sets

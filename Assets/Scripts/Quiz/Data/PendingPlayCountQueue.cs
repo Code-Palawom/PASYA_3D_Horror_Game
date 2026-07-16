@@ -55,8 +55,7 @@ public class PendingPlayCountQueue : MonoBehaviour {
 
         foreach (var (setId, count) in snapshot) {
             db.Collection(collection).Document(metaDocId)
-              .UpdateAsync($"sets.{setId}.playCount",
-                           Firebase.Firestore.FieldValue.Increment(count))
+              .UpdateAsync($"sets.{setId}.playCount", Firebase.Firestore.FieldValue.Increment(count))
               .ContinueWith(task => {
                   if (task.IsCompletedSuccessfully) {
                       Debug.Log($"[PendingPlayCountQueue] Flushed +{count} for '{setId}'.");

@@ -92,6 +92,7 @@ public class UIAuthButton : MonoBehaviour {
         // Toggle panels
         signedInPanel.SetActive(signedIn);
         if (signedIn) {
+            if (AuthManager.Instance.CurrentProfile != null) UpdateUserStatsUI(AuthManager.Instance.CurrentProfile);
             AuthManager.Instance.OnPlayerStatsLoaded += UpdateUserStatsUI;
         }
 
@@ -108,7 +109,7 @@ public class UIAuthButton : MonoBehaviour {
 
         email.text = AuthManager.Instance.CurrentUser?.Email ?? "N/A";
         displayName.text = profile.DisplayName;
-        role.text = profile.Role;
+        role.text = profile.Role.ToString();
         xp.text = profile.Xp.ToString();
         gamesPlayed.text = profile.GamesPlayed.ToString();
         correctAnswers.text = profile.CorrectAnswers.ToString();

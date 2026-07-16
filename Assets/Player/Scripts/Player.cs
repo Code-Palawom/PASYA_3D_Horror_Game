@@ -132,6 +132,8 @@ public class Player : NetworkBehaviour {
         if (IsOwner && playerInput != null) {
             playerInput.POV.SwitchPOV.performed -= OnSwitchPOV;
             playerInput.POV.Disable();
+            playerInput.Interactions.Disable();
+            playerInput.Movements.Disable();
         }
     }
 

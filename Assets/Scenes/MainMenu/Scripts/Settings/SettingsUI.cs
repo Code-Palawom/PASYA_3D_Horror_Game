@@ -91,6 +91,9 @@ public class SettingsUI : MonoBehaviour {
             }
         };
 
+        if (AuthManager.Instance.CurrentProfile != null)
+            RefreshName(AuthManager.Instance.CurrentProfile);
+
         if (SettingsManager.Instance != null)
             Populate(SettingsManager.Instance.Current);
 

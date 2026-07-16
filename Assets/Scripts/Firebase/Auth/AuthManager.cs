@@ -236,6 +236,7 @@ public class AuthManager : MonoBehaviour {
     // ── Player profile (Firestore: users/{uid}, live-listened) ──────────
 
     private void AttachPlayerProfileListener(FirebaseUser user) {
+        Debug.Log($"[AuthManager] Attaching listener for {user.UserId}");
         DetachPlayerProfileListener(); // guard against double-attach on re-sign-in
 
         _profileDocRef = FirebaseManager.Instance.Db.Collection("users").Document(user.UserId);
@@ -250,6 +251,7 @@ public class AuthManager : MonoBehaviour {
         // Skip optimistic local snapshots. Any field written with FieldValue.ServerTimestamp
         // comes back as null until the server resolves the actual value — ConvertTo<T>()
         // would throw trying to assign null into a non-nullable Timestamp field.
+        Debug.Log($"[AuthManager] HandleProfileSnapshot called. Exists={snapshot.Exists}, HasPendingWrites={snapshot.Metadata.HasPendingWrites}");
         if (snapshot.Metadata.HasPendingWrites) return;
 
         if (!snapshot.Exists) {

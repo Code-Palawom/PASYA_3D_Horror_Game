@@ -51,7 +51,6 @@ public class PauseMenuController : MonoBehaviour {
 
     public void OnBackToMainMenu() {
         Time.timeScale = 1f;
-
         NetworkSessionManager.Instance.LeaveSession();
     }
 
