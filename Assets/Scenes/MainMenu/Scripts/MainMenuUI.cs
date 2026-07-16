@@ -164,6 +164,7 @@ public class MainMenuUI : MonoBehaviour {
 
         // Attach _meta snapshot listener — fires immediately + on every remote change
         QuizFetcher.Instance.StartListening();
+        TipsManager.Instance.FetchTipsOnce();
     }
 
     void Start() {
@@ -221,6 +222,7 @@ public class MainMenuUI : MonoBehaviour {
             }
         };
 
+        TipsManager.Instance.LoadCacheImmediately();
         ShowMainPanel();
     }
 

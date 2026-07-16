@@ -108,10 +108,11 @@ InitTestScene*.unity*
 /Assets/Scripts/Firebase/SecretStoreEncoder.cs.meta
 /Assets/Scripts/Misc/SaveEncryption.cs
 /Assets/Scripts/Misc/SaveEncryption.cs.meta
+/Assets/Scripts/Misc/TipsManager.cs
+/Assets/Scripts/Misc/TipsManager.cs.meta
 /Assets/Scripts/Misc/VersionChecker.cs
 /Assets/Scripts/Misc/VersionChecker.cs.meta
 /Assets/Scripts/Quiz/QuestionSource/QuizFetcher.cs
 /Assets/Scripts/Quiz/QuestionSource/QuizFetcher.cs.meta
 /Assets/Scripts/Quiz/QuestionSource/QuizRepository.cs
 /Assets/Scripts/Quiz/QuestionSource/QuizRepository.cs.meta
-
