@@ -4,6 +4,7 @@ using Unity.Cinemachine;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.Rendering;
 
 public class Player : NetworkBehaviour {
     [Header("Movement")]
@@ -27,12 +28,17 @@ public class Player : NetworkBehaviour {
     [SerializeField] private CinemachineCamera firstPersonPOV;
     [SerializeField] private ThirdPersonCameraLook thirdPersonLook;
     [SerializeField] private FirstPersonCameraLook firstPersonLook;
+    [SerializeField] private Transform cameraFollow;
 
     [Header("Player Setup")]
     [SerializeField] private UnityEngine.InputSystem.PlayerInput inputComponent;
     [SerializeField] private Camera playerCamera;
     [SerializeField] private Canvas playerCanvas;
     [SerializeField] private AudioListener audioListener;
+
+    [Header("Distance Thresholds (hysteresis)")]
+    [SerializeField] private float hideDistance = 0.5f;
+    [SerializeField] private float showDistance = 0.7f;
 
     [Header("Player Inventory UI")]
     [SerializeField] private InventoryUI inventoryUI;
@@ -53,12 +59,20 @@ public class Player : NetworkBehaviour {
     private float standHeight;
     private Vector3 standCenter;
 
+    [Header("Camera Follow Crouch Offset")]
+    [SerializeField] private float crouchYOffset = -0.6f;
+    [SerializeField] private float transitionSpeed = 8f;
+    private Vector3 cameraFollowOriginalLocalPos;
+
     private CharacterController controller;
     private Vector2 moveInput;
     private Vector3 velocity;
     private PlayerInput playerInput;
     private PlayerState playerState;
     private PlayerAnimation playerAnimation;
+
+    private bool isVisible = true;
+    private SkinnedMeshRenderer[] renderers;
 
     void Awake() {
         originalBasePlayerSpeed = basePlayerSpeed;
@@ -74,6 +88,9 @@ public class Player : NetworkBehaviour {
 
         standCenter = controller.center;
         standHeight = controller.height;
+        cameraFollowOriginalLocalPos = cameraFollow.localPosition;
+
+        renderers = GetComponentsInChildren<SkinnedMeshRenderer>();
     }
 
     // Replaces owner-specific Start() logic; guaranteed IsOwner is valid here
@@ -111,7 +128,7 @@ public class Player : NetworkBehaviour {
             isFirstPerson = SettingsManager.Instance != null
                 ? SettingsManager.Instance.Current.isFirstPerson
                 : true;
-            SetCharacter(isFirstPerson);
+            SetCamera(isFirstPerson);
         } else {
             // Remote instances on this machine: disable camera, audio, and UI
             playerCamera.enabled = false;
@@ -221,30 +238,34 @@ public class Player : NetworkBehaviour {
             SettingsManager.Instance.Save(s);
         }
 
-        SetCharacter(isFirstPerson);
+        SetCamera(isFirstPerson);
         //Debug.Log($"POV Switch is First Person: {isFirstPerson}");
     }
 
-    private void SetCharacter(bool mode) {
+    private void SetCamera(bool mode) {
         if (!IsOwner) return;
-
-        var renderers = GetComponentsInChildren<SkinnedMeshRenderer>();
 
         if (mode) {
             firstPersonPOV.Priority = 10;
             thirdPersonPOV.Priority = 0;
             firstPersonLook.enabled = true;
             thirdPersonLook.enabled = false;
-            foreach (var r in renderers)
-                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly;
         } else {
             firstPersonPOV.Priority = 0;
             thirdPersonPOV.Priority = 10;
             firstPersonLook.enabled = false;
             thirdPersonLook.enabled = true;
-            foreach (var r in renderers)
-                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
         }
+    }
+
+    private void SetCharacterVisibility(bool visibility) {
+        if (isVisible == visibility) return;
+        isVisible = visibility;
+        Debug.Log($"SFMKPFMDSF {visibility}");
+
+        ShadowCastingMode mode = visibility ? ShadowCastingMode.On : ShadowCastingMode.ShadowsOnly;
+        foreach (var r in renderers)
+            r.shadowCastingMode = mode;
     }
 
     public void RefreshPOV() {
@@ -252,11 +273,27 @@ public class Player : NetworkBehaviour {
 
         if (SettingsManager.Instance == null) return;
         isFirstPerson = SettingsManager.Instance.Current.isFirstPerson;
-        SetCharacter(isFirstPerson);
+        SetCamera(isFirstPerson);
     }
 
     void Update() {
         if (!IsOwner) return;
+
+        Vector3 camPos = playerCamera.transform.position;
+        Vector3 targetPos = cameraFollow.position;
+        float targetY = targetPos.y + 1f;
+
+        bool isBelow = camPos.y < targetY;
+
+        Vector2 camXZ = new Vector2(camPos.x, camPos.z);
+        Vector2 targetXZ = new Vector2(targetPos.x, targetPos.z);
+        float horizontalDist = Vector2.Distance(camXZ, targetXZ);
+
+        if (isVisible && isBelow && horizontalDist < hideDistance) {
+            SetCharacterVisibility(false);
+        } else if (!isVisible && (!isBelow || horizontalDist > showDistance)) {
+            SetCharacterVisibility(true);
+        }
 
         playerAnimation.UpdateAnimationState(moveInput, controller.isGrounded);
 
@@ -345,6 +382,11 @@ public class Player : NetworkBehaviour {
 
         controller.height = Mathf.Lerp(controller.height, targetHeight, crouchTransitionSpeed * Time.deltaTime);
         controller.center = Vector3.Lerp(controller.center, targetCenter, crouchTransitionSpeed * Time.deltaTime);
+
+        Vector3 targetPos = cameraFollowOriginalLocalPos;
+        if (isCrouching) targetPos.y += crouchYOffset;
+
+        cameraFollow.localPosition = Vector3.Lerp(cameraFollow.localPosition, targetPos, Time.deltaTime * transitionSpeed);
     }
 
     private bool IsMovingLiterally() {
