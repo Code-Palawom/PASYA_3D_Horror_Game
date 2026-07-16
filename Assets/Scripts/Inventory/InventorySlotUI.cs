@@ -9,12 +9,16 @@ public class InventorySlotUI : MonoBehaviour,
     IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler, IPointerEnterHandler, IPointerClickHandler {
     [SerializeField] private Image iconImage;
     [SerializeField] private TextMeshProUGUI quantityText;
-    [SerializeField] private Image highlightBorder; // Active slot yellow border
     [SerializeField] private Image background;
 
     [SerializeField] private Color hotbarBgColor = new Color(0.75f, 0.75f, 0.75f, 0.9f);
     [SerializeField] private Color inventoryBgColor = new Color(0.55f, 0.55f, 0.55f, 0.9f);
-    [SerializeField] private Color highlightColor = new Color(1f, 0.85f, 0.1f, 1f);
+
+    [Header("Hotbar Active/Inactive Opacity")]
+    [Tooltip("Only hotbar slots ever show an active/inactive state — main inventory " +
+             "slots (isHotbar == false) always stay at full opacity regardless of these values.")]
+    [SerializeField] private float activeOpacity = 0.5f;
+    [SerializeField] private float inactiveOpacity = 0.25f;
 
     [Header("Active Item Name Popup (hotbar slots only)")]
     [Tooltip("Positioned above the icon in the prefab. Only wired up on hotbar " +
@@ -30,6 +34,7 @@ public class InventorySlotUI : MonoBehaviour,
     public int SlotIndex { get; private set; }
 
     private bool _isHotbar;
+    private bool _isCurrentlyActive; // only meaningful when _isHotbar is true
     private InventoryUI _ui;
     private Coroutine _namePopupCoroutine;
     private string _currentItemName; // authoritative source for "what's actually in this slot right now"
@@ -42,10 +47,9 @@ public class InventorySlotUI : MonoBehaviour,
         _ui = ui;
 
         background.color = isHotbar ? hotbarBgColor : inventoryBgColor;
-        SetHighlight(false);
         ClearDisplay();
         HideNamePopupImmediate();
-        SetIconOpacity(1f);
+        SetHighlight(false); // applies correct base opacity (25% hotbar / 100% main) via ApplyBaseOpacity
     }
 
     // ── Display ───────────────────────────────────────────────────────────────
@@ -69,10 +73,36 @@ public class InventorySlotUI : MonoBehaviour,
         _currentItemName = null;
     }
 
+    // Only hotbar slots have an "active" concept at all — main inventory
+    // slots always sit at full opacity regardless of what's passed in here.
     public void SetHighlight(bool active) {
-        if (highlightBorder == null) return;
-        highlightBorder.enabled = active;
-        highlightBorder.color = highlightColor;
+        _isCurrentlyActive = active;
+        ApplyBaseOpacity();
+    }
+
+    // The opacity a hotbar slot's icon should sit at when NOT being dragged —
+    // used both by SetHighlight and to restore the correct value after a
+    // drag ends (rather than hardcoding a flat 1f, which would be wrong for
+    // an inactive hotbar slot that should settle back at 25%, not 100%).
+    // Main inventory slots always resolve to 1f here (their icon just isn't
+    // touched by the active/inactive system at all).
+    private float BaseOpacity => !_isHotbar ? 1f : (_isCurrentlyActive ? activeOpacity : inactiveOpacity);
+
+    // Applies the active/inactive dimming to a hotbar slot's bg+icon.
+    // No-op for main inventory slots — they're never touched by this at all,
+    // so their designed background alpha (inventoryBgColor) is left exactly
+    // as configured rather than being forced to 1f.
+    private void ApplyBaseOpacity() {
+        if (!_isHotbar) return;
+        float alpha = BaseOpacity;
+        SetIconOpacity(alpha);
+        SetBackgroundOpacity(alpha);
+    }
+
+    private void SetBackgroundOpacity(float alpha) {
+        if (background == null) return;
+        var c = background.color;
+        background.color = new Color(c.r, c.g, c.b, alpha);
     }
 
     // ── Active Item Name Popup ───────────────────────────────────────────────
@@ -136,8 +166,8 @@ public class InventorySlotUI : MonoBehaviour,
             _namePopupCoroutine = null;
         }
         // Also guards against a slot staying dimmed forever if it's disabled
-        // mid-drag (e.g. main inventory panel closed via Tab while dragging).
-        SetIconOpacity(1f);
+        // mid-drag (e.g. main inventory panel closed while dragging).
+        SetIconOpacity(BaseOpacity);
     }
 
     // ── Drag & Drop ───────────────────────────────────────────────────────────
@@ -174,9 +204,10 @@ public class InventorySlotUI : MonoBehaviour,
 
     public void OnEndDrag(PointerEventData eventData) {
         // Fires on THIS slot (the source) regardless of whether the drop
-        // landed on a valid target, so restoring full opacity here always
-        // matches up with the dim applied in OnBeginDrag above.
-        SetIconOpacity(1f);
+        // landed on a valid target. Restores to BaseOpacity rather than a
+        // flat 1f, since an inactive hotbar slot should settle back at 25%,
+        // not full opacity.
+        SetIconOpacity(BaseOpacity);
         _ui.EndDragVisual();
     }
 
@@ -200,7 +231,7 @@ public class InventorySlotUI : MonoBehaviour,
     // equivalent of pressing 1–9 on desktop. Fires alongside the drag
     // handlers with no conflict: uGUI only raises OnPointerClick if the
     // pointer didn't move past the drag threshold, so a tap selects and
-    // a drag still reorders as before. Main inventory slots (9–35) ignore
+    // a drag still reorders as before. Main inventory slots ignore
     // taps here since only the hotbar has an "active" concept.
     public void OnPointerClick(PointerEventData eventData) {
         if (!_isHotbar) return;

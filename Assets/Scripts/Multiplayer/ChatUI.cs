@@ -7,17 +7,23 @@ using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 public class ChatUI : NetworkBehaviour {
+    [SerializeField] GameObject chatUI;
     [SerializeField] ScrollRect scrollRect;
     [SerializeField] Transform messageContainer;
     [SerializeField] ChatMessageItemUI messagePrefab;
     [SerializeField] TMP_InputField inputField;
     [SerializeField] Button sendButton;
 
+#if UNITY_EDITOR || UNITY_STANDALONE
+    [SerializeField] Image chatIcon;
+#endif
+
     [Header("Input")]
-    [SerializeField] private InputAction _typeInChat;
-    [SerializeField] private InputAction _exitTypeMode;
+    [SerializeField] private InputAction openChat;
 
     private readonly List<ChatMessageItemUI> _spawnedItems = new();
+    private bool isChatActive = false;
+    private bool isTyping = false;
 
     public override void OnNetworkSpawn() {
         if (!IsOwner) return;
@@ -27,10 +33,8 @@ public class ChatUI : NetworkBehaviour {
         inputField.onSelect.AddListener(_ => GameManager.Instance.SetPlayerInputEnabled(true));
         inputField.onDeselect.AddListener(_ => GameManager.Instance.SetPlayerInputEnabled(false));
 
-        _typeInChat.performed += _ => WillTypeInChat(true); ;
-        _typeInChat.Enable();
-        _exitTypeMode.performed += _ => WillTypeInChat(false);
-        _exitTypeMode.Enable();
+        openChat.performed += _ => ToggleChat();
+        openChat.Enable();
 
         if (ChatManager.Instance != null)
             InitChat();
@@ -50,10 +54,8 @@ public class ChatUI : NetworkBehaviour {
             ChatManager.Instance.OnChatCleared.RemoveListener(OnChatCleared);
         }
 
-        _typeInChat.Disable();
-        _typeInChat.Dispose();
-        _exitTypeMode.Disable();
-        _exitTypeMode.Dispose();
+        openChat.Disable();
+        openChat.Dispose();
     }
 
     // ─── Init ─────────────────────────────────────────────────
@@ -75,14 +77,31 @@ public class ChatUI : NetworkBehaviour {
     }
 
     // ─── Callbacks ────────────────────────────────────────────
+    void ToggleChat() {
+        if (GameManager.Instance != null && GameManager.Instance.IsControlFrozen) return;
+         
+        isChatActive = !isChatActive;
+        chatUI.SetActive(isChatActive);
 
-    void WillTypeInChat(bool willType) {
+#if UNITY_EDITOR || UNITY_STANDALONE
+        var c = chatIcon.color;
+        if (isChatActive) {
+            chatIcon.color = new Color(c.r, c.g, c.b, 0.50f);
+        } else {
+            chatIcon.color = new Color(c.r, c.g, c.b, 0.25f);
+        }
+#endif
+    }
+
+    void ToggleTyping() {
         if(GameManager.Instance != null && GameManager.Instance.IsControlFrozen) return;
 
-        if (willType)
+        if (isTyping)
             inputField.ActivateInputField();
         else
             inputField.DeactivateInputField();
+
+        isTyping = !isTyping;
     }
 
     void OnSend() {

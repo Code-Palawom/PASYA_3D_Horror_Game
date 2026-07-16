@@ -27,12 +27,22 @@ public class HotbarInput : NetworkBehaviour {
         // One button-per-digit action. Each binding stores its slot index in
         // the interaction/processor-free path, so we can't get the "which
         // key" info off InputAction.CallbackContext directly for a single
-        // shared action — instead, wire 9 individual actions so each
-        // callback closure already knows its own index. Cheap, and it's
-        // the more idiomatic pattern for this Input System since actions
-        // aren't easily parameterized by which binding fired.
-        _digitActions = new InputAction[PlayerInventory.HotbarSize];
-        for (int i = 0; i < PlayerInventory.HotbarSize; i++) {
+        // shared action — instead, wire individual actions so each callback
+        // closure already knows its own index. Cheap, and it's the more
+        // idiomatic pattern for this Input System since actions aren't
+        // easily parameterized by which binding fired.
+        //
+        // Digit keys only go 1-9, so if hotbarSize is configured above 9,
+        // only the first 9 slots get a direct key binding — scroll still
+        // reaches the rest.
+        int digitCount = Mathf.Min(_inventory.HotbarSize, 9);
+        if (_inventory.HotbarSize > 9) {
+            Debug.LogWarning($"[HotbarInput] hotbarSize is {_inventory.HotbarSize}, but only " +
+                              "digit keys 1-9 exist — slots beyond 9 are only reachable via scroll.");
+        }
+
+        _digitActions = new InputAction[digitCount];
+        for (int i = 0; i < digitCount; i++) {
             var action = new InputAction($"SelectHotbar{i + 1}", InputActionType.Button,
                 $"<Keyboard>/{i + 1}");
             int captured = i; // avoid closure-over-loop-variable bug
@@ -71,8 +81,8 @@ public class HotbarInput : NetworkBehaviour {
         if (Mathf.Abs(scroll) <= scrollThreshold) return;
 
         int dir = scroll > 0 ? -1 : 1; // scroll up = previous slot, flip if you want the opposite feel
-        int next = (_inventory.ActiveHotbarIndex + dir + PlayerInventory.HotbarSize)
-                   % PlayerInventory.HotbarSize;
+        int next = (_inventory.ActiveHotbarIndex + dir + _inventory.HotbarSize)
+                   % _inventory.HotbarSize;
         RequestSlot(next);
     }
 

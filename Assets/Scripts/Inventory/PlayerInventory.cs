@@ -5,16 +5,24 @@ using UnityEngine;
 // Host-authoritative inventory. Clients send ServerRpcs; the host validates
 // and mutates the NetworkList which auto-syncs to all clients.
 //
-// Slot layout:
-//   Index 0–8   → Hotbar  (the "active/held" slot is hotbar[ActiveHotbarIndex])
-//   Index 9–35  → Main inventory
+// Slot layout (indices are computed from hotbarSize, not hardcoded):
+//   Index 0 .. hotbarSize-1              → Hotbar  (the "active/held" slot is hotbar[ActiveHotbarIndex])
+//   Index hotbarSize .. TotalSlots-1     → Main inventory
 //
 // Implements IInventoryQuery so any InteractionRequirement (ItemRequirement,
 // KeyRequirement, etc) can check this player's inventory without knowing
 // about NetworkList/slot layout internals.
 public class PlayerInventory : NetworkBehaviour, IInventoryQuery {
-    public const int HotbarSize = 8; // 9
-    public const int InventorySize = 36; // 36
+    [Header("Slot Counts")]
+    [Tooltip("Number of hotbar slots (indices 0..hotbarSize-1). Adjustable per-prefab.")]
+    [SerializeField] private int hotbarSize = 4;
+    [Tooltip("Number of MAIN inventory slots, i.e. NOT counting the hotbar. " +
+             "Total slots = hotbarSize + mainInventorySize.")]
+    [SerializeField] private int mainInventorySize = 8;
+
+    public int HotbarSize => hotbarSize;
+    public int MainInventorySize => mainInventorySize;
+    public int TotalSlots => hotbarSize + mainInventorySize;
 
     [Tooltip("Leave empty to auto-resolve the current scene's registry via " +
              "ItemRegistry.Instance (set by that scene's GameBootstrap). Only " +
@@ -54,7 +62,7 @@ public class PlayerInventory : NetworkBehaviour, IInventoryQuery {
     public override void OnNetworkSpawn() {
         if (IsServer) {
             // Fill all slots with empty data
-            for (int i = 0; i < InventorySize; i++)
+            for (int i = 0; i < TotalSlots; i++)
                 _slots.Add(NetworkInventorySlot.Empty);
         }
 
@@ -74,10 +82,18 @@ public class PlayerInventory : NetworkBehaviour, IInventoryQuery {
     // Add items to inventory. Returns true if ALL qty was placed.
     // Call only from server (e.g. inside a ServerRpc or host game logic).
     //
-    // If the item lands in a hotbar slot (new placement OR stacking into an
-    // existing hotbar stack), that slot becomes the active slot — picking
-    // something up effectively "equips" it. If it only lands in the main
-    // inventory (hotbar full), the active slot is left untouched.
+    // Priority order:
+    //   1) Top off any EXISTING matching stack, wherever it is — hotbar or
+    //      main inventory. Adding to a stack you already have always wins
+    //      over where a brand new stack would land.
+    //   2) Whatever's left needs a NEW slot. This is where hotbar gets
+    //      priority: empty hotbar slots are filled first, and only the
+    //      leftover that doesn't fit overflows into main inventory.
+    //
+    // If any of the item lands in a hotbar slot (existing stack topped off
+    // OR a new stack placed there), that slot becomes the active slot —
+    // picking something up effectively "equips" it. If it only touches main
+    // inventory, the active slot is left untouched.
     public bool AddItem(string itemID, int qty = 1) {
         if (!IsServer) return false;
         var data = Registry.Get(itemID);
@@ -86,25 +102,53 @@ public class PlayerInventory : NetworkBehaviour, IInventoryQuery {
             return false;
         }
 
-        int remaining = qty;
         int firstTouchedSlot = -1;
+        int remaining = qty;
 
-        // 1) Stack into existing slots
-        if (data.stackable) {
-            for (int i = 0; i < InventorySize && remaining > 0; i++) {
-                var s = _slots[i];
-                if (!s.IsEmpty && s.ItemID.ToString() == itemID && s.Quantity < data.maxStack) {
-                    int space = data.maxStack - s.Quantity;
-                    int toAdd = Mathf.Min(space, remaining);
-                    _slots[i] = new NetworkInventorySlot { ItemID = itemID, Quantity = s.Quantity + toAdd };
-                    remaining -= toAdd;
-                    if (firstTouchedSlot < 0) firstTouchedSlot = i;
-                }
+        // 1) Stack into any existing match, hotbar or main, wherever it is.
+        if (data.stackable)
+            remaining = StackIntoExisting(itemID, data, remaining, 0, TotalSlots, ref firstTouchedSlot);
+
+        // 2) New slot needed for the rest — hotbar's empty slots first...
+        if (remaining > 0)
+            remaining = FillEmptySlots(itemID, data, remaining, 0, hotbarSize, ref firstTouchedSlot);
+
+        // ...then overflow into main inventory's empty slots.
+        if (remaining > 0)
+            remaining = FillEmptySlots(itemID, data, remaining, hotbarSize, TotalSlots, ref firstTouchedSlot);
+
+        bool success = remaining == 0;
+
+        if (success && firstTouchedSlot >= 0 && firstTouchedSlot < hotbarSize)
+            _activeHotbarIndex.Value = firstTouchedSlot;
+
+        return success;
+    }
+
+    // Tops off existing stacks of itemID within [startIndex, endExclusive).
+    // Returns whatever quantity didn't fit (0 if it all fit).
+    private int StackIntoExisting(string itemID, InventoryItem data, int qty, int startIndex, int endExclusive,
+        ref int firstTouchedSlot) {
+        int remaining = qty;
+        for (int i = startIndex; i < endExclusive && remaining > 0; i++) {
+            var s = _slots[i];
+            if (!s.IsEmpty && s.ItemID.ToString() == itemID && s.Quantity < data.maxStack) {
+                int space = data.maxStack - s.Quantity;
+                int toAdd = Mathf.Min(space, remaining);
+                _slots[i] = new NetworkInventorySlot { ItemID = itemID, Quantity = s.Quantity + toAdd };
+                remaining -= toAdd;
+                if (firstTouchedSlot < 0) firstTouchedSlot = i;
             }
         }
+        return remaining;
+    }
 
-        // 2) Place remainder into empty slots
-        for (int i = 0; i < InventorySize && remaining > 0; i++) {
+    // Fills empty slots within [startIndex, endExclusive) with new stacks of
+    // itemID. Returns whatever quantity didn't fit (0 if it all fit).
+    private int FillEmptySlots(string itemID, InventoryItem data, int qty, int startIndex, int endExclusive,
+        ref int firstTouchedSlot) {
+        int remaining = qty;
+        for (int i = startIndex; i < endExclusive && remaining > 0; i++) {
             if (_slots[i].IsEmpty) {
                 int toPlace = data.stackable ? Mathf.Min(data.maxStack, remaining) : 1;
                 _slots[i] = new NetworkInventorySlot { ItemID = itemID, Quantity = toPlace };
@@ -112,13 +156,7 @@ public class PlayerInventory : NetworkBehaviour, IInventoryQuery {
                 if (firstTouchedSlot < 0) firstTouchedSlot = i;
             }
         }
-
-        bool success = remaining == 0;
-
-        if (success && firstTouchedSlot >= 0 && firstTouchedSlot < HotbarSize)
-            _activeHotbarIndex.Value = firstTouchedSlot;
-
-        return success;
+        return remaining;
     }
 
     // Remove qty of itemID. Returns true if fully removed.
@@ -127,7 +165,7 @@ public class PlayerInventory : NetworkBehaviour, IInventoryQuery {
         if (!IsServer) return false;
 
         int remaining = qty;
-        for (int i = 0; i < InventorySize && remaining > 0; i++) {
+        for (int i = 0; i < TotalSlots && remaining > 0; i++) {
             var s = _slots[i];
             if (!s.IsEmpty && s.ItemID.ToString() == itemID) {
                 int toRemove = Mathf.Min(s.Quantity, remaining);
@@ -146,7 +184,7 @@ public class PlayerInventory : NetworkBehaviour, IInventoryQuery {
     // the NetworkList is Everyone-readable.
     public bool HasItem(string itemID) {
         if (string.IsNullOrEmpty(itemID)) return false;
-        for (int i = 0; i < InventorySize; i++) {
+        for (int i = 0; i < TotalSlots; i++) {
             var s = _slots[i];
             if (!s.IsEmpty && s.ItemID.ToString() == itemID) return true;
         }
@@ -180,18 +218,18 @@ public class PlayerInventory : NetworkBehaviour, IInventoryQuery {
 
     // ── Client → Server RPCs ──────────────────────────────────────────────────
 
-    // Select a hotbar slot (0–8). Only the owner may call this.
+    // Select a hotbar slot (0..hotbarSize-1). Only the owner may call this.
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
     public void SetActiveSlotServerRpc(int index) {
-        if (index < 0 || index >= HotbarSize) return;
+        if (index < 0 || index >= hotbarSize) return;
         _activeHotbarIndex.Value = index;
     }
 
     // Swap two inventory slots. Only the owner may call this.
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
     public void MoveSlotServerRpc(int fromIndex, int toIndex) {
-        if (fromIndex < 0 || fromIndex >= InventorySize) return;
-        if (toIndex < 0 || toIndex >= InventorySize) return;
+        if (fromIndex < 0 || fromIndex >= TotalSlots) return;
+        if (toIndex < 0 || toIndex >= TotalSlots) return;
         if (fromIndex == toIndex) return;
 
         var temp = _slots[fromIndex];
@@ -202,7 +240,7 @@ public class PlayerInventory : NetworkBehaviour, IInventoryQuery {
     // Drop item at slotIndex into the world. Only the owner may call this.
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
     public void DropItemServerRpc(int slotIndex) {
-        if (slotIndex < 0 || slotIndex >= InventorySize) return;
+        if (slotIndex < 0 || slotIndex >= TotalSlots) return;
         if (_slots[slotIndex].IsEmpty) return;
 
         // TODO: Instantiate a WorldItem prefab at player's position here
