@@ -127,8 +127,8 @@ public class GameSessionManager : NetworkBehaviour {
             stats.Disconnected = true;
             _disconnectedPlayers.Add(stats);
             _stats.Remove(clientId);
-            Debug.Log($"[GameSessionManager] Player '{stats.PlayerName}' disconnected — stats frozen.");
-            ChatManager.Instance.SendSystemMessage($"Player '{stats.PlayerName}' left the game.");
+            Debug.Log($"[GameSessionManager] '{stats.PlayerName}' disconnected — stats frozen.");
+            ChatManager.Instance.SendSystemMessage($"<b>{stats.PlayerName}</b> left the game.");
         }
     }
 
