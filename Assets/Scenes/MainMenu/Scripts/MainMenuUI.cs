@@ -482,6 +482,8 @@ public class MainMenuUI : MonoBehaviour {
     // START — branches based on which entry point opened the wizard
     // ─────────────────────────────────────────────────────────
     void OnStartClicked() {
+        ConnectionApprovalHandler.Instance.Register();
+
         if (_pendingMode == GameMode.Host)
             StartCoroutine(StartAsHost());
         else if (_pendingMode == GameMode.SinglePlayer)

@@ -7,6 +7,8 @@ using UnityEngine.SceneManagement;
 // Must register its callback BEFORE StartHost()/StartClient() is called.
 // Uses Awake() to guarantee registration before any other Start() runs.
 public class ConnectionApprovalHandler : MonoBehaviour {
+    public static ConnectionApprovalHandler Instance { get; private set; }
+
     public const int MaxPlayers = 4;
 
     public const string ReasonFull = "REASON:FULL";
@@ -30,6 +32,9 @@ public class ConnectionApprovalHandler : MonoBehaviour {
     public static string GameVersion => Application.version;
 
     void Awake() {
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+        Instance = this;
+
         // Must happen before StartHost() — Awake() runs before Start()
         // on any other component, so this is guaranteed to register first.
         if (NetworkManager.Singleton != null) {
@@ -51,10 +56,12 @@ public class ConnectionApprovalHandler : MonoBehaviour {
             Register();
     }
 
-    void Register() {
-        NetworkManager.Singleton.ConnectionApprovalCallback = ApprovalCheck;
-        NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
-        Debug.Log("[ConnectionApprovalHandler] Approval callback registered.");
+    public void Register() {
+        if (NetworkManager.Singleton != null && NetworkManager.Singleton.ConnectionApprovalCallback == null) {
+            NetworkManager.Singleton.ConnectionApprovalCallback = ApprovalCheck;
+            NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
+            Debug.Log("[ConnectionApprovalHandler] Approval callback registered.");
+        }
     }
 
     void OnDisable() {

@@ -163,8 +163,7 @@ public class GameSessionManager : NetworkBehaviour {
         }
     }
 
-    /// Called by QuizSideEffect.ApplyWithDuration() via RPC when effect applied.
-    /// </summary>
+    // Called by QuizSideEffect.ApplyWithDuration() via RPC when effect applied.
     public void RecordSideEffect(ulong clientId) {
         if (!IsServer) return;
         if (!_stats.TryGetValue(clientId, out var stats)) return;
@@ -191,9 +190,8 @@ public class GameSessionManager : NetworkBehaviour {
     // End of game — host sends all stats to every client
     // ─────────────────────────────────────────────────────────
 
-    /// Call on the server when the level ends to broadcast results.
-    /// Merges live + disconnected players, orders by score descending.
-    /// </summary>
+    // Call on the server when the level ends to broadcast results.
+    // Merges live + disconnected players, orders by score descending.
     public void SendResults() {
         if (!IsServer) return;
 
