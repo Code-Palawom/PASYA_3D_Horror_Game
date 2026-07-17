@@ -1,3 +1,4 @@
+using NUnit.Framework;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -41,6 +42,26 @@ public class RoomDetailPanelUI : MonoBehaviour {
             questionCountLabel.text = $"{host.QuestionCount} questions";
 
         RefreshPlayerList(host.PlayerNames);
+    }
+
+    public void ShowOnline(OnlineDiscoveredSession session, string levelDisplayName, Sprite preview) {
+        gameObject.SetActive(true);
+
+        if (previewImage != null) {
+            previewImage.sprite = preview;
+            previewImage.gameObject.SetActive(preview != null);
+        }
+
+        if (levelNameLabel != null)
+            levelNameLabel.text = levelDisplayName;
+
+        if (quizNameLabel != null)
+            quizNameLabel.text = session.QuizSetName;
+
+        if (questionCountLabel != null)
+            questionCountLabel.text = $"{session.QuestionCount} questions";
+
+        RefreshPlayerList(new List<string>());
     }
 
     public void Hide() => gameObject.SetActive(false);

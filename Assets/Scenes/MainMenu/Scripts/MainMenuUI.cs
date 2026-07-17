@@ -1,9 +1,13 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using TMPro;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -72,6 +76,22 @@ public class MainMenuUI : MonoBehaviour {
     // Back button (top tab row) handles exiting Multiplayer entirely,
     // since Join is now the default content shown within it.
 
+    // ── Connection Mode Toggle (LAN / Online) ──────────────────
+    [Header("Connection Mode Toggle")]
+    [Tooltip("Two buttons in the Multiplayer tab row that switch between LAN and Online mode.")]
+    [SerializeField] Button hostModeButton;
+
+    // ── Online — Private Join (join code input) ────────────────
+    // Wire these into the existing joinPanel in the Inspector.
+    // Online sessions are discovered into the same hostListContainer as LAN.
+    [Header("Online — Join by Code")]
+    [SerializeField] TMP_InputField onlineJoinCodeInput;
+
+    // ── Online Host Options ────────────────────────────────────
+    [Header("Online Host Options")]
+    [Tooltip("Panel inside the multiplayer tab row, visible only when Online mode is active.")]
+    [SerializeField] Toggle publicSessionToggle;
+
     // ── Level Select Panel (shared by Host + Single Player) ─
     [Header("Level Select Panel")]
     [SerializeField] GameObject levelSelectPanel;
@@ -122,8 +142,13 @@ public class MainMenuUI : MonoBehaviour {
 
     private readonly List<LevelSelectItemUI> _levelItems = new();
     private readonly List<QuizSetItemUI> _quizItems = new();
-    private readonly List<LobbyListItemUI> _spawnedHostItems = new();
+    // Unified session list — holds both LAN and online items for the merged join panel
+    private readonly List<LobbyListItemUI> _allSessionItems = new();
     private readonly List<DiscoveredHost> _discoveredHosts = new();
+    private readonly List<OnlineDiscoveredSession> _discoveredOnlineSessions = new();
+    private OnlineDiscoveredSession _selectedOnlineSession;
+    private CancellationTokenSource _joinCodeDebounce;
+    private ConnectionMode _activeConnectionMode = ConnectionMode.LAN;
     private readonly HashSet<string> _renderedQuizSetIds = new();
 
     // Tracks known categories — "All" is always index 0
@@ -178,7 +203,7 @@ public class MainMenuUI : MonoBehaviour {
 
         // Multiplayer panel
         hostButton.onClick.AddListener(() => EnterWizard(GameMode.Host));
-        multiplayerJoinButton.onClick.AddListener(ShowJoinPanel);
+        multiplayerJoinButton.onClick.AddListener(OnMultiplayerJoinClicked);
         multiplayerBackButton.onClick.AddListener(ShowMainPanel);
 
         // Level select
@@ -192,10 +217,17 @@ public class MainMenuUI : MonoBehaviour {
         // Category dropdown
         categoryDropdown.onValueChanged.AddListener(OnCategoryFilterChanged);
 
-        // Join panel
+        // Join panel (LAN)
         refreshButton.onClick.AddListener(OnRefreshHostsClicked);
         joinButton.onClick.AddListener(OnJoinClicked);
 
+        // Connection mode toggle (LAN / Online)
+        hostModeButton.onClick.AddListener(() => SetConnectionModeTab());
+
+        // Online join panel — private code entry
+        onlineJoinCodeInput.onValueChanged.AddListener(OnJoinCodeChanged);
+
+        // Online join panel — public session discovery
         // Placeholder panels
         characterBackButton.onClick.AddListener(ShowMainPanel);
         settingsBackButton.onClick.AddListener(ShowMainPanel);
@@ -210,14 +242,13 @@ public class MainMenuUI : MonoBehaviour {
         foreach (var entry in localMeta)
             SpawnQuizCard(entry);
 
-        if(FirebaseManager.Instance.IsReady) OnFirebaseReady();
+        if (FirebaseManager.Instance.IsReady) OnFirebaseReady();
 
         // Step 2: wait for Firebase — Firestore cache + listener start after Init() completes
         FirebaseManager.Instance.OnFirebaseReady += OnFirebaseReady;
 
         AuthManager.Instance.OnAuthStateChanged += (user) => {
             if (user == null) {
-                ShowMainPanel();
                 ActionbarToastNotification.Instance.ShowLocalToast("Logged out.", ToastType.Info);
             }
         };
@@ -317,10 +348,8 @@ public class MainMenuUI : MonoBehaviour {
         TryAddCategory(entry.category);
     }
 
-    /// <summary>
-    /// Fires per verified set as each background download completes.
-    /// Adds card live; hides it immediately if it doesn't match the active filter.
-    /// </summary>
+    // Fires per verified set as each background download completes.
+    // Adds card live; hides it immediately if it doesn't match the active filter.
     void HandleSetReady(QuizSetMetaEntry entry) {
         SpawnQuizCard(entry);
     }
@@ -361,7 +390,12 @@ public class MainMenuUI : MonoBehaviour {
         mainPanel.SetActive(true);
     }
 
-    void ShowMultiplayerPanel() => EnterWizard(GameMode.Host);
+    void ShowMultiplayerPanel() {
+        // Reset connection mode to LAN on each fresh entry into the multiplayer flow
+        _activeConnectionMode = ConnectionMode.LAN;
+        if (publicSessionToggle != null) publicSessionToggle.SetIsOnWithoutNotify(false);
+        EnterWizard(GameMode.Host);
+    }
 
     void ShowCharacterPanel() {
         HideAllContentPanels();
@@ -390,17 +424,35 @@ public class MainMenuUI : MonoBehaviour {
     }
 
     // ─────────────────────────────────────────────────────────
+    // Unified join panel — shows both LAN and online sessions in the same list.
     void ShowJoinPanel() {
         HideAllContentPanels();
-        SetMultiplayerTabRowVisible(true);   // Host/Join tabs stay visible
+        SetMultiplayerTabRowVisible(true);
+        multiplayerJoinButton.image.color = Color.orange;
+        hostButton.image.color = Color.white;
         joinPanel.SetActive(true);
         roomDetailPanel.ShowEmpty();
         joinButton.interactable = false;
-
-        // Auto-search on entry — removes the extra click, matches how
-        // most multiplayer browsers behave. The manual Refresh button
-        // stays available for re-searching afterward.
+        if (onlineJoinCodeInput != null) onlineJoinCodeInput.text = "";
+        if (joinStatusText != null) joinStatusText.text = "";
         OnRefreshHostsClicked();
+    }
+
+    // Always shows the unified join panel regardless of connection mode.
+    void OnMultiplayerJoinClicked() => ShowJoinPanel();
+
+    // Switches between LAN and Online modes — only affects host-side options.
+    // Join always shows the same unified panel.
+    void SetConnectionModeTab() {
+        if(_activeConnectionMode == ConnectionMode.LAN) {
+            _activeConnectionMode = ConnectionMode.Relay;
+            hostModeButton.GetComponentInChildren<TMP_Text>().text = "Switch to LAN";
+            publicSessionToggle.gameObject.SetActive(true);
+        } else {
+            _activeConnectionMode = ConnectionMode.LAN;
+            hostModeButton.GetComponentInChildren<TMP_Text>().text = "Switch to NET";
+            publicSessionToggle.gameObject.SetActive(false);
+        }
     }
 
     // ─────────────────────────────────────────────────────────
@@ -410,6 +462,9 @@ public class MainMenuUI : MonoBehaviour {
         _selectedQuizSetName = null;
         _selectedQuizSetId = null;
         ShowLevelSelectPanel();
+
+        hostButton.image.color = Color.orange;
+        multiplayerJoinButton.image.color = Color.white;
     }
 
     void ShowLevelSelectPanel() {
@@ -485,24 +540,58 @@ public class MainMenuUI : MonoBehaviour {
         ConnectionApprovalHandler.Instance.Register();
 
         if (_pendingMode == GameMode.Host)
-            StartCoroutine(StartAsHost());
+            StartAsHost();
         else if (_pendingMode == GameMode.SinglePlayer)
             StartCoroutine(StartAsSinglePlayer());
     }
 
-    IEnumerator StartAsHost() {
+    async void StartAsHost() {
         GameModeManager.Instance.SetHostMode(_selectedQuizSetName, _selectedLevelSceneName);
+        GameModeManager.Instance.SetConnectionMode(_activeConnectionMode);
+
+        bool isPublic = _activeConnectionMode == ConnectionMode.Relay && publicSessionToggle != null && publicSessionToggle.isOn;
+        GameModeManager.Instance.SetIsPublicSession(isPublic);
 
         statusText.text = "";
         startButton.interactable = false;
-        ConfigureTransport("0.0.0.0", gamePort);
 
-        LoadingScreenController.Instance.Show("Starting host...");
-        yield return new WaitForSeconds(1f);
+        if (_activeConnectionMode == ConnectionMode.Relay) {
+            LoadingScreenController.Instance.Show("Creating online game...", 1f, 0f, 0.3f);
+            try {
+                string joinCode = await RelayManager.Instance.CreateRelayAsync(maxPlayers: ConnectionApprovalHandler.MaxPlayers);
+                GameModeManager.Instance.SetRelayJoinCode(joinCode);
+
+                int questionCount = QuizRepository.Instance.GetSetByName(_selectedQuizSetName).questions.Count;
+
+                await LobbyManager.Instance.CreateLobbyAsync(
+                    hostName: AuthManager.Instance.CurrentProfile.DisplayName ?? SettingsManager.Instance.PlayerName,
+                    quizSetName: _selectedQuizSetName,
+                    levelSceneName: _selectedLevelSceneName,
+                    questionCount: questionCount,
+                    relayJoinCode: joinCode,
+                    maxPlayers: ConnectionApprovalHandler.MaxPlayers,
+                    isPublic
+                );
+
+                LoadingScreenController.Instance.SetMessage("Starting host...");
+                LoadingScreenController.Instance.SetProgress(1f, 0.3f, 0.9f);
+            } catch (Exception e) {
+                Debug.LogError($"[Host] {e.Message}");
+                LoadingScreenController.Instance.SetMessage("Failed to create online game.", LoadingScreenController.MessageColor.Error);
+                LoadingScreenController.Instance.Hide(3f);
+                startButton.interactable = true;
+                return;
+            }
+        } else {
+            // ── LAN path: direct transport on all interfaces ──
+            ConfigureTransport("0.0.0.0", gamePort);
+            LoadingScreenController.Instance.Show("Starting host...");
+        }
+
+        await Task.Delay(1000);
 
         NetworkManager.Singleton.OnServerStarted += OnHostServerStarted;
         NetworkManager.Singleton.StartHost();
-
         LoadingScreenController.Instance.SetMessage("Entering lobby...");
     }
 
@@ -515,19 +604,24 @@ public class MainMenuUI : MonoBehaviour {
         );
         SpawnChatManager();
 
-        QuizFetcher.Instance.IncrementPlayCount(_selectedQuizSetId);
+        // Call this when the game ends, not on start:
+        // QuizFetcher.Instance.IncrementPlayCount(_selectedQuizSetId);
 
         int questionCount = QuizRepository.Instance
             .GetSetByName(GameModeManager.Instance.SelectedQuizSetName)?.questions.Count ?? 0;
 
-        LanDiscovery.Instance.StartHostBroadcast(
-            hostName: AuthManager.Instance.CurrentProfile?.DisplayName ?? SettingsManager.Instance.PlayerName,
-            quizName: GameModeManager.Instance.SelectedQuizSetName,
-            levelSceneName: GameModeManager.Instance.SelectedLevelSceneName,
-            questionCount: questionCount,
-            gamePort: gamePort,
-            playerNamesProvider: GetCurrentPlayerNames
-        );
+        // LAN only: broadcast via UDP so clients can discover this host.
+        // Skipped in Relay mode — clients connect via join code instead.
+        if (!GameModeManager.Instance.IsRelayMode) {
+            LanDiscovery.Instance.StartHostBroadcast(
+                hostName: AuthManager.Instance.CurrentUser?.DisplayName ?? SystemInfo.deviceName,
+                quizName: GameModeManager.Instance.SelectedQuizSetName,
+                levelSceneName: GameModeManager.Instance.SelectedLevelSceneName,
+                questionCount: questionCount,
+                gamePort: gamePort,
+                playerNamesProvider: GetCurrentPlayerNames
+            );
+        }
 
         NetworkManager.Singleton.SceneManager.LoadScene(lobbySceneName, LoadSceneMode.Single);
     }
@@ -555,7 +649,9 @@ public class MainMenuUI : MonoBehaviour {
         );
         SpawnChatManager();
 
-        QuizFetcher.Instance.IncrementPlayCount(_selectedQuizSetId);
+        // No LAN broadcast, no Lobby — straight to the chosen level
+        // Call this when the game ends, not on start:
+        // QuizFetcher.Instance.IncrementPlayCount(_selectedQuizSetId);
 
         NetworkManager.Singleton.SceneManager.LoadScene(
             GameModeManager.Instance.SelectedLevelSceneName, LoadSceneMode.Single);
@@ -574,39 +670,43 @@ public class MainMenuUI : MonoBehaviour {
     }
 
     // ─────────────────────────────────────────────────────────
-    // JOIN — LAN discovery
+    // JOIN — unified LAN + Online discovery
     // ─────────────────────────────────────────────────────────
     void OnRefreshHostsClicked() {
-        foreach (var item in _spawnedHostItems) Destroy(item.gameObject);
-        _spawnedHostItems.Clear();
+        foreach (var item in _allSessionItems) Destroy(item.gameObject);
+        _allSessionItems.Clear();
         _discoveredHosts.Clear();
+        _discoveredOnlineSessions.Clear();
 
+        _selectedHost = null;
+        _selectedOnlineSession = null;
         joinButton.interactable = false;
-        joinStatusText.text = "Searching for LAN hosts...";
+        joinStatusText.text = "Searching...";
         roomDetailPanel.ShowEmpty();
 
+        // Both run concurrently — LAN via UDP broadcast, online via Lobby query
         LanDiscovery.Instance.StartClientDiscovery(OnHostDiscovered, duration: 4f);
+        _ = QueryOnlineSessionsAsync();
     }
 
     void OnHostDiscovered(DiscoveredHost host) {
         string levelDisplayName = ResolveLevelDisplayName(host.LevelSceneName);
 
         var item = Instantiate(hostListItemPrefab, hostListContainer);
-        item.Setup(host, levelDisplayName, OnHostSelected);
-        _spawnedHostItems.Add(item);
+        item.Setup(host, levelDisplayName, (h) => OnHostSelected(h, item));
+        _allSessionItems.Add(item);
         _discoveredHosts.Add(host);
 
-        joinStatusText.text = $"{_spawnedHostItems.Count} game(s) found.";
+        UpdateSessionCountText();
     }
 
-    void OnHostSelected(DiscoveredHost host) {
+    void OnHostSelected(DiscoveredHost host, LobbyListItemUI selectedItem) {
         _selectedHost = host;
+        _selectedOnlineSession = null;
         joinButton.interactable = true;
 
-        foreach (var item in _spawnedHostItems) item.SetSelected(false);
-        int index = _discoveredHosts.IndexOf(host);
-        if (index >= 0 && index < _spawnedHostItems.Count)
-            _spawnedHostItems[index].SetSelected(true);
+        foreach (var item in _allSessionItems) item.SetSelected(false);
+        selectedItem.SetSelected(true);
 
         var levelOption = availableLevels.FirstOrDefault(l => l.sceneName == host.LevelSceneName);
         roomDetailPanel.Show(
@@ -616,46 +716,194 @@ public class MainMenuUI : MonoBehaviour {
         );
     }
 
+    async Task QueryOnlineSessionsAsync() {
+        try {
+            var sessions = await LobbyManager.Instance.QueryPublicSessionsAsync();
+            foreach (var session in sessions) {
+                var item = Instantiate(hostListItemPrefab, hostListContainer);
+                item.SetupOnline(session, ResolveLevelDisplayName(session.LevelSceneName),
+                    (s) => OnOnlineSessionSelected(s, item));
+                _allSessionItems.Add(item);
+                _discoveredOnlineSessions.Add(session);
+            }
+        } catch (Exception e) {
+            Debug.LogWarning($"[Online Discovery] {e.Message}");
+        }
+        UpdateSessionCountText();
+    }
+
+    void OnOnlineSessionSelected(OnlineDiscoveredSession session, LobbyListItemUI selectedItem) {
+        _selectedOnlineSession = session;
+        _selectedHost = null;
+        joinButton.interactable = true;
+        roomDetailPanel.ShowEmpty();
+
+        foreach (var item in _allSessionItems) item.SetSelected(false);
+        selectedItem.SetSelected(true);
+
+        var levelOption = availableLevels.FirstOrDefault(l => l.sceneName == session.LevelSceneName);
+        roomDetailPanel.ShowOnline(
+            session,
+            levelOption?.displayName ?? session.LevelSceneName,
+            levelOption?.previewImage
+        );
+    }
+
+    void UpdateSessionCountText() {
+        int count = _allSessionItems.Count;
+        joinStatusText.text = count == 0 ? "No lobbies found." : $"{count} lobb{(count > 1 ? "ies" : "y")} found.";
+    }
+
     string ResolveLevelDisplayName(string sceneName) =>
         availableLevels.FirstOrDefault(l => l.sceneName == sceneName)?.displayName ?? sceneName;
 
     void OnJoinClicked() {
-        StartCoroutine(JoinGame());
+        // Join code takes priority — lets the player override a selected LAN
+        // session by typing a relay code without deselecting the list item.
+        string code = onlineJoinCodeInput != null ? onlineJoinCodeInput.text.Trim().ToUpper() : "";
+        if (_selectedHost != null)
+            JoinGame();
+        else if(_selectedOnlineSession != null)
+            JoinOnlineSession(_selectedOnlineSession.RelayJoinCode);
+        else if(code.Length >= 6)
+            JoinOnlineSession(code);
     }
 
-    IEnumerator JoinGame() {
-        if (_selectedHost == null) yield break;
+    async void JoinGame() {
+        if (_selectedHost == null) return;
 
         GameModeManager.Instance.SetClientMode(_selectedHost.Address, _selectedHost.GamePort);
+        GameModeManager.Instance.SetConnectionMode(ConnectionMode.LAN);
         ConfigureTransport(_selectedHost.Address, _selectedHost.GamePort);
 
         joinStatusText.text = "";
-
-        // Resolve this client's role from their signed-in Firebase profile.
-        // Trusted as-is by the host — no server-side verification (see ConnectionApprovalHandler).
-        PlayerRole localRole = AuthManager.Instance != null && AuthManager.Instance.CurrentProfile != null
-            ? AuthManager.Instance.CurrentProfile.RoleEnum
-            : PlayerRole.Player;
-
-        var payload = new ConnectionPayload {
-            version = Application.version,
-            playerName = AuthManager.Instance.CurrentProfile?.DisplayName ?? SettingsManager.Instance.PlayerName,
-            role = (byte)localRole
-        };
-
-        string json = JsonUtility.ToJson(payload);
-        NetworkManager.Singleton.NetworkConfig.ConnectionData = System.Text.Encoding.UTF8.GetBytes(json);
+        SetConnectionPayload();
 
         LoadingScreenController.Instance.Show($"Joining \"{_selectedHost.HostName}\" Lobby...");
-        yield return new WaitForSeconds(1f);
+        await Task.Delay(1000);
 
         NetworkManager.Singleton.OnClientConnectedCallback += OnClientJoined;
         NetworkManager.Singleton.OnClientDisconnectCallback += OnClientJoinFailed;
         NetworkManager.Singleton.StartClient();
     }
 
-    // Must match the private ConnectionPayload class shape expected by
-    // ConnectionApprovalHandler on the host side.
+    // ── Online Host Options ───────────────────────────────────
+
+    // Toggle value is read directly in StartAsHost() — no extra callback needed.
+
+    // ── Online Join — Private (join code) ─────────────────────
+
+    // Debounced handler — fires 600 ms after the user stops typing.
+    // Looks up the relay code in Unity Lobby and previews the session in
+    // roomDetailPanel, mirroring what OnHostSelected does for LAN sessions.
+    // Private relay sessions (no lobby entry) show a "private session" note instead.
+    async void OnJoinCodeChanged(string raw) {
+        _selectedHost = null;
+        _selectedOnlineSession = null;
+        joinButton.interactable = false;
+
+        foreach (var item in _allSessionItems) item.SetSelected(false);
+
+        _joinCodeDebounce?.Cancel();
+        _joinCodeDebounce?.Dispose();
+        _joinCodeDebounce = new CancellationTokenSource();
+        var token = _joinCodeDebounce.Token;
+
+        string code = raw.Trim().ToUpper();
+
+        if (code.Length < 6) {
+            roomDetailPanel.ShowEmpty();
+            if (joinStatusText != null) joinStatusText.text = "";
+            // Only disable if no LAN host is selected either
+            if (_selectedHost == null)
+                joinButton.interactable = false;
+            return;
+        }
+
+        try { await Task.Delay(600, token); } catch (OperationCanceledException) { return; }
+
+        if (joinStatusText != null) joinStatusText.text = "Looking up...";
+
+        OnlineDiscoveredSession session = null;
+        try { session = await LobbyManager.Instance.FindSessionByCodeAsync(code); } catch { /* network error — treat as not found */ }
+
+        if (token.IsCancellationRequested) return;
+
+        if (session != null) {
+            // Public session — show details exactly like OnHostSelected does for LAN
+            var levelOption = availableLevels.FirstOrDefault(l => l.sceneName == session.LevelSceneName);
+
+            // Bridge to DiscoveredHost so roomDetailPanel needs no changes
+            roomDetailPanel.Show(
+                new DiscoveredHost {
+                    HostName = session.HostName,
+                    QuizSetName = session.QuizSetName,
+                    LevelSceneName = session.LevelSceneName,
+                    QuestionCount = session.QuestionCount,
+                    PlayerCount = session.PlayerCount,
+                    PlayerNames = new(),
+                    Address = "0.0.0.0",
+                    GamePort = 0,
+                    PingMs = -1   // not applicable for relay
+                },
+                levelOption.displayName ?? session.LevelSceneName,
+                levelOption.previewImage
+            );
+            joinStatusText.text = $"Private lobby by <b>{session.HostName}</b> found.";
+            joinButton.interactable = true;
+        } else {
+            // No public lobby found — private relay session or invalid code
+            roomDetailPanel.ShowEmpty();
+            joinStatusText.text = "No private lobby found.";
+        }
+    }
+
+    // ── Shared relay connect logic ────────────────────────────
+
+    async void JoinOnlineSession(string relayJoinCode) {
+        joinButton.interactable = false;
+        if (joinStatusText != null) joinStatusText.text = "Connecting...";
+        LoadingScreenController.Instance.Show("Joining online game...");
+
+        try {
+            await RelayManager.Instance.JoinRelayAsync(relayJoinCode);
+        } catch (Exception e) {
+            if (joinStatusText != null) joinStatusText.text = "Connection failed. Try again.";
+            Debug.LogError($"[Online Join] {e.Message}");
+            joinButton.interactable = true;
+            LoadingScreenController.Instance.Hide(3f);
+            return;
+        }
+
+        GameModeManager.Instance.SetClientMode("0.0.0.0", 0);
+        GameModeManager.Instance.SetConnectionMode(ConnectionMode.Relay);
+        SetConnectionPayload();
+
+        await Task.Delay(1000);
+
+        NetworkManager.Singleton.OnClientConnectedCallback += OnClientJoined;
+        NetworkManager.Singleton.OnClientDisconnectCallback += OnClientJoinFailed;
+        NetworkManager.Singleton.StartClient();
+    }
+
+    // Shared by all join paths (LAN + Online). Reads from Firebase profile.
+    // Trusted as-is by the host — no server-side verification (see ConnectionApprovalHandler).
+    void SetConnectionPayload() {
+        PlayerRole localRole = AuthManager.Instance?.CurrentProfile != null
+            ? AuthManager.Instance.CurrentProfile.RoleEnum
+            : PlayerRole.Player;
+
+        var payload = new ConnectionPayload {
+            version = Application.version,
+            playerName = AuthManager.Instance.CurrentProfile?.DisplayName ?? "Player",
+            role = (byte)localRole
+        };
+
+        NetworkManager.Singleton.NetworkConfig.ConnectionData =
+            System.Text.Encoding.UTF8.GetBytes(JsonUtility.ToJson(payload));
+    }
+
+    // Must match the ConnectionPayload class shape expected by ConnectionApprovalHandler.
     [System.Serializable]
     private class ConnectionPayload {
         public string version;
@@ -697,16 +945,10 @@ public class MainMenuUI : MonoBehaviour {
             _ => "Failed to connect."
         }, LoadingScreenController.MessageColor.Error);
 
+        joinButton.interactable = _selectedHost != null
+            || (onlineJoinCodeInput != null && onlineJoinCodeInput.text.Trim().Length >= 6);
+
         LoadingScreenController.Instance.Hide(3f);
-        ToastNotification.Instance.ShowLocalToast(reason switch {
-            ConnectionApprovalHandler.ReasonFull => "Cannot join - lobby is full.",
-            ConnectionApprovalHandler.ReasonInProgress => "Cannot join - game is already in progress.",
-            ConnectionApprovalHandler.ReasonCountdown => "Cannot join - game is about to start.",
-            ConnectionApprovalHandler.ReasonVersionMismatch => "Cannot join - version mismatch.",
-            ConnectionApprovalHandler.ReasonDuplicateName => "Cannot join - duplicate player name.",
-            _ => "Failed to connect."
-        }, ToastType.Error);
-        Debug.Log(reason);
     }
 
     // ─────────────────────────────────────────────────────────

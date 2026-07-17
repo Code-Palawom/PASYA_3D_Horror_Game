@@ -62,8 +62,8 @@ public class LoadingScreenController : MonoBehaviour {
     // Public API
     // -------------------------------------------------------------------------
 
-    public void Show(string message = "Loading...") {
-        StartCoroutine(ShowSequence(message));
+    public void Show(string message = "Loading...", float duration = 2f, float from = 0f, float to = 0.9f) {
+        StartCoroutine(ShowSequence(message, duration, from, to));
     }
 
     public void Hide(float delay = 0.2f) {
@@ -79,11 +79,17 @@ public class LoadingScreenController : MonoBehaviour {
         };
     }
 
+    public void SetProgress(float duration, float from, float to) {
+        StopFakeProgress();
+
+        _fakeProgressCoroutine = StartCoroutine(FakeLoadProgress(duration, from, to));
+    }
+
     // -------------------------------------------------------------------------
     // Show: fade black in → reveal loading panel
     // -------------------------------------------------------------------------
 
-    private IEnumerator ShowSequence(string message = "Loading...") {
+    private IEnumerator ShowSequence(string message = "Loading...", float duration = 2f, float from = 0f, float to = 0.9f) {
         StopFakeProgress();
 
         blackOverlay.blocksRaycasts = true;
@@ -98,7 +104,7 @@ public class LoadingScreenController : MonoBehaviour {
         }
 
         ShowRandomTip();
-        _fakeProgressCoroutine = StartCoroutine(FakeLoadProgress());
+        _fakeProgressCoroutine = StartCoroutine(FakeLoadProgress(duration, from, to));
     }
 
     // -------------------------------------------------------------------------
@@ -144,12 +150,12 @@ public class LoadingScreenController : MonoBehaviour {
         blackOverlay.alpha = to;
     }
 
-    private IEnumerator FakeLoadProgress(float duration = 2f) {
+    private IEnumerator FakeLoadProgress(float duration, float from, float to) {
         float elapsed = 0f;
 
         while (elapsed < duration) {
             elapsed += Time.deltaTime;
-            progressBar.fillAmount = Mathf.Lerp(0f, 0.9f, elapsed / duration);
+            progressBar.fillAmount = Mathf.Lerp(from, to, elapsed / duration);
             yield return null;
         }
     }

@@ -75,8 +75,8 @@ public class NetworkSessionManager : MonoBehaviour {
         if (GameSessionManager.Instance != null)
             Destroy(GameSessionManager.Instance.gameObject);
 
-        if (LanDiscovery.Instance != null)
-            LanDiscovery.Instance.StopHostBroadcast();
+        LanDiscovery.Instance.StopHostBroadcast();
+        _ = LobbyManager.Instance.DeleteHostedLobbyAsync();
 
         Debug.Log("[NetworkSessionManager] Returning to Main Menu.");
         LoadingScreenController.Instance.Show(message);

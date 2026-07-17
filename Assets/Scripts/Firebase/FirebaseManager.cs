@@ -65,6 +65,10 @@ public class FirebaseManager : MonoBehaviour {
             IsReady = true;
             Debug.Log("[FirebaseManager] Firebase ready.");
             OnFirebaseReady?.Invoke();
+
+            // Pre-warm UGS anonymous auth in the background so there's no
+            // delay when the host clicks "Start Hosting" in online mode.
+            _ = RelayManager.Instance.InitializeAsync();
         } else {
             Debug.LogError($"[FirebaseManager] Dependency error: {status}");
         }

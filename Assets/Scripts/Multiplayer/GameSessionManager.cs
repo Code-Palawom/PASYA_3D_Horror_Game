@@ -110,6 +110,7 @@ public class GameSessionManager : NetworkBehaviour {
         }
 
         AddPlayer(clientId, name, role);
+        UpdateLobby();
         ChatManager.Instance.SendSystemMessage($"<b>{name}</b> joined the game.");
     }
 
@@ -130,6 +131,8 @@ public class GameSessionManager : NetworkBehaviour {
             Debug.Log($"[GameSessionManager] '{stats.PlayerName}' disconnected — stats frozen.");
             ChatManager.Instance.SendSystemMessage($"<b>{stats.PlayerName}</b> left the game.");
         }
+
+        UpdateLobby();
     }
 
     void AddPlayer(ulong clientId, string name, PlayerRole role) {
@@ -144,6 +147,10 @@ public class GameSessionManager : NetworkBehaviour {
             ClientId = clientId,
             PlayerName = name
         };
+    }
+
+    async void UpdateLobby() {
+        await LobbyManager.Instance.UpdatePlayerCountAsync(NetworkManager.Singleton.ConnectedClientsIds.Count);
     }
 
     // ─────────────────────────────────────────────────────────

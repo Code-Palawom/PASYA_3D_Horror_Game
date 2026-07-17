@@ -169,6 +169,8 @@ public class LobbyReadyManager : NetworkBehaviour {
             yield break;
         }
 
+        LanDiscovery.Instance.StopHostBroadcast();
+        _ = LobbyManager.Instance.DeleteHostedLobbyAsync();
         NetworkManager.Singleton.SceneManager.LoadScene(levelScene, UnityEngine.SceneManagement.LoadSceneMode.Single);
     }
 

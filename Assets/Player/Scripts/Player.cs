@@ -261,7 +261,6 @@ public class Player : NetworkBehaviour {
     private void SetCharacterVisibility(bool visibility) {
         if (isVisible == visibility) return;
         isVisible = visibility;
-        Debug.Log($"SFMKPFMDSF {visibility}");
 
         ShadowCastingMode mode = visibility ? ShadowCastingMode.On : ShadowCastingMode.ShadowsOnly;
         foreach (var r in renderers)

@@ -112,6 +112,10 @@ InitTestScene*.unity*
 /Assets/Scripts/Misc/TipsManager.cs.meta
 /Assets/Scripts/Misc/VersionChecker.cs
 /Assets/Scripts/Misc/VersionChecker.cs.meta
+/Assets/Scripts/Multiplayer/LobbyManager.cs
+/Assets/Scripts/Multiplayer/LobbyManager.cs.meta
+/Assets/Scripts/Multiplayer/RelayManager.cs
+/Assets/Scripts/Multiplayer/RelayManager.cs.meta
 /Assets/Scripts/Quiz/QuestionSource/QuizFetcher.cs
 /Assets/Scripts/Quiz/QuestionSource/QuizFetcher.cs.meta
 /Assets/Scripts/Quiz/QuestionSource/QuizRepository.cs
