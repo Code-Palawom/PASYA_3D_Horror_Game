@@ -3,12 +3,10 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Selectable row for the Quiz Select panel.
-/// Displays name, category, question count, and play count from QuizSetMetaEntry.
-/// Author (id + name) is stored for future use.
-/// Supports show/hide for category filtering.
-/// </summary>
+// Selectable row for the Quiz Select panel.
+// Displays name, category, question count, and play count from QuizSetMetaEntry.
+// Author (id + name) is stored for future use.
+// Supports show/hide for category filtering.
 public class QuizSetItemUI : MonoBehaviour {
     [SerializeField] TMP_Text nameLabel;
     [SerializeField] TMP_Text categoryLabel;
@@ -50,10 +48,8 @@ public class QuizSetItemUI : MonoBehaviour {
             background.color = selected ? selectedColor : normalColor;
     }
 
-    /// <summary>
-    /// Shows or hides this card based on the active category filter.
-    /// Pass null or empty string to show all.
-    /// </summary>
+    // Shows or hides this card based on the active category filter.
+    // Pass null or empty string to show all.
     public void ApplyFilter(string filterCategory) {
         bool show = string.IsNullOrEmpty(filterCategory) || Category == filterCategory;
         gameObject.SetActive(show);

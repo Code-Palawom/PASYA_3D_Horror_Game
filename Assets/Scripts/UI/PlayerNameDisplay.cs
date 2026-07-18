@@ -7,10 +7,11 @@ public class PlayerNameDisplay : NetworkBehaviour {
     [Header("References")]
     [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private Transform nameTagTransform; // the World Space Canvas
+    [SerializeField] private VoiceActivityIndicator voiceIndicator; // mic icon, same name tag
 
-    /// Static registry of all non-owner PlayerNameDisplay instances.
-    /// Use this to toggle name tags without a scene scan.
-    /// Example: foreach (var p in PlayerNameDisplay.All) p.SetNameTagVisible(show);
+    // Static registry of all non-owner PlayerNameDisplay instances.
+    // Use this to toggle name tags without a scene scan.
+    // Example: foreach (var p in PlayerNameDisplay.All) p.SetNameTagVisible(show);
     public static readonly List<PlayerNameDisplay> All = new();
 
     private Camera _mainCamera;
@@ -26,8 +27,7 @@ public class PlayerNameDisplay : NetworkBehaviour {
         All.Add(this);
 
         // Read setting once on spawn
-        nameTagsEnabled = SettingsManager.Instance == null
-            || SettingsManager.Instance.Current.showNameTags;
+        nameTagsEnabled = SettingsManager.Instance == null || SettingsManager.Instance.Current.showNameTags;
 
         nameTagTransform.gameObject.SetActive(nameTagsEnabled);
 
@@ -45,8 +45,8 @@ public class PlayerNameDisplay : NetworkBehaviour {
             GameSessionManager.Instance.Players.OnListChanged -= OnPlayersChanged;
     }
 
-    /// Call this from your settings save/apply logic to toggle all name tags.
-    /// Example: foreach (var p in PlayerNameDisplay.All) p.SetNameTagVisible(show);
+    // Call this from your settings save/apply logic to toggle all name tags.
+    // Example: foreach (var p in PlayerNameDisplay.All) p.SetNameTagVisible(show);
     public void SetNameTagVisible(bool visible) {
         if (IsOwner) return;
         nameTagsEnabled = visible;
@@ -58,7 +58,7 @@ public class PlayerNameDisplay : NetworkBehaviour {
 
         foreach (var player in GameSessionManager.Instance.Players) {
             if (player.ClientId == OwnerClientId) {
-                nameText.text = player.PlayerName.ToString();
+                ApplyName(player.PlayerName.ToString());
                 return;
             }
         }
@@ -66,7 +66,14 @@ public class PlayerNameDisplay : NetworkBehaviour {
 
     private void OnPlayersChanged(NetworkListEvent<PlayerLobbyInfo> changeEvent) {
         if (changeEvent.Value.ClientId == OwnerClientId)
-            nameText.text = changeEvent.Value.PlayerName.ToString();
+            ApplyName(changeEvent.Value.PlayerName.ToString());
+    }
+
+    private void ApplyName(string playerName) {
+        nameText.text = playerName;
+
+        if (voiceIndicator != null)
+            voiceIndicator.DisplayName = playerName; // matches Vivox DisplayName set at login
     }
 
     private void LateUpdate() {

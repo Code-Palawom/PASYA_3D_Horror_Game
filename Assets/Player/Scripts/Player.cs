@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using Unity.Cinemachine;
 using Unity.Netcode;
+using Unity.Services.Vivox;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
@@ -103,6 +104,8 @@ public class Player : NetworkBehaviour {
             playerCamera.tag = "MainCamera";
             audioListener.enabled = true;
 
+            if(GameModeManager.Instance.IsRelayMode) VivoxManager.Instance.RegisterLocalPlayerTransform(cameraFollow);
+
             // Assign canvas to local player's camera explicitly — never rely on Camera.main
             playerCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
             playerCanvas.worldCamera = playerCamera;
@@ -147,6 +150,7 @@ public class Player : NetworkBehaviour {
     public override void OnNetworkDespawn() {
         // Clean up input when this player leaves to avoid dangling subscriptions
         if (IsOwner && playerInput != null) {
+            if (GameModeManager.Instance.IsRelayMode) VivoxManager.Instance.UnregisterLocalPlayerTransform(cameraFollow);
             playerInput.POV.SwitchPOV.performed -= OnSwitchPOV;
             playerInput.POV.Disable();
             playerInput.Interactions.Disable();
@@ -416,11 +420,30 @@ public class Player : NetworkBehaviour {
         transform.SetPositionAndRotation(position, rotation);
         if (cc != null) cc.enabled = true;
         StartCoroutine(HideLoadingScreen());
+
+        if (GameModeManager.Instance.IsRelayMode) {
+            if (VivoxManager.Instance.IsLoggedIn) {
+                JoinPositionalChannel($"{GameSessionManager.Instance.SessionId.Value}");
+            } else {
+                VivoxManager.Instance.OnVivoxLoggedIn += () => JoinPositionalChannel($"{GameSessionManager.Instance.SessionId.Value}");
+            }
+        }
     }
 
     [ClientRpc]
     public void ShowLoadingScreenClientRpc() {
         LoadingScreenController.Instance.Show("Loading...");
+    }
+
+    async void JoinPositionalChannel(string id) {
+        VivoxManager.Instance.OnVivoxLoggedIn -= () => JoinPositionalChannel($"{GameSessionManager.Instance.SessionId.Value}");
+
+        ToastNotification.Instance.ShowLocalToast("Initializing voice chat.");
+        Debug.Log($"Initializing voice chat: ${id}");
+        await VivoxManager.Instance.JoinPositionalChannelAsync($"Channel_{id}");
+        //await VivoxService.Instance.JoinEchoChannelAsync($"Channel_{id}", ChatCapability.AudioOnly);
+        ToastNotification.Instance.ShowLocalToast("Voice chat active.");
+        Debug.Log("Voice chat active.");
     }
 
     IEnumerator HideLoadingScreen() {

@@ -19,6 +19,9 @@ using UnityEngine.SceneManagement;
 public class GameSessionManager : NetworkBehaviour {
     public static GameSessionManager Instance { get; private set; }
 
+    public NetworkVariable<FixedString64Bytes> SessionId = new(
+        "", NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
     public NetworkVariable<FixedString128Bytes> SelectedQuizSetName = new(
         "", NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
@@ -71,14 +74,19 @@ public class GameSessionManager : NetworkBehaviour {
             NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
             NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
 
-            string hostName = GameModeManager.Instance != null
-                ? AuthManager.Instance.CurrentProfile?.DisplayName ?? SettingsManager.Instance.PlayerName
-                : SettingsManager.Instance.PlayerName;
+            // Use the public lobby ID if this is a listed session; otherwise
+            // (LAN / direct-connect / private relay) generate a session GUID.
+            string sessionId = LobbyManager.Instance != null && LobbyManager.Instance.HostedLobbyId != null
+                ? LobbyManager.Instance.HostedLobbyId
+                : Guid.NewGuid().ToString();
+            SessionId.Value = new FixedString64Bytes(sessionId);
+
+            string hostName = AuthManager.Instance.CurrentProfile.DisplayName ?? SettingsManager.Instance.PlayerName;
 
             PlayerRole hostRole = AuthManager.Instance != null && AuthManager.Instance.CurrentProfile != null
                 ? AuthManager.Instance.CurrentProfile.RoleEnum
                 : PlayerRole.Player;
-
+            
             AddPlayer(NetworkManager.Singleton.LocalClientId, hostName, hostRole);
         }
     }

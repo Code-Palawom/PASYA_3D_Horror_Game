@@ -77,6 +77,7 @@ public class NetworkSessionManager : MonoBehaviour {
 
         LanDiscovery.Instance.StopHostBroadcast();
         _ = LobbyManager.Instance.DeleteHostedLobbyAsync();
+        _ = VivoxManager.Instance.LeaveCurrentChannelAsync();
 
         Debug.Log("[NetworkSessionManager] Returning to Main Menu.");
         LoadingScreenController.Instance.Show(message);

@@ -171,7 +171,7 @@ public class MainMenuUI : MonoBehaviour {
 
     // Called once when Firebase finishes initializing.
     // Populates Firestore-backed quiz sets and attaches the _meta listener.
-    void OnFirebaseReady() {
+     void OnFirebaseReady() {
         // Unsubscribe — only needs to fire once
         Debug.Log("[MainMenuUI] Firebase ready, loading Firestore-backed quiz sets...");
         FirebaseManager.Instance.OnFirebaseReady -= OnFirebaseReady;
@@ -236,7 +236,7 @@ public class MainMenuUI : MonoBehaviour {
         // ── Firebase quiz sets ────────────────────────────────
         SetStatus("Checking for updates...", Color.gray);
 
-        // Step 1: populate local SO sets immediately (no Firebase needed)
+        // Populate local SO sets immediately (no Firebase needed)
         List<QuizSetMetaEntry> localMeta = QuizRepository.Instance.GetLocalSetMeta();
         InitDropdown(localMeta);
         foreach (var entry in localMeta)
@@ -244,7 +244,7 @@ public class MainMenuUI : MonoBehaviour {
 
         if (FirebaseManager.Instance.IsReady) OnFirebaseReady();
 
-        // Step 2: wait for Firebase — Firestore cache + listener start after Init() completes
+        // Wait for Firebase — Firestore cache + listener start after Init() completes
         FirebaseManager.Instance.OnFirebaseReady += OnFirebaseReady;
 
         AuthManager.Instance.OnAuthStateChanged += (user) => {
@@ -889,13 +889,11 @@ public class MainMenuUI : MonoBehaviour {
     // Shared by all join paths (LAN + Online). Reads from Firebase profile.
     // Trusted as-is by the host — no server-side verification (see ConnectionApprovalHandler).
     void SetConnectionPayload() {
-        PlayerRole localRole = AuthManager.Instance?.CurrentProfile != null
-            ? AuthManager.Instance.CurrentProfile.RoleEnum
-            : PlayerRole.Player;
+        PlayerRole localRole = AuthManager.Instance.CurrentProfile != null ? AuthManager.Instance.CurrentProfile.RoleEnum : PlayerRole.Player;
 
         var payload = new ConnectionPayload {
             version = Application.version,
-            playerName = AuthManager.Instance.CurrentProfile?.DisplayName ?? "Player",
+            playerName = AuthManager.Instance.CurrentProfile.DisplayName ?? "Player",
             role = (byte)localRole
         };
 
