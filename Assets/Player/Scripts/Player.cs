@@ -7,6 +7,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
 
+[RequireComponent(typeof(MicPermission))]
 public class Player : NetworkBehaviour {
     [Header("Movement")]
     [SerializeField] private Transform cameraTransform;
@@ -435,15 +436,32 @@ public class Player : NetworkBehaviour {
         LoadingScreenController.Instance.Show("Loading...");
     }
 
-    async void JoinPositionalChannel(string id) {
+    void JoinPositionalChannel(string id) {
+        if (!IsOwner) return;
         VivoxManager.Instance.OnVivoxLoggedIn -= () => JoinPositionalChannel($"{GameSessionManager.Instance.SessionId.Value}");
 
-        ToastNotification.Instance.ShowLocalToast("Initializing voice chat.");
-        Debug.Log($"Initializing voice chat: ${id}");
-        await VivoxManager.Instance.JoinPositionalChannelAsync($"Channel_{id}");
-        //await VivoxService.Instance.JoinEchoChannelAsync($"Channel_{id}", ChatCapability.AudioOnly);
-        ToastNotification.Instance.ShowLocalToast("Voice chat active.");
-        Debug.Log("Voice chat active.");
+        var micPermission = GetComponent<MicPermission>();
+
+        micPermission.RequestMicThenJoin(
+            onGranted: async () => {
+                ActionbarToastNotification.Instance.ShowLocalToast("Initializing voice chat.");
+                Debug.Log($"Initializing voice chat: ${id}");
+
+                //await VivoxService.Instance.JoinEchoChannelAsync($"Channel_{id}", ChatCapability.AudioOnly);
+                VivoxManager.Instance.ToggleLocalMute();
+                if (await VivoxManager.Instance.JoinPositionalChannelAsync($"Channel_{id}")) {
+                    ActionbarToastNotification.Instance.ShowLocalToast("Voice chat active.", ToastType.Success);
+                    Debug.Log("Voice chat active.");
+                } else {
+                    ActionbarToastNotification.Instance.ShowLocalToast("An error occured initializing voice chat.", ToastType.Error);
+                    Debug.Log("An error occured initializing voice chat.");
+                }
+            },
+            onDenied: () => {
+                ActionbarToastNotification.Instance.ShowLocalToast("Microphone permission denied cannot use voice chat.", ToastType.Error);
+                Debug.Log("Microphone permission denied cannot use voice chat.");
+            }
+        );
     }
 
     IEnumerator HideLoadingScreen() {

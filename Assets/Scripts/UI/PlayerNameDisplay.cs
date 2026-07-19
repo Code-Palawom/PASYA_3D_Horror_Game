@@ -16,10 +16,35 @@ public class PlayerNameDisplay : NetworkBehaviour {
 
     private Camera _mainCamera;
     private bool nameTagsEnabled = true;
+    private bool _vivoxSubscribed;
+
+    private System.Collections.IEnumerator SubscribeToVivoxWhenReady() {
+        // VivoxManager is a separate DontDestroyOnLoad singleton whose Awake()
+        // ordering relative to this player prefab spawning isn't guaranteed -
+        // waiting here instead of a single one-shot null-check avoids silently
+        // skipping the sync forever if VivoxManager just hasn't run Awake() yet.
+        yield return new WaitUntil(() => VivoxManager.Instance != null);
+
+        Debug.Log($"[VoiceSync] VivoxManager ready, subscribing. IsLocallyMuted={VivoxManager.Instance.IsLocallyMuted}, CurrentChannelName='{VivoxManager.Instance.CurrentChannelName}'");
+
+        // Deliberate mute state - reported on toggle.
+        VivoxManager.Instance.OnLocalMuteChanged += HandleLocalMuteChanged;
+        HandleLocalMuteChanged(VivoxManager.Instance.IsLocallyMuted);
+
+        // Connection state - distinct from mute. IsMicOn reflects whether
+        // this client has actually joined a Vivox channel and can transmit
+        // at all, regardless of whether they've chosen to mute.
+        VivoxManager.Instance.OnChannelJoined += HandleChannelJoined;
+        VivoxManager.Instance.OnChannelLeft += HandleChannelLeft;
+        HandleMicOnChanged(!string.IsNullOrEmpty(VivoxManager.Instance.CurrentChannelName));
+
+        _vivoxSubscribed = true;
+    }
 
     public override void OnNetworkSpawn() {
         if (IsOwner) {
             nameTagTransform.gameObject.SetActive(false);
+            StartCoroutine(SubscribeToVivoxWhenReady());
             return;
         }
 
@@ -27,12 +52,13 @@ public class PlayerNameDisplay : NetworkBehaviour {
         All.Add(this);
 
         // Read setting once on spawn
-        nameTagsEnabled = SettingsManager.Instance == null || SettingsManager.Instance.Current.showNameTags;
+        nameTagsEnabled = SettingsManager.Instance == null
+            || SettingsManager.Instance.Current.showNameTags;
 
         nameTagTransform.gameObject.SetActive(nameTagsEnabled);
 
         // Look up name from session manager
-        ApplyNameFromSession();
+        ApplyFromSession();
 
         // Fallback: in case this object spawns before the NetworkList is populated
         GameSessionManager.Instance.Players.OnListChanged += OnPlayersChanged;
@@ -43,6 +69,25 @@ public class PlayerNameDisplay : NetworkBehaviour {
 
         if (GameSessionManager.Instance != null)
             GameSessionManager.Instance.Players.OnListChanged -= OnPlayersChanged;
+
+        if (_vivoxSubscribed && VivoxManager.Instance != null) {
+            VivoxManager.Instance.OnLocalMuteChanged -= HandleLocalMuteChanged;
+            VivoxManager.Instance.OnChannelJoined -= HandleChannelJoined;
+            VivoxManager.Instance.OnChannelLeft -= HandleChannelLeft;
+        }
+    }
+
+    private void HandleLocalMuteChanged(bool muted) {
+        if (GameSessionManager.Instance != null)
+            GameSessionManager.Instance.SetMutedRpc(muted);
+    }
+
+    private void HandleChannelJoined(string channelName) => HandleMicOnChanged(true);
+    private void HandleChannelLeft(string channelName) => HandleMicOnChanged(false);
+
+    private void HandleMicOnChanged(bool micOn) {
+        if (GameSessionManager.Instance != null)
+            GameSessionManager.Instance.SetMicOnRpc(micOn);
     }
 
     // Call this from your settings save/apply logic to toggle all name tags.
@@ -53,27 +98,36 @@ public class PlayerNameDisplay : NetworkBehaviour {
         nameTagTransform.gameObject.SetActive(visible);
     }
 
-    private void ApplyNameFromSession() {
-        if (GameSessionManager.Instance == null) return;
+    private void ApplyFromSession() {
+        if (GameSessionManager.Instance == null) {
+            Debug.Log("[VoiceSync] ApplyFromSession: GameSessionManager.Instance is null");
+            return;
+        }
 
         foreach (var player in GameSessionManager.Instance.Players) {
             if (player.ClientId == OwnerClientId) {
-                ApplyName(player.PlayerName.ToString());
+                Debug.Log($"[VoiceSync] ApplyFromSession found player {player.ClientId}: IsMuted={player.IsMuted}, IsMicOn={player.IsMicOn}");
+                ApplyPlayerInfo(player);
                 return;
             }
         }
+
+        Debug.Log($"[VoiceSync] ApplyFromSession: no matching player for OwnerClientId={OwnerClientId} in list of {GameSessionManager.Instance.Players.Count}");
     }
 
     private void OnPlayersChanged(NetworkListEvent<PlayerLobbyInfo> changeEvent) {
+        Debug.Log($"[VoiceSync] OnPlayersChanged: type={changeEvent.Type}, valueClientId={changeEvent.Value.ClientId}, IsMuted={changeEvent.Value.IsMuted}, IsMicOn={changeEvent.Value.IsMicOn}, watching OwnerClientId={OwnerClientId}");
         if (changeEvent.Value.ClientId == OwnerClientId)
-            ApplyName(changeEvent.Value.PlayerName.ToString());
+            ApplyPlayerInfo(changeEvent.Value);
     }
 
-    private void ApplyName(string playerName) {
+    private void ApplyPlayerInfo(PlayerLobbyInfo player) {
+        string playerName = player.PlayerName.ToString();
         nameText.text = playerName;
 
-        if (voiceIndicator != null)
-            voiceIndicator.DisplayName = playerName; // matches Vivox DisplayName set at login
+        voiceIndicator.DisplayName = playerName; // matches Vivox DisplayName set at login
+        voiceIndicator.IsMuted = player.IsMuted;
+        voiceIndicator.IsMicOn = player.IsMicOn;
     }
 
     private void LateUpdate() {

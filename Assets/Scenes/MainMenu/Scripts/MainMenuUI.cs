@@ -496,7 +496,7 @@ public class MainMenuUI : MonoBehaviour {
         SetMultiplayerTabRowVisible(false);   // Host/Join tabs disappear here, per design
 
         quizSelectPanel.SetActive(true);
-        startButtonLabel.text = _pendingMode == GameMode.Host ? "Start Hosting" : "Start Single Player";
+        startButtonLabel.text = _pendingMode == GameMode.Host ? "Create Lobby" : "Start Game";
         startButton.interactable = !string.IsNullOrEmpty(_selectedQuizSetName);
         statusText.text = "";
     }
@@ -556,7 +556,7 @@ public class MainMenuUI : MonoBehaviour {
         startButton.interactable = false;
 
         if (_activeConnectionMode == ConnectionMode.Relay) {
-            LoadingScreenController.Instance.Show("Creating online game...", 1f, 0f, 0.3f);
+            LoadingScreenController.Instance.Show("Creating online lobby...", 1f, 0f, 0.3f);
             try {
                 string joinCode = await RelayManager.Instance.CreateRelayAsync(maxPlayers: ConnectionApprovalHandler.MaxPlayers);
                 GameModeManager.Instance.SetRelayJoinCode(joinCode);
@@ -577,7 +577,7 @@ public class MainMenuUI : MonoBehaviour {
                 LoadingScreenController.Instance.SetProgress(1f, 0.3f, 0.9f);
             } catch (Exception e) {
                 Debug.LogError($"[Host] {e.Message}");
-                LoadingScreenController.Instance.SetMessage("Failed to create online game.", LoadingScreenController.MessageColor.Error);
+                LoadingScreenController.Instance.SetMessage("Failed to create online lobby.", LoadingScreenController.MessageColor.Error);
                 LoadingScreenController.Instance.Hide(3f);
                 startButton.interactable = true;
                 return;
@@ -863,7 +863,7 @@ public class MainMenuUI : MonoBehaviour {
     async void JoinOnlineSession(string relayJoinCode) {
         joinButton.interactable = false;
         if (joinStatusText != null) joinStatusText.text = "Connecting...";
-        LoadingScreenController.Instance.Show("Joining online game...");
+        LoadingScreenController.Instance.Show("Joining online lobby...");
 
         try {
             await RelayManager.Instance.JoinRelayAsync(relayJoinCode);

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Unity.Services.Authentication;
 using Unity.Services.Core;
@@ -296,7 +297,7 @@ public class VivoxManager : MonoBehaviour {
         }
     }
 
-    public void SetParticipantMuted(string firebaseUid, bool muted) {
+    public void SetParticipantMuted(string username, bool muted) {
         if (string.IsNullOrEmpty(CurrentChannelName))
             return;
 
@@ -304,21 +305,21 @@ public class VivoxManager : MonoBehaviour {
             return;
 
         foreach (var participant in participants) {
-            if (participant.DisplayName != firebaseUid)
+            if (participant.DisplayName != username)
                 continue;
 
             if (muted) {
                 participant.MutePlayerLocally();
-                _mutedParticipants.Add(firebaseUid);
+                _mutedParticipants.Add(username);
             } else {
                 participant.UnmutePlayerLocally();
-                _mutedParticipants.Remove(firebaseUid);
+                _mutedParticipants.Remove(username);
             }
             break;
         }
     }
 
-    public bool IsParticipantMuted(string firebaseUid) => _mutedParticipants.Contains(firebaseUid);
+    public bool IsParticipantMuted(string username) => _mutedParticipants.Contains(username);
 
     // --- Event Handlers ---
 

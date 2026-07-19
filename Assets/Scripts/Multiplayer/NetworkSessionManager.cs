@@ -76,8 +76,10 @@ public class NetworkSessionManager : MonoBehaviour {
             Destroy(GameSessionManager.Instance.gameObject);
 
         LanDiscovery.Instance.StopHostBroadcast();
-        _ = LobbyManager.Instance.DeleteHostedLobbyAsync();
-        _ = VivoxManager.Instance.LeaveCurrentChannelAsync();
+        if (GameModeManager.Instance.IsRelayMode) {
+            _ = LobbyManager.Instance.DeleteHostedLobbyAsync();
+            _ = VivoxManager.Instance.LeaveCurrentChannelAsync();
+        }
 
         Debug.Log("[NetworkSessionManager] Returning to Main Menu.");
         LoadingScreenController.Instance.Show(message);

@@ -28,7 +28,6 @@ public class GameSessionManager : NetworkBehaviour {
     public NetworkVariable<FixedString64Bytes> SelectedLevelSceneName = new(
         "", NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
-
     public NetworkList<PlayerLobbyInfo> Players;
 
     // ─────────────────────────────────────────────────────────
@@ -86,7 +85,7 @@ public class GameSessionManager : NetworkBehaviour {
             PlayerRole hostRole = AuthManager.Instance != null && AuthManager.Instance.CurrentProfile != null
                 ? AuthManager.Instance.CurrentProfile.RoleEnum
                 : PlayerRole.Player;
-            
+
             AddPlayer(NetworkManager.Singleton.LocalClientId, hostName, hostRole);
         }
     }
@@ -250,6 +249,64 @@ public class GameSessionManager : NetworkBehaviour {
         }
 
         OnResultsReceived?.Invoke(results);
+    }
+
+    // ─────────────────────────────────────────────────────────
+    // Voice mute state — client reports their own VivoxManager mute
+    // state, server is authoritative and writes it into Players.
+    // ─────────────────────────────────────────────────────────
+
+    public void SetPlayerMuted(ulong clientId, bool muted) {
+        if (!IsServer) return;
+
+        for (int i = 0; i < Players.Count; i++) {
+            if (Players[i].ClientId != clientId) continue;
+
+            var info = Players[i];
+            if (info.IsMuted == muted) {
+                Debug.Log($"[VoiceSync] SetPlayerMuted: no-op, already {muted}");
+                return;
+            }
+
+            info.IsMuted = muted;
+            Players[i] = info; // structs are value types - must reassign the element
+            Debug.Log($"[VoiceSync] SetPlayerMuted: wrote IsMuted={muted} for clientId={clientId}");
+            return;
+        }
+
+        Debug.Log($"[VoiceSync] SetPlayerMuted: no matching clientId={clientId} found in Players (count={Players.Count})");
+    }
+
+    [Rpc(SendTo.Server)]
+    public void SetMutedRpc(bool muted, RpcParams rpcParams = default) {
+        SetPlayerMuted(rpcParams.Receive.SenderClientId, muted);
+    }
+
+    public void SetPlayerMicOn(ulong clientId, bool micOn) {
+        Debug.Log($"[VoiceSync] SetPlayerMicOn called: clientId={clientId}, micOn={micOn}, IsServer={IsServer}");
+        if (!IsServer) return;
+
+        for (int i = 0; i < Players.Count; i++) {
+            if (Players[i].ClientId != clientId) continue;
+
+            var info = Players[i];
+            if (info.IsMicOn == micOn) {
+                Debug.Log($"[VoiceSync] SetPlayerMicOn: no-op, already {micOn}");
+                return;
+            }
+
+            info.IsMicOn = micOn;
+            Players[i] = info; // structs are value types - must reassign the element
+            Debug.Log($"[VoiceSync] SetPlayerMicOn: wrote IsMicOn={micOn} for clientId={clientId}");
+            return;
+        }
+
+        Debug.Log($"[VoiceSync] SetPlayerMicOn: no matching clientId={clientId} found in Players (count={Players.Count})");
+    }
+
+    [Rpc(SendTo.Server)]
+    public void SetMicOnRpc(bool micOn, RpcParams rpcParams = default) {
+        SetPlayerMicOn(rpcParams.Receive.SenderClientId, micOn);
     }
 
     // ─────────────────────────────────────────────────────────
