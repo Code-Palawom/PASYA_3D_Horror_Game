@@ -13,6 +13,7 @@ public class LobbyWorldCanvasController : MonoBehaviour {
     [SerializeField] TMP_Text quizNameLabel;
     [SerializeField] TMP_Text levelNameLabel;
     [SerializeField] TMP_Text playerCountLabel;   // e.g. "2 / 4"
+    [SerializeField] TMP_Text lobbyCode;
 
     [Header("Player List")]
     [SerializeField] Transform playerListContainer;
@@ -72,11 +73,10 @@ public class LobbyWorldCanvasController : MonoBehaviour {
     void RefreshSessionInfo() {
         if (GameSessionManager.Instance == null) return;
 
-        if (quizNameLabel != null)
-            quizNameLabel.text = GameSessionManager.Instance.SelectedQuizSetName.Value.ToString();
-
-        if (levelNameLabel != null)
-            levelNameLabel.text = GameSessionManager.Instance.SelectedLevelSceneName.Value.ToString();
+        quizNameLabel.text = GameSessionManager.Instance.SelectedQuizSetName.Value.ToString();
+        levelNameLabel.text = GameSessionManager.Instance.SelectedLevelSceneName.Value.ToString();
+        if (GameModeManager.Instance.IsRelayMode) lobbyCode.text = $"Lobby Code: {GameModeManager.Instance.RelayJoinCode}";
+        else lobbyCode.gameObject.SetActive(false);
     }
 
     void RefreshPlayerList() {
