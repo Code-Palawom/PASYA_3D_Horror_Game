@@ -448,7 +448,7 @@ public class Player : NetworkBehaviour {
                 Debug.Log($"Initializing voice chat: ${id}");
 
                 //await VivoxService.Instance.JoinEchoChannelAsync($"Channel_{id}", ChatCapability.AudioOnly);
-                VivoxManager.Instance.ToggleLocalMute();
+                VivoxManager.Instance.SetLocalMute(true, true);
                 if (await VivoxManager.Instance.JoinPositionalChannelAsync($"Channel_{id}")) {
                     ActionbarToastNotification.Instance.ShowLocalToast("Voice chat active.", ToastType.Success);
                     Debug.Log("Voice chat active.");

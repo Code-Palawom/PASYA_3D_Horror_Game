@@ -29,6 +29,7 @@ public class VoiceActivityIndicator : MonoBehaviour {
     [SerializeField, Range(0f, 1f)] private float speakingAlpha = 1f;
     [Tooltip("Alpha while silent/idle.")]
     [SerializeField, Range(0f, 1f)] private float idleAlpha = 0.4f;
+    [SerializeField, Range(0f, 1f)] private float mutedAlpha = 0.2f;
     [Tooltip("Seconds for a full 0->1 (or 1->0) fade. 0 = instant.")]
     [SerializeField] private float fadeDuration = 0.15f;
 
@@ -130,7 +131,7 @@ public class VoiceActivityIndicator : MonoBehaviour {
 
     //  Actively speaking -> full opacity. Muted or silent/idle -> dimmed.
     private void RecomputeTargetAlpha() {
-        _targetAlpha = (_isSpeaking) ? speakingAlpha : idleAlpha;
+        _targetAlpha = _isSpeaking ? speakingAlpha : isMuted ? mutedAlpha : idleAlpha;
     }
 
     private void SetAlpha(float alpha) {

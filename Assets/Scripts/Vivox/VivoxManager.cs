@@ -39,7 +39,7 @@ public class VivoxManager : MonoBehaviour {
     public event Action<string> OnChannelLeft;
     public event Action<VivoxParticipant> OnParticipantJoinedChannel;
     public event Action<VivoxParticipant> OnParticipantLeftChannel;
-    public event Action<bool> OnLocalMuteChanged;
+    public event Action<bool, bool> OnLocalMuteChanged;
 
     // Fired whenever a participant's speaking state or audio level changes.
     // Identifier is DisplayName (set to Firebase UID at login), NOT VivoxParticipant.PlayerId -
@@ -267,7 +267,7 @@ public class VivoxManager : MonoBehaviour {
 
     // --- Mute / Volume Controls ---
 
-    public void SetLocalMute(bool muted) {
+    public void SetLocalMute(bool muted, bool forced = false) {
         try {
             if (muted)
                 VivoxService.Instance.MuteInputDevice();
@@ -275,7 +275,7 @@ public class VivoxManager : MonoBehaviour {
                 VivoxService.Instance.UnmuteInputDevice();
 
             IsLocallyMuted = muted;
-            OnLocalMuteChanged?.Invoke(muted);
+            OnLocalMuteChanged?.Invoke(muted, forced);
         } catch (Exception e) {
             Debug.LogWarning($"[VivoxManager] Failed to set local mute: {e.Message}");
         }

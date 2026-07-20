@@ -29,7 +29,7 @@ public class PlayerNameDisplay : NetworkBehaviour {
 
         // Deliberate mute state - reported on toggle.
         VivoxManager.Instance.OnLocalMuteChanged += HandleLocalMuteChanged;
-        HandleLocalMuteChanged(VivoxManager.Instance.IsLocallyMuted);
+        HandleLocalMuteChanged(VivoxManager.Instance.IsLocallyMuted, false);
 
         // Connection state - distinct from mute. IsMicOn reflects whether
         // this client has actually joined a Vivox channel and can transmit
@@ -77,7 +77,7 @@ public class PlayerNameDisplay : NetworkBehaviour {
         }
     }
 
-    private void HandleLocalMuteChanged(bool muted) {
+    private void HandleLocalMuteChanged(bool muted, bool forced) {
         if (GameSessionManager.Instance != null)
             GameSessionManager.Instance.SetMutedRpc(muted);
     }

@@ -135,9 +135,9 @@ public class MuteButtonUI : MonoBehaviour, IPointerClickHandler {
         // duplicate them here.
     }
 
-    private void HandleMuteStateChanged(bool isMuted) {
+    private void HandleMuteStateChanged(bool isMuted, bool forced) {
         RefreshVisual(isMuted);
-        PlayMuteSfx(isMuted);
+        if (!forced) PlayMuteSfx(isMuted);
 
         if (isMuted) {
             _targetFill = 0f; // muted input transmits nothing, so force the meter to empty
