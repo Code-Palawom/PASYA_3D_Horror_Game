@@ -949,7 +949,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 75, y: 75}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &355233255972597362
 CanvasRenderer:
@@ -1188,7 +1188,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 75, y: 75}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1104687879007761690
 CanvasRenderer:
@@ -1426,10 +1426,12 @@ MonoBehaviour:
   quantityText: {fileID: 6525485898980174200}
   background: {fileID: 7061873702543440652}
   hotbarBgColor: {r: 1, g: 1, b: 1, a: 0.0627451}
-  inventoryBgColor: {r: 0.55, g: 0.55, b: 0.55, a: 0.2509804}
+  inventoryBgColor: {r: 1, g: 1, b: 1, a: 0.5019608}
   activeOpacity: 0.5
   inactiveOpacity: 0.25
   itemNameLabel: {fileID: 3329601351511985760}
+  namePunchDuration: 0.15
+  namePunchStartScale: 0.7
   nameHoldDuration: 0.4
   nameFadeDuration: 1.6
   draggingIconOpacity: 0.35
@@ -3719,9 +3721,9 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 1}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -500, y: -400}
+  m_AnchoredPosition: {x: -250, y: -225}
   m_SizeDelta: {x: 500, y: 350}
-  m_Pivot: {x: 0.5, y: 0.5}
+  m_Pivot: {x: 1, y: 1}
 --- !u!222 &2919206939739784954
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -4102,10 +4104,12 @@ MonoBehaviour:
   quantityText: {fileID: 5034332294393956201}
   background: {fileID: 6776763005264341242}
   hotbarBgColor: {r: 1, g: 1, b: 1, a: 0.0627451}
-  inventoryBgColor: {r: 0.55, g: 0.55, b: 0.55, a: 0.2509804}
+  inventoryBgColor: {r: 1, g: 1, b: 1, a: 0.5019608}
   activeOpacity: 0.5
   inactiveOpacity: 0.25
   itemNameLabel: {fileID: 1542448190425388394}
+  namePunchDuration: 0.15
+  namePunchStartScale: 0.7
   nameHoldDuration: 0.4
   nameFadeDuration: 1.6
   draggingIconOpacity: 0.35
@@ -4138,8 +4142,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1398212334812659468}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 328.2109, y: 1.6, z: 53.84344}
+  m_LocalRotation: {x: 0.12767383, y: 0.20613296, z: -0.027137911, w: 0.96977943}
+  m_LocalPosition: {x: 328.2109, y: 3.5, z: 53.84344}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5928,7 +5932,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 75, y: 75}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2373622951579126577
 CanvasRenderer:
@@ -6545,10 +6549,12 @@ MonoBehaviour:
   quantityText: {fileID: 6744989213812181604}
   background: {fileID: 2864236547158519060}
   hotbarBgColor: {r: 1, g: 1, b: 1, a: 0.0627451}
-  inventoryBgColor: {r: 0.55, g: 0.55, b: 0.55, a: 0.2509804}
+  inventoryBgColor: {r: 1, g: 1, b: 1, a: 0.5019608}
   activeOpacity: 0.5
   inactiveOpacity: 0.25
   itemNameLabel: {fileID: 8804553568673530434}
+  namePunchDuration: 0.15
+  namePunchStartScale: 0.7
   nameHoldDuration: 0.4
   nameFadeDuration: 1.6
   draggingIconOpacity: 0.35
@@ -6830,6 +6836,8 @@ MonoBehaviour:
   activeOpacity: 0.5
   inactiveOpacity: 0.25
   itemNameLabel: {fileID: 8542481501436467594}
+  namePunchDuration: 0.15
+  namePunchStartScale: 0.7
   nameHoldDuration: 0.4
   nameFadeDuration: 1.6
   draggingIconOpacity: 0.35
@@ -7311,7 +7319,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 75, y: 75}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7873654820381374687
 CanvasRenderer:
@@ -7905,10 +7913,12 @@ MonoBehaviour:
   quantityText: {fileID: 2519780015363772690}
   background: {fileID: 810105431834443379}
   hotbarBgColor: {r: 1, g: 1, b: 1, a: 0.0627451}
-  inventoryBgColor: {r: 0.55, g: 0.55, b: 0.55, a: 0.2509804}
+  inventoryBgColor: {r: 1, g: 1, b: 1, a: 0.5019608}
   activeOpacity: 0.5
   inactiveOpacity: 0.25
   itemNameLabel: {fileID: 3923228521493783382}
+  namePunchDuration: 0.15
+  namePunchStartScale: 0.7
   nameHoldDuration: 0.4
   nameFadeDuration: 1.6
   draggingIconOpacity: 0.35
@@ -8660,7 +8670,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 75, y: 75}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2998106400073067506
 CanvasRenderer:
@@ -9196,7 +9206,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 75, y: 75}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1939881155293359488
 CanvasRenderer:
@@ -11700,10 +11710,12 @@ MonoBehaviour:
   quantityText: {fileID: 2653486659268257912}
   background: {fileID: 1912084612951799307}
   hotbarBgColor: {r: 1, g: 1, b: 1, a: 0.0627451}
-  inventoryBgColor: {r: 0.55, g: 0.55, b: 0.55, a: 0.2509804}
+  inventoryBgColor: {r: 1, g: 1, b: 1, a: 0.5019608}
   activeOpacity: 0.5
   inactiveOpacity: 0.25
   itemNameLabel: {fileID: 1491536781946477025}
+  namePunchDuration: 0.15
+  namePunchStartScale: 0.7
   nameHoldDuration: 0.4
   nameFadeDuration: 1.6
   draggingIconOpacity: 0.35
@@ -13610,31 +13622,8 @@ MonoBehaviour:
   - {fileID: 7256555241607723766}
   inventoryPanel: {fileID: 6031317705827510319}
   inventoryPanelCanvasGroup: {fileID: 2286279184391786945}
-  slideDuration: 0.25
-  slideEase:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
+  popupInDuration: 0.35
+  popupOutDuration: 0.2
   dragGhost: {fileID: 6971993956095013371}
   action:
     m_Name: Action
@@ -14344,7 +14333,6 @@ GameObject:
   - component: {fileID: 4150302022571842751}
   - component: {fileID: 2286279184391786945}
   - component: {fileID: 7836451773975661917}
-  - component: {fileID: 3696541000602065669}
   m_Layer: 5
   m_Name: Main
   m_TagString: Untagged
@@ -14368,10 +14356,10 @@ RectTransform:
   - {fileID: 6232682271273810410}
   m_Father: {fileID: 1456183022701141744}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 1, y: 0.5}
-  m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: -250, y: 0}
-  m_SizeDelta: {x: 500, y: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 550, y: 310}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &3791398660453908600
 CanvasRenderer:
@@ -14449,20 +14437,6 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
---- !u!114 &3696541000602065669
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4755328364377800307}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
-  m_HorizontalFit: 0
-  m_VerticalFit: 2
 --- !u!1 &4760771273969970102
 GameObject:
   m_ObjectHideFlags: 0
@@ -15137,7 +15111,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 75, y: 75}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8144283661718701390
 CanvasRenderer:
@@ -15475,6 +15449,9 @@ MonoBehaviour:
       m_Action: Open Chat
       m_Flags: 0
     m_Flags: 0
+  toggleInDuration: 0.3
+  toggleOutDuration: 0.2
+  isChatActive: 0
 --- !u!114 &1246460478462405575
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15801,6 +15778,10 @@ MonoBehaviour:
   - {fileID: 3292754945129017186}
   - {fileID: 2607922905788436405}
   - {fileID: 5488803187283272675}
+  chatUi: {fileID: 1259183933917962637}
+  chatBoundaryRect: {fileID: 6662443357452564837}
+  inventoryUi: {fileID: 6560784741169748872}
+  inventoryUiRect: {fileID: 1456183022701141744}
   panTilt: {fileID: 5240064665015112383}
   fpYawTarget: {fileID: 190666774804602483}
   horizontalSensitivity: 0.25
@@ -16372,7 +16353,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 75, y: 75}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &4487379656381452420
 CanvasRenderer:
@@ -17657,10 +17638,12 @@ MonoBehaviour:
   quantityText: {fileID: 5137575786251108670}
   background: {fileID: 7683898355795807909}
   hotbarBgColor: {r: 1, g: 1, b: 1, a: 0.0627451}
-  inventoryBgColor: {r: 0.55, g: 0.55, b: 0.55, a: 0.2509804}
+  inventoryBgColor: {r: 1, g: 1, b: 1, a: 0.5019608}
   activeOpacity: 0.5
   inactiveOpacity: 0.25
   itemNameLabel: {fileID: 8179784640331246288}
+  namePunchDuration: 0.15
+  namePunchStartScale: 0.7
   nameHoldDuration: 0.4
   nameFadeDuration: 1.6
   draggingIconOpacity: 0.35
@@ -18099,6 +18082,10 @@ MonoBehaviour:
   - {fileID: 3292754945129017186}
   - {fileID: 2607922905788436405}
   - {fileID: 5488803187283272675}
+  chatUi: {fileID: 1259183933917962637}
+  chatBoundaryRect: {fileID: 6662443357452564837}
+  inventoryUi: {fileID: 6560784741169748872}
+  inventoryUiRect: {fileID: 1456183022701141744}
   orbitalFollow: {fileID: 2769187261544237235}
   horizontalSensitivity: 0.25
   verticalSensitivity: 0.18
@@ -18649,10 +18636,12 @@ MonoBehaviour:
   quantityText: {fileID: 7982209106056033326}
   background: {fileID: 5465927206095810076}
   hotbarBgColor: {r: 1, g: 1, b: 1, a: 0.0627451}
-  inventoryBgColor: {r: 0.55, g: 0.55, b: 0.55, a: 0.2509804}
+  inventoryBgColor: {r: 1, g: 1, b: 1, a: 0.5019608}
   activeOpacity: 0.5
   inactiveOpacity: 0.25
   itemNameLabel: {fileID: 5921255196571684922}
+  namePunchDuration: 0.15
+  namePunchStartScale: 0.7
   nameHoldDuration: 0.4
   nameFadeDuration: 1.6
   draggingIconOpacity: 0.35
@@ -18743,10 +18732,12 @@ MonoBehaviour:
   quantityText: {fileID: 244410370292627933}
   background: {fileID: 7988559939938730675}
   hotbarBgColor: {r: 1, g: 1, b: 1, a: 0.0627451}
-  inventoryBgColor: {r: 0.55, g: 0.55, b: 0.55, a: 0.2509804}
+  inventoryBgColor: {r: 1, g: 1, b: 1, a: 0.5019608}
   activeOpacity: 0.5
   inactiveOpacity: 0.25
   itemNameLabel: {fileID: 776564706089999188}
+  namePunchDuration: 0.15
+  namePunchStartScale: 0.7
   nameHoldDuration: 0.4
   nameFadeDuration: 1.6
   draggingIconOpacity: 0.35
@@ -18810,6 +18801,8 @@ MonoBehaviour:
   activeOpacity: 0.5
   inactiveOpacity: 0.25
   itemNameLabel: {fileID: 3195476948608879644}
+  namePunchDuration: 0.15
+  namePunchStartScale: 0.7
   nameHoldDuration: 0.4
   nameFadeDuration: 1.6
   draggingIconOpacity: 0.35
@@ -20987,7 +20980,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 75, y: 75}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2498179179849107383
 CanvasRenderer:
@@ -22620,6 +22613,8 @@ MonoBehaviour:
   activeOpacity: 0.5
   inactiveOpacity: 0.25
   itemNameLabel: {fileID: 4256745687799122800}
+  namePunchDuration: 0.15
+  namePunchStartScale: 0.7
   nameHoldDuration: 0.4
   nameFadeDuration: 1.6
   draggingIconOpacity: 0.35
@@ -23031,6 +23026,8 @@ MonoBehaviour:
   activeOpacity: 0.5
   inactiveOpacity: 0.25
   itemNameLabel: {fileID: 6878454876581920346}
+  namePunchDuration: 0.15
+  namePunchStartScale: 0.7
   nameHoldDuration: 0.4
   nameFadeDuration: 1.6
   draggingIconOpacity: 0.35
@@ -23181,7 +23178,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 75, y: 75}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7859273869605879725
 CanvasRenderer:
@@ -25821,7 +25818,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 75, y: 75}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &784071560529884058
 CanvasRenderer:
@@ -27655,7 +27652,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 100, y: 100}
+  m_SizeDelta: {x: 75, y: 75}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8774909776392702867
 CanvasRenderer:

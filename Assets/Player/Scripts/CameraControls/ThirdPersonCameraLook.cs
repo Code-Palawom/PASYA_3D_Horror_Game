@@ -10,6 +10,8 @@ public class ThirdPersonCameraLook : MonoBehaviour {
     [SerializeField] private RectTransform[] moveBoundaryRects;
     [SerializeField] private ChatUI chatUi;
     [SerializeField] private RectTransform chatBoundaryRect;
+    [SerializeField] private InventoryUI inventoryUi;
+    [SerializeField] private RectTransform inventoryUiRect;
     [SerializeField] private CinemachineOrbitalFollow orbitalFollow;
 
     [Header("Look Sensitivity")]
@@ -118,7 +120,8 @@ public class ThirdPersonCameraLook : MonoBehaviour {
 
     private bool IsBlocked(Vector2 screenPos) {
         if (moveBoundaryRects == null) return false;
-        if(chatUi.isChatActive && RectTransformUtility.RectangleContainsScreenPoint(chatBoundaryRect, screenPos, null)) return true;
+        if (chatUi.isChatActive && RectTransformUtility.RectangleContainsScreenPoint(chatBoundaryRect, screenPos, null)) return true;
+        if (inventoryUi.IsOpen && RectTransformUtility.RectangleContainsScreenPoint(inventoryUiRect, screenPos, null)) return true;
 
         foreach (RectTransform r in moveBoundaryRects) {
             if (r != null && RectTransformUtility.RectangleContainsScreenPoint(r, screenPos, null)) return true;

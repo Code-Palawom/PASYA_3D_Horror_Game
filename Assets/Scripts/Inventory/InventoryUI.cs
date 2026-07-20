@@ -1,21 +1,21 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using PrimeTween;
 
 // Client-side inventory UI. Wire this to the local player's PlayerInventory
 // by calling Init() from PlayerSetup after network spawn.
 
 // Scene setup:
 //   - Create a Canvas with an "InventoryPanel" — its GameObject stays ACTIVE
-//     at all times now (the slide toggle uses position, not SetActive), just
-//     position it in the scene at its OPEN/shown position — Init() captures
-//     that as the shown position and computes the hidden position by
-//     shifting right by the panel's own width.
+//     at all times now (the popup toggle uses scale/alpha, not SetActive),
+//     just position it in the scene at SCREEN CENTER (its anchor/pivot should
+//     be 0.5, 0.5 so it scales outward from its own center, not a corner).
 //   - Inside it: (hotbarSize + mainInventorySize) InventorySlotUI children —
 //     indices 0..hotbarSize-1 = hotbar, the rest = main inventory
 //   - Assign them to UISlots in order
 //   - The hotbar itself should be a SEPARATE always-visible bar outside
-//     InventoryPanel — only the main inventory portion slides
+//     InventoryPanel — only the main inventory portion pops
 public class InventoryUI : MonoBehaviour {
     [Tooltip("Leave empty to auto-resolve the current scene's registry via " +
              "ItemRegistry.Instance (set by that scene's GameBootstrap).")]
@@ -23,16 +23,16 @@ public class InventoryUI : MonoBehaviour {
     private ItemRegistry Registry => itemRegistry != null ? itemRegistry : ItemRegistry.Instance;
     [SerializeField] private InventorySlotUI[] UISlots; // (hotbarSize + mainInventorySize) elements, set in Inspector
 
-    [Header("Main Inventory Slide Panel")]
+    [Header("Main Inventory Popup Panel")]
     [Tooltip("The main inventory panel's RectTransform (NOT the hotbar — the hotbar stays " +
-             "always visible). Position it in the scene at its OPEN position; Init() reads " +
-             "that as the shown position and computes the hidden position from it.")]
+             "always visible). Position it in the scene at screen center with pivot (0.5, 0.5) " +
+             "so it scales outward from its own middle.")]
     [SerializeField] private RectTransform inventoryPanel;
-    [Tooltip("Optional but recommended: prevents clicking/dragging through the panel while " +
-             "it's slid off-screen, and blocks interaction during the slide itself.")]
+    [Tooltip("Prevents clicking/dragging through the panel while it's scaled down, and blocks " +
+             "interaction during the pop animation itself.")]
     [SerializeField] private CanvasGroup inventoryPanelCanvasGroup;
-    [SerializeField] private float slideDuration = 0.25f;
-    [SerializeField] private AnimationCurve slideEase = AnimationCurve.EaseInOut(0, 0, 1, 1);
+    [SerializeField] private float popupInDuration = 0.35f;
+    [SerializeField] private float popupOutDuration = 0.2f;
 
     [Header("Drag Ghost")]
     [Tooltip("A plain UI Image that follows the pointer while dragging. Must sit on a " +
@@ -53,9 +53,10 @@ public class InventoryUI : MonoBehaviour {
     private int _dragSourceIndex = -1;
     private bool _hasInitialized;
 
-    private Vector2 _shownPos;
-    private Vector2 _hiddenPos;
-    private Coroutine _slideCoroutine;
+    private PrimeTween.Tween _scaleTween;
+    private PrimeTween.Tween _fadeTween;
+
+    public bool IsOpen => _isOpen;
 
     // ── Initialization ────────────────────────────────────────────────────────
 
@@ -67,6 +68,8 @@ public class InventoryUI : MonoBehaviour {
     void OnDestroy() {
         action.Disable();
         action.Dispose();
+        if (_scaleTween.isAlive) _scaleTween.Stop();
+        if (_fadeTween.isAlive) _fadeTween.Stop();
     }
 
     public void Init(PlayerInventory inventory) {
@@ -82,13 +85,11 @@ public class InventoryUI : MonoBehaviour {
             dragGhost.enabled = false;
         }
 
-        // Capture the panel's designed position as "shown", then compute
-        // "hidden" by shifting it fully off-screen to the right by its own
-        // width — this is what makes it slide in from off-screen right ->
-        // into view (right-to-left) when opened.
-        _shownPos = inventoryPanel.anchoredPosition;
-        _hiddenPos = _shownPos + new Vector2(inventoryPanel.rect.width, 0f);
-        inventoryPanel.anchoredPosition = _hiddenPos;
+        // Start popped-down/invisible at whatever position the panel is
+        // designed at (should be screen center) — no position math needed
+        // now, since the popup scales in place instead of sliding in.
+        inventoryPanel.localScale = Vector3.zero;
+        if (inventoryPanelCanvasGroup != null) inventoryPanelCanvasGroup.alpha = 0f;
         SetPanelInteractable(false);
 
         RefreshAll();
@@ -98,43 +99,42 @@ public class InventoryUI : MonoBehaviour {
 
     private void SetOpen(bool open) {
         _isOpen = open;
-        if (_slideCoroutine != null) StopCoroutine(_slideCoroutine);
-        _slideCoroutine = StartCoroutine(SlidePanel(open));
-    }
+        if (_scaleTween.isAlive) _scaleTween.Stop();
+        if (_fadeTween.isAlive) _fadeTween.Stop();
 
-    private System.Collections.IEnumerator SlidePanel(bool open) {
-        // Block interaction immediately when CLOSING so items can't be
-        // dragged mid-slide; only allow interaction once fully OPEN (below).
-        if (!open) SetPanelInteractable(false);
+        // Block interaction immediately for both directions — closing shouldn't
+        // be draggable mid-shrink, and opening only becomes interactable once
+        // the bounce settles (below).
+        SetPanelInteractable(false);
 
-        Vector2 start = inventoryPanel.anchoredPosition;
-        Vector2 end = open ? _shownPos : _hiddenPos;
-
-        float t = 0f;
-        while (t < slideDuration) {
-            t += Time.deltaTime;
-            float eased = slideEase.Evaluate(Mathf.Clamp01(t / slideDuration));
-            inventoryPanel.anchoredPosition = Vector2.LerpUnclamped(start, end, eased);
-            yield return null;
-        }
-        inventoryPanel.anchoredPosition = end;
-
-        if (open) SetPanelInteractable(true);
-#if UNITY_EDITOR || UNITY_STANDALONE
-        var c = backpackIcon.color;
         if (open) {
-            backpackIcon.color = new Color(c.r, c.g, c.b, 0.50f);
+            _scaleTween = Tween.Scale(inventoryPanel, endValue: Vector3.one, duration: popupInDuration, ease: Ease.OutBack)
+                .OnComplete(() => {
+                    SetPanelInteractable(true);
+                    SetBackpackIconAlpha(true);
+                });
+            if (inventoryPanelCanvasGroup != null)
+                _fadeTween = Tween.Alpha(inventoryPanelCanvasGroup, endValue: 1f, duration: popupInDuration * 0.6f);
         } else {
-            backpackIcon.color = new Color(c.r, c.g, c.b, 0.25f);
+            _scaleTween = Tween.Scale(inventoryPanel, endValue: Vector3.zero, duration: popupOutDuration, ease: Ease.InBack)
+                .OnComplete(() => SetBackpackIconAlpha(false));
+            if (inventoryPanelCanvasGroup != null)
+                _fadeTween = Tween.Alpha(inventoryPanelCanvasGroup, endValue: 0f, duration: popupOutDuration * 0.8f);
         }
-#endif
-        _slideCoroutine = null;
     }
 
     private void SetPanelInteractable(bool interactable) {
         if (inventoryPanelCanvasGroup == null) return;
         inventoryPanelCanvasGroup.interactable = interactable;
         inventoryPanelCanvasGroup.blocksRaycasts = interactable;
+    }
+
+    private void SetBackpackIconAlpha(bool open) {
+#if UNITY_EDITOR || UNITY_STANDALONE
+        if (backpackIcon == null) return;
+        var c = backpackIcon.color;
+        backpackIcon.color = new Color(c.r, c.g, c.b, open ? 0.50f : 0.25f);
+#endif
     }
 
     // ── Refresh ───────────────────────────────────────────────────────────────
@@ -152,13 +152,22 @@ public class InventoryUI : MonoBehaviour {
         var item = slot.IsEmpty ? null : Registry.Get(slot.ItemID.ToString());
         UISlots[index].UpdateDisplay(item, slot.Quantity);
 
-        // Also re-trigger the popup if this is the slot you're currently
-        // holding — e.g. picking an item up directly into your active slot,
-        // or its stack count changing. Skipped during the very first
-        // RefreshAll() so joining doesn't flash a name immediately; see
-        // _hasInitialized below.
-        if (_hasInitialized && index < _inventory.HotbarSize
-            && index == _inventory.ActiveHotbarIndex) {
+        // Skipped during the very first RefreshAll() so joining doesn't
+        // flash names for every already-filled slot; see _hasInitialized.
+        if (!_hasInitialized) return;
+
+        bool isHotbar = index < _inventory.HotbarSize;
+        if (isHotbar) {
+            // Hotbar: only the currently-active slot pops — e.g. picking an
+            // item up directly into your held slot, or its stack count
+            // changing while held.
+            if (index == _inventory.ActiveHotbarIndex)
+                UISlots[index].PlayActiveNamePopup(item?.displayName);
+        } else {
+            // Main inventory: any slot pops whenever its contents change
+            // (item added/removed/stack count changed), regardless of
+            // whether the panel is currently open — it'll just be sitting
+            // there ready when the player next opens it.
             UISlots[index].PlayActiveNamePopup(item?.displayName);
         }
     }

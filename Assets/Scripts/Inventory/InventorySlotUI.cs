@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using TMPro;
+using PrimeTween;
 
 // Visual representation of one inventory slot.
 // Supports drag-and-drop between slots.
@@ -20,12 +21,15 @@ public class InventorySlotUI : MonoBehaviour,
     [SerializeField] private float activeOpacity = 0.5f;
     [SerializeField] private float inactiveOpacity = 0.25f;
 
-    [Header("Active Item Name Popup (hotbar slots only)")]
-    [Tooltip("Positioned above the icon in the prefab. Only wired up on hotbar " +
-             "slots — leave empty on main inventory slot prefabs.")]
+    [Header("Item Name Popup")]
+    [Tooltip("Positioned above the icon in the prefab. Wire this up on BOTH hotbar and " +
+             "main inventory slot prefabs — main inventory slots now show the popup too " +
+             "whenever their contents change, not just the active hotbar slot.")]
     [SerializeField] private TMP_Text itemNameLabel;
-    [SerializeField] private float nameHoldDuration = 0.4f; // full-alpha hold before fading
-    [SerializeField] private float nameFadeDuration = 1.6f; // fade-out length (hold + fade ≈ 2s total)
+    [SerializeField] private float namePunchDuration = 0.15f;   // quick scale+fade in
+    [SerializeField] private float namePunchStartScale = 0.7f;  // starting scale before the OutBack pop
+    [SerializeField] private float nameHoldDuration = 0.4f;     // full-alpha hold before fading
+    [SerializeField] private float nameFadeDuration = 1.6f;     // fade-out length (in + hold + fade ≈ 2.15s total)
 
     [Header("Drag Feedback")]
     [Tooltip("Icon alpha on the slot you're dragging FROM, while the drag is in progress.")]
@@ -36,7 +40,7 @@ public class InventorySlotUI : MonoBehaviour,
     private bool _isHotbar;
     private bool _isCurrentlyActive; // only meaningful when _isHotbar is true
     private InventoryUI _ui;
-    private Coroutine _namePopupCoroutine;
+    private Sequence _namePopupSequence;
     private string _currentItemName; // authoritative source for "what's actually in this slot right now"
 
     // ── Init ──────────────────────────────────────────────────────────────────
@@ -105,20 +109,20 @@ public class InventorySlotUI : MonoBehaviour,
         background.color = new Color(c.r, c.g, c.b, alpha);
     }
 
-    // ── Active Item Name Popup ───────────────────────────────────────────────
-    // Called by InventoryUI whenever this slot becomes the active hotbar slot
-    // (or its contents change while already active). Shows the item's name
-    // at full alpha, holds briefly, then fades out over ~2s total. Switching
-    // to a DIFFERENT slot calls HideNamePopupImmediate on this one instead,
-    // so only one name is ever visible/fading at a time.
+    // ── Item Name Popup ──────────────────────────────────────────────────────
+    // Called by InventoryUI whenever this slot's contents are worth calling
+    // out — the active hotbar slot changing/refreshing, or (now) ANY main
+    // inventory slot's contents changing. Pops the label in with a quick
+    // scale+fade (OutBack), holds briefly at full alpha, then fades out.
+    // Switching away from a hotbar slot calls HideNamePopupImmediate on it
+    // instead, so only one hotbar name is ever visible/fading at a time —
+    // main inventory slots each animate independently since several can
+    // change at once (e.g. a stack split across slots).
 
     public void PlayActiveNamePopup(string itemDisplayName) {
         if (itemNameLabel == null) return;
 
-        if (_namePopupCoroutine != null) {
-            StopCoroutine(_namePopupCoroutine);
-            _namePopupCoroutine = null;
-        }
+        if (_namePopupSequence.isAlive) _namePopupSequence.Stop();
 
         if (string.IsNullOrEmpty(itemDisplayName)) {
             HideNamePopupImmediate();
@@ -126,45 +130,30 @@ public class InventorySlotUI : MonoBehaviour,
         }
 
         itemNameLabel.text = itemDisplayName;
-        var c = itemNameLabel.color;
-        itemNameLabel.color = new Color(c.r, c.g, c.b, 1f);
         itemNameLabel.enabled = true;
+        itemNameLabel.rectTransform.localScale = Vector3.one * namePunchStartScale;
+        var c = itemNameLabel.color;
+        itemNameLabel.color = new Color(c.r, c.g, c.b, 0f);
 
-        if (gameObject.activeInHierarchy)
-            _namePopupCoroutine = StartCoroutine(FadeNameRoutine());
+        if (!gameObject.activeInHierarchy) return;
+
+        _namePopupSequence = Sequence.Create()
+            .Group(Tween.Alpha(itemNameLabel, endValue: 1f, duration: namePunchDuration))
+            .Group(Tween.Scale(itemNameLabel.rectTransform, endValue: Vector3.one, duration: namePunchDuration, ease: Ease.OutBack))
+            .ChainDelay(nameHoldDuration)
+            .Chain(Tween.Alpha(itemNameLabel, endValue: 0f, duration: nameFadeDuration))
+            .OnComplete(() => itemNameLabel.enabled = false);
     }
 
     public void HideNamePopupImmediate() {
-        if (_namePopupCoroutine != null) {
-            StopCoroutine(_namePopupCoroutine);
-            _namePopupCoroutine = null;
-        }
+        if (_namePopupSequence.isAlive) _namePopupSequence.Stop();
         if (itemNameLabel != null) itemNameLabel.enabled = false;
-    }
-
-    private System.Collections.IEnumerator FadeNameRoutine() {
-        yield return new WaitForSeconds(nameHoldDuration);
-
-        float t = 0f;
-        Color start = itemNameLabel.color;
-        while (t < nameFadeDuration) {
-            t += Time.deltaTime;
-            itemNameLabel.color = new Color(start.r, start.g, start.b,
-                Mathf.Lerp(1f, 0f, t / nameFadeDuration));
-            yield return null;
-        }
-
-        itemNameLabel.enabled = false;
-        _namePopupCoroutine = null;
     }
 
     private void OnDisable() {
         // Panel toggled off (e.g. Tab menu) or object pooled — drop any
-        // in-flight coroutine so it doesn't try to run against a disabled object.
-        if (_namePopupCoroutine != null) {
-            StopCoroutine(_namePopupCoroutine);
-            _namePopupCoroutine = null;
-        }
+        // in-flight tween so it doesn't try to run against a disabled object.
+        if (_namePopupSequence.isAlive) _namePopupSequence.Stop();
         // Also guards against a slot staying dimmed forever if it's disabled
         // mid-drag (e.g. main inventory panel closed while dragging).
         SetIconOpacity(BaseOpacity);
@@ -185,8 +174,8 @@ public class InventorySlotUI : MonoBehaviour,
         SetIconOpacity(draggingIconOpacity);
 
         // Show the name once at drag-start. PlayActiveNamePopup no-ops safely
-        // if itemNameLabel isn't assigned (main inventory slots), so this is
-        // safe to call unconditionally regardless of slot type.
+        // if itemNameLabel isn't assigned, so this is safe to call
+        // unconditionally regardless of slot type.
         PlayActiveNamePopup(_currentItemName);
 
         _ui.OnBeginDrag(SlotIndex, iconImage.sprite);
@@ -196,9 +185,7 @@ public class InventorySlotUI : MonoBehaviour,
     // previous explanation) — also moves the ghost icon to follow the pointer
     // every frame while dragging. Deliberately does NOT re-trigger the name
     // popup here — that already happened once in OnBeginDrag above; calling
-    // it again every frame would restart the fade coroutine 60+ times/sec
-    // and would throw on main-inventory slots where itemNameLabel is null
-    // if read directly instead of through PlayActiveNamePopup's own guard.
+    // it again every frame would restart the tween 60+ times/sec.
     public void OnDrag(PointerEventData eventData)
         => _ui.UpdateDragVisual(eventData.position);
 
@@ -234,7 +221,13 @@ public class InventorySlotUI : MonoBehaviour,
     // a drag still reorders as before. Main inventory slots ignore
     // taps here since only the hotbar has an "active" concept.
     public void OnPointerClick(PointerEventData eventData) {
-        if (!_isHotbar) return;
+        if (!_isHotbar) {
+            // Main inventory slots have no "active" concept to route through
+            // InventoryUI — just pop the name directly off this slot's own
+            // current contents. No-ops safely on an empty slot.
+            PlayActiveNamePopup(_currentItemName);
+            return;
+        }
         _ui.OnHotbarSlotTapped(SlotIndex);
     }
 }
