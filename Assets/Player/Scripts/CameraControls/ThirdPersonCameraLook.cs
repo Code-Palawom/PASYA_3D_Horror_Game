@@ -84,8 +84,12 @@ public class ThirdPersonCameraLook : MonoBehaviour {
         if (lookFinger != null && touch.finger == lookFinger && pinchFinger2 == null) {
             float h = touch.delta.x * horizontalSensitivity;
             float v = touch.delta.y * verticalSensitivity * (invertVertical ? -1f : 1f);
+
             orbitalFollow.HorizontalAxis.Value += h;
-            orbitalFollow.VerticalAxis.Value += v;
+
+            var vAxis = orbitalFollow.VerticalAxis;
+            vAxis.Value = Mathf.Clamp(vAxis.Value + v, vAxis.Range.x, vAxis.Range.y);
+            orbitalFollow.VerticalAxis = vAxis;
         }
 
         if (pinchFinger1 != null && pinchFinger2 != null &&
