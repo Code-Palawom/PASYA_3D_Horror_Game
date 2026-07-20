@@ -7,7 +7,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 public class ChatUI : NetworkBehaviour {
-    [SerializeField] GameObject chatUI;
+    [SerializeField] CanvasGroup chatUI;
     [SerializeField] ScrollRect scrollRect;
     [SerializeField] Transform messageContainer;
     [SerializeField] ChatMessageItemUI messagePrefab;
@@ -22,7 +22,7 @@ public class ChatUI : NetworkBehaviour {
     [SerializeField] private InputAction openChat;
 
     private readonly List<ChatMessageItemUI> _spawnedItems = new();
-    private bool isChatActive = false;
+    public bool isChatActive = false;
     private bool isTyping = false;
 
     public override void OnNetworkSpawn() {
@@ -81,7 +81,15 @@ public class ChatUI : NetworkBehaviour {
         if (GameManager.Instance != null && GameManager.Instance.IsControlFrozen) return;
          
         isChatActive = !isChatActive;
-        chatUI.SetActive(isChatActive);
+        if (isChatActive) {
+            chatUI.alpha = 1f;
+            chatUI.interactable = true;
+            chatUI.blocksRaycasts = true;
+        } else {
+            chatUI.alpha = 0f;
+            chatUI.interactable = false;
+            chatUI.blocksRaycasts = false;
+        }
 
 #if UNITY_EDITOR || UNITY_STANDALONE
         var c = chatIcon.color;

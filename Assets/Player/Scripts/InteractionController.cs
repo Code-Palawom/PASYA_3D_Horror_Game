@@ -80,6 +80,7 @@ public class InteractionController : NetworkBehaviour {
 
     // ─────────────────────────────────────────────────────────
     void OnInteractPerformed(InputAction.CallbackContext ctx) {
+        if (interactionUI.IsShowingCooldown) return;
         _currentTarget?.OnInteract(gameObject);
     }
 

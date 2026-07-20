@@ -16,7 +16,6 @@ public class QuizCanvasController : MonoBehaviour {
     [Header("Header")]
     [SerializeField] TMP_Text questionText;
     [SerializeField] TMP_Text difficultyBadge;
-    [SerializeField] Image questionImage;
     [SerializeField] Color easyColor = Color.green;
     [SerializeField] Color mediumColor = Color.yellow;
     [SerializeField] Color hardColor = Color.red;
@@ -25,9 +24,6 @@ public class QuizCanvasController : MonoBehaviour {
     [SerializeField] TimerController timer;
     [SerializeField] Image timerBar;
     [SerializeField] TMP_Text timerLabel;     // numeric seconds e.g. "12.3s"
-
-    [Header("Feedback")]
-    [SerializeField] TMP_Text feedbackText;
 
     [Header("Multiple Choice")]
     [SerializeField] GameObject multipleChoicePanel;
@@ -52,7 +48,6 @@ public class QuizCanvasController : MonoBehaviour {
         mainPanel.SetActive(false);
         chatUI.SetActive(false);
         quizPanel.SetActive(true);
-        feedbackText.gameObject.SetActive(false);
         //panelAnimator.SetTrigger("Open");
 
         SetupHeader(question);
@@ -63,12 +58,8 @@ public class QuizCanvasController : MonoBehaviour {
     }
     
     public void ShowFeedback(bool isCorrect, Action afterFeedback) {
-        feedbackText.gameObject.SetActive(true);
-        feedbackText.text = isCorrect ? "Correct!" : "Wrong!";
-        feedbackText.color = isCorrect ? Color.green : Color.red;
-
         if (isCorrect) ScreenFlashController.Local?.FlashCorrect(); else ScreenFlashController.Local?.FlashWrong();
-        ActionbarToastNotification.Instance.ShowLocalToast(feedbackText.text, isCorrect ? ToastType.Success : ToastType.Error);
+        ActionbarToastNotification.Instance.ShowLocalToast(isCorrect ? "Correct!" : "Wrong!", isCorrect ? ToastType.Success : ToastType.Error);
         if (!isCorrect) ActionbarToastNotification.Instance.ShowLocalToast("Door/Item Locked", ToastType.Error);
         afterFeedback?.Invoke();
     }
@@ -98,10 +89,6 @@ public class QuizCanvasController : MonoBehaviour {
             QuestionDifficulty.Hard => hardColor,
             _ => Color.white
         };
-
-        // Question image not synced over network — hide for now
-        if (questionImage != null)
-            questionImage.gameObject.SetActive(false);
     }
 
     void ActivatePanel(QuestionRuntime question) {

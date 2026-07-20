@@ -7,6 +7,8 @@ using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 [RequireComponent(typeof(CinemachineInputAxisController))]
 public class FirstPersonCameraLook : MonoBehaviour {
     [SerializeField] private RectTransform[] moveBoundaryRects;
+    [SerializeField] private ChatUI chatUi;
+    [SerializeField] private RectTransform chatBoundaryRect;
     [SerializeField] private CinemachinePanTilt panTilt;
     [SerializeField] private Transform fpYawTarget;
 
@@ -71,6 +73,8 @@ public class FirstPersonCameraLook : MonoBehaviour {
 
     private bool IsBlocked(Vector2 screenPos) {
         if (moveBoundaryRects == null) return false;
+        if (chatUi.isChatActive && RectTransformUtility.RectangleContainsScreenPoint(chatBoundaryRect, screenPos, null)) return true;
+
         foreach (RectTransform r in moveBoundaryRects) {
             if (r != null && RectTransformUtility.RectangleContainsScreenPoint(r, screenPos, null)) return true;
         }
