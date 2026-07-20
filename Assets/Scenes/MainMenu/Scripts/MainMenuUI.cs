@@ -564,7 +564,7 @@ public class MainMenuUI : MonoBehaviour {
                 int questionCount = QuizRepository.Instance.GetSetByName(_selectedQuizSetName).questions.Count;
 
                 await LobbyManager.Instance.CreateLobbyAsync(
-                    hostName: AuthManager.Instance.CurrentProfile.DisplayName ?? SettingsManager.Instance.PlayerName,
+                    hostName: AuthManager.Instance.CurrentProfile.DisplayName ?? SettingsManager.Instance.Current.playerName,
                     quizSetName: _selectedQuizSetName,
                     levelSceneName: _selectedLevelSceneName,
                     questionCount: questionCount,

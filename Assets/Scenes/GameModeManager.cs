@@ -33,7 +33,7 @@ public class GameModeManager : MonoBehaviour {
     void Start() {
         // Start() is safe here — all Awake()s (including SettingsManager's) have run by now
         if (AuthManager.Instance != null)
-            LocalPlayerName = AuthManager.Instance.CurrentProfile?.DisplayName ?? SettingsManager.Instance.PlayerName;
+            LocalPlayerName = AuthManager.Instance.CurrentProfile?.DisplayName ?? SettingsManager.Instance.Current.playerName;
         else
             Debug.LogWarning("[GameModeManager] SettingsManager not ready in Start — using default name.");
     }

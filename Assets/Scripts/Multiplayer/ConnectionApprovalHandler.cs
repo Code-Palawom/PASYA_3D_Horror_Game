@@ -91,7 +91,7 @@ public class ConnectionApprovalHandler : MonoBehaviour {
 
             string hostName = AuthManager.Instance != null && AuthManager.Instance.CurrentProfile != null
                 ? AuthManager.Instance.CurrentProfile.DisplayName
-                : SettingsManager.Instance.PlayerName;
+                : SettingsManager.Instance.Current.playerName;
 
             PendingRoles[request.ClientNetworkId] =
                 AuthManager.Instance != null && AuthManager.Instance.CurrentProfile != null

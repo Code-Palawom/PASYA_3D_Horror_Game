@@ -1,13 +1,10 @@
 using System;
 using System.IO;
-using System.Text;
 using UnityEngine;
 
 public class SettingsManager : MonoBehaviour {
     public static SettingsManager Instance { get; private set; }
     public GameSettings Current { get; private set; }
-
-    public string PlayerName => Current.playerName;
 
     [Header("Defaults")]
     [Tooltip("Assign the DefaultSettingsConfig asset here")]
@@ -36,10 +33,13 @@ public class SettingsManager : MonoBehaviour {
     public void Save(GameSettings settings) {
         Current = settings;
 
-        string json = JsonUtility.ToJson(settings, true);
-        string encoded = Convert.ToBase64String(Encoding.UTF8.GetBytes(json));
+        string kv = settings.ToKeyValueString();
+        var wrapper = new Wrapper {
+            payload = kv,
+            signature = QuizDataIntegrity.ComputeSignature(kv)
+        };
 
-        File.WriteAllText(FilePath, encoded);
+        File.WriteAllText(FilePath, JsonUtility.ToJson(wrapper, true));
         Apply(Current);
         OnSettingsSaved?.Invoke(Current);
         Debug.Log("[SettingsManager] Saved.");
@@ -49,21 +49,30 @@ public class SettingsManager : MonoBehaviour {
     private void Load() {
         if (!File.Exists(FilePath)) {
             Debug.Log("[SettingsManager] No file found — using defaults.");
-            Save(Current); // Save defaults to file for future loads)
+            // Current is already seeded from defaultConfig in Awake
+            Apply(Current);
+            OnSettingsLoaded?.Invoke(Current);
             return;
         }
 
         try {
-            string encoded = File.ReadAllText(FilePath);
-            string json = Encoding.UTF8.GetString(Convert.FromBase64String(encoded));
-            Current = JsonUtility.FromJson<GameSettings>(json);
-            Debug.Log("[SettingsManager] Loaded.");
+            string raw = File.ReadAllText(FilePath);
+            var wrapper = JsonUtility.FromJson<Wrapper>(raw);
+
+            if (!QuizDataIntegrity.Verify(wrapper.payload, wrapper.signature)) {
+                Debug.LogWarning("[SettingsManager] Integrity check failed — using defaults.");
+                Current = defaultConfig != null
+                    ? defaultConfig.ToGameSettings()
+                    : new GameSettings();
+            } else {
+                Current = GameSettings.FromKeyValueString(wrapper.payload);
+                Debug.Log("[SettingsManager] Loaded and verified.");
+            }
         } catch (Exception e) {
             Debug.LogError($"[SettingsManager] Load error: {e.Message}");
             Current = defaultConfig != null
                 ? defaultConfig.ToGameSettings()
                 : new GameSettings();
-            Save(Current); // Save defaults to file for future loads)
         }
 
         Apply(Current);
@@ -75,19 +84,12 @@ public class SettingsManager : MonoBehaviour {
         QualitySettings.SetQualityLevel(s.qualityLevel, true);
         // POV is read by your camera/character via:
         // SettingsManager.Instance.Current.isFirstPerson
+    }
 
-        QualitySettings.vSyncCount = s.vsyncEnabled ? 1 : 0;
-
-        int maxRefreshRate = Mathf.RoundToInt(DeviceFrameRate.GetMaxRefreshRate());
-        int fps = s.targetFrameRate > 0 ? s.targetFrameRate : maxRefreshRate;
-
-        // Clamp against this device's max refresh rate in case the save came
-        // from a different device (e.g. cloud save restore, or device swap).
-        fps = Mathf.Min(fps, maxRefreshRate);
-
-        Application.targetFrameRate = fps;
-
-        Debug.Log(fps);
-        Debug.Log(s.vsyncEnabled);
+    // ── Internal wrapper ────────────────────────────────────
+    [Serializable]
+    private class Wrapper {
+        public string payload;
+        public string signature;
     }
 }
