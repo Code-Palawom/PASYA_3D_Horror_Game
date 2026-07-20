@@ -62,30 +62,30 @@ public class MuteButtonUI : MonoBehaviour, IPointerClickHandler {
         _targetIconAlpha = iconIdleAlpha;
 
         if (VivoxManager.Instance != null) {
-            if (string.IsNullOrEmpty(VivoxManager.Instance.CurrentChannelName)) {
-                fillImage.color = unmutedFillColor;
-                isActive = true;
-                iconImage.color = Color.white;
-                action.performed += _ => OnActionPerformed();
-                action.Enable();
+            if (!string.IsNullOrEmpty(VivoxManager.Instance.CurrentChannelName)) {
+                SetupMic();
             } else {
                 VivoxManager.Instance.OnChannelJoined += (_) => {
-                    fillImage.color = unmutedFillColor;
-                    isActive = true;
-                    iconImage.color = Color.white;
-                    action.performed += _ => OnActionPerformed();
-                    action.Enable();
+                    SetupMic();
                 };
             }
-
-            VivoxManager.Instance.OnLocalMuteChanged += HandleMuteStateChanged;
-            VivoxManager.Instance.OnParticipantSpeechChanged += HandleSpeechChanged;
-
-            RefreshVisual(VivoxManager.Instance.IsLocallyMuted);
-            _targetFill = VivoxManager.Instance.IsLocallyMuted ? 0f : intensitySlider.value;
-            _targetIconAlpha = VivoxManager.Instance.IsLocallyMuted ? iconSpeakingAlpha : iconIdleAlpha;
-            SetIconAlpha(_targetIconAlpha);
         }
+    }
+
+    private void SetupMic() {
+        fillImage.color = unmutedFillColor;
+        isActive = true;
+        iconImage.color = Color.white;
+        action.performed += _ => OnActionPerformed();
+        action.Enable();
+
+        VivoxManager.Instance.OnLocalMuteChanged += HandleMuteStateChanged;
+        VivoxManager.Instance.OnParticipantSpeechChanged += HandleSpeechChanged;
+
+        RefreshVisual(VivoxManager.Instance.IsLocallyMuted);
+        _targetFill = VivoxManager.Instance.IsLocallyMuted ? 0f : intensitySlider.value;
+        _targetIconAlpha = VivoxManager.Instance.IsLocallyMuted ? iconSpeakingAlpha : iconIdleAlpha;
+        SetIconAlpha(_targetIconAlpha);
     }
 
     private void OnDisable() {
