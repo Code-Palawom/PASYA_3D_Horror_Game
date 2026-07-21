@@ -51,6 +51,7 @@ public class InventoryUI : MonoBehaviour {
     private PlayerInventory _inventory;
     private bool _isOpen;
     private int _dragSourceIndex = -1;
+    private InventorySlotUI _hoveredDropTarget;
     private bool _hasInitialized;
 
     private PrimeTween.Tween _scaleTween;
@@ -225,12 +226,39 @@ public class InventoryUI : MonoBehaviour {
     // target — always hide the ghost so it never gets stuck on screen.
     public void EndDragVisual() {
         if (dragGhost != null) dragGhost.enabled = false;
+
+        // The pointer may end the drag sitting directly over a slot without
+        // ever firing OnPointerExit on it (e.g. release without moving off),
+        // so clear whatever's currently highlighted here too, not just via
+        // NotifySlotHovered's own exit path.
+        if (_hoveredDropTarget != null) {
+            _hoveredDropTarget.SetDropTargetHighlight(false);
+            _hoveredDropTarget = null;
+        }
     }
 
     public void OnDrop(int targetIndex) {
         if (_dragSourceIndex < 0 || _dragSourceIndex == targetIndex) return;
         _inventory.MoveSlotServerRpc(_dragSourceIndex, targetIndex);
         _dragSourceIndex = -1;
+    }
+
+    // Called by InventorySlotUI on pointer enter/exit. Only shows the
+    // "drop here" highlight while an actual drag is in progress, and never
+    // on the slot being dragged FROM (dropping there is a no-op).
+    public void NotifySlotHovered(InventorySlotUI slot, bool entered) {
+        if (_dragSourceIndex < 0) return;
+
+        if (entered) {
+            if (slot.SlotIndex == _dragSourceIndex) return;
+            if (_hoveredDropTarget != null && _hoveredDropTarget != slot)
+                _hoveredDropTarget.SetDropTargetHighlight(false);
+            _hoveredDropTarget = slot;
+            slot.SetDropTargetHighlight(true);
+        } else if (_hoveredDropTarget == slot) {
+            slot.SetDropTargetHighlight(false);
+            _hoveredDropTarget = null;
+        }
     }
 
     // ── Touch/Click Slot Selection (called by InventorySlotUI) ─────────────────

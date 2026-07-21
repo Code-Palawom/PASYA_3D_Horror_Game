@@ -7,7 +7,7 @@ using PrimeTween;
 // Visual representation of one inventory slot.
 // Supports drag-and-drop between slots.
 public class InventorySlotUI : MonoBehaviour,
-    IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler, IPointerEnterHandler, IPointerClickHandler {
+    IBeginDragHandler, IDragHandler, IEndDragHandler, IDropHandler, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler {
     [SerializeField] private Image iconImage;
     [SerializeField] private TextMeshProUGUI quantityText;
     [SerializeField] private Image background;
@@ -34,6 +34,9 @@ public class InventorySlotUI : MonoBehaviour,
     [Header("Drag Feedback")]
     [Tooltip("Icon alpha on the slot you're dragging FROM, while the drag is in progress.")]
     [SerializeField] private float draggingIconOpacity = 0.35f;
+    [Tooltip("Background alpha shown on whichever slot the pointer is currently over " +
+             "while dragging — signals \"drop here\".")]
+    [SerializeField] private float dropTargetOpacity = 1f;
 
     public int SlotIndex { get; private set; }
 
@@ -107,6 +110,19 @@ public class InventorySlotUI : MonoBehaviour,
         if (background == null) return;
         var c = background.color;
         background.color = new Color(c.r, c.g, c.b, alpha);
+    }
+
+    // What the background should sit at when NOT highlighted as a drop
+    // target — hotbar slots follow their active/inactive dimming, main
+    // inventory slots just sit at their designed inventoryBgColor alpha
+    // (ApplyBaseOpacity never touches main inventory backgrounds at all).
+    private float RestingBackgroundOpacity => _isHotbar ? BaseOpacity : inventoryBgColor.a;
+
+    // Called by InventoryUI while a drag is in progress and the pointer is
+    // over this slot, to signal "drop here". Cleared (highlighted: false)
+    // on pointer-exit or whenever the drag ends, regardless of outcome.
+    public void SetDropTargetHighlight(bool highlighted) {
+        SetBackgroundOpacity(highlighted ? dropTargetOpacity : RestingBackgroundOpacity);
     }
 
     // ── Item Name Popup ──────────────────────────────────────────────────────
@@ -211,7 +227,11 @@ public class InventorySlotUI : MonoBehaviour,
     }
 
     public void OnPointerEnter(PointerEventData eventData) {
-        // TODO: show item tooltip
+        _ui.NotifySlotHovered(this, true);
+    }
+
+    public void OnPointerExit(PointerEventData eventData) {
+        _ui.NotifySlotHovered(this, false);
     }
 
     // Tap/click a hotbar slot to make it active — this is the touch

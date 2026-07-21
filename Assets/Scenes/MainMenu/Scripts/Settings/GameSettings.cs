@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using System.Text;
+using System.Xml.Linq;
 
 [Serializable]
 public class GameSettings {
@@ -44,7 +45,12 @@ public class GameSettings {
 
             switch (key) {
                 case "playerName":
-                    settings.playerName = value;
+                    if (string.IsNullOrEmpty(value)) {
+                        settings.playerName = "Player";
+                        break;
+                    }
+
+                    settings.playerName = value.Length > 30 ? value[..30] : value;
                     break;
                 case "isFirstPerson":
                     settings.isFirstPerson = value == "1";
@@ -62,7 +68,9 @@ public class GameSettings {
                     settings.vsyncEnabled = value == "1";
                     break;
                 case "targetFrameRate":
-                    settings.targetFrameRate = 60;
+                    if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out settings.targetFrameRate))
+                        if(settings.targetFrameRate < 30) settings.targetFrameRate = 60;
+                    else settings.targetFrameRate = 60;
                     break;
                 default:
                     // unknown key — ignore, keeps format forward-compatible

@@ -33,13 +33,7 @@ public class SettingsManager : MonoBehaviour {
     public void Save(GameSettings settings) {
         Current = settings;
 
-        string kv = settings.ToKeyValueString();
-        var wrapper = new Wrapper {
-            payload = kv,
-            signature = QuizDataIntegrity.ComputeSignature(kv)
-        };
-
-        File.WriteAllText(FilePath, JsonUtility.ToJson(wrapper, true));
+        File.WriteAllText(FilePath, settings.ToKeyValueString());
         Apply(Current);
         OnSettingsSaved?.Invoke(Current);
         Debug.Log("[SettingsManager] Saved.");
@@ -57,17 +51,8 @@ public class SettingsManager : MonoBehaviour {
 
         try {
             string raw = File.ReadAllText(FilePath);
-            var wrapper = JsonUtility.FromJson<Wrapper>(raw);
-
-            if (!QuizDataIntegrity.Verify(wrapper.payload, wrapper.signature)) {
-                Debug.LogWarning("[SettingsManager] Integrity check failed — using defaults.");
-                Current = defaultConfig != null
-                    ? defaultConfig.ToGameSettings()
-                    : new GameSettings();
-            } else {
-                Current = GameSettings.FromKeyValueString(wrapper.payload);
-                Debug.Log("[SettingsManager] Loaded and verified.");
-            }
+            Current = GameSettings.FromKeyValueString(raw);
+            Debug.Log("[SettingsManager] Loaded.");
         } catch (Exception e) {
             Debug.LogError($"[SettingsManager] Load error: {e.Message}");
             Current = defaultConfig != null
@@ -84,12 +69,5 @@ public class SettingsManager : MonoBehaviour {
         QualitySettings.SetQualityLevel(s.qualityLevel, true);
         // POV is read by your camera/character via:
         // SettingsManager.Instance.Current.isFirstPerson
-    }
-
-    // ── Internal wrapper ────────────────────────────────────
-    [Serializable]
-    private class Wrapper {
-        public string payload;
-        public string signature;
     }
 }
