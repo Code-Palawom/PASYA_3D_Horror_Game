@@ -30,6 +30,12 @@ public class PlayerInventory : NetworkBehaviour, IInventoryQuery {
     [SerializeField] private ItemRegistry itemRegistry;
     private ItemRegistry Registry => itemRegistry != null ? itemRegistry : ItemRegistry.Instance;
 
+    [Tooltip("Must have NetworkObject + WorldItem components (the same prefab WorldItemSpawner " +
+             "uses). Instantiated server-side whenever a player drops an item from their inventory.")]
+    [SerializeField] private GameObject worldItemPrefab;
+    [Tooltip("Dropped items spawn this far in front of the player (transform.forward).")]
+    [SerializeField] private float dropDistance = 1.5f;
+
     // ── Networked State ───────────────────────────────────────────────────────
 
     private NetworkList<NetworkInventorySlot> _slots;
@@ -237,17 +243,46 @@ public class PlayerInventory : NetworkBehaviour, IInventoryQuery {
         _slots[toIndex] = temp;
     }
 
-    // Drop item at slotIndex into the world. Only the owner may call this.
+    // Drop `quantity` of the item at slotIndex into the world as a WorldItem,
+    // in front of the player. Only the owner may call this. Dropping less
+    // than the full stack leaves the remainder in place; dropping the whole
+    // stack (or more, which is clamped) empties the slot.
     [Rpc(SendTo.Server, InvokePermission = RpcInvokePermission.Owner)]
-    public void DropItemServerRpc(int slotIndex) {
+    public void DropItemServerRpc(int slotIndex, int quantity) {
         if (slotIndex < 0 || slotIndex >= TotalSlots) return;
-        if (_slots[slotIndex].IsEmpty) return;
 
-        // TODO: Instantiate a WorldItem prefab at player's position here
-        // var go = Instantiate(worldItemPrefab, transform.position + transform.forward, Quaternion.identity);
-        // go.GetComponent<NetworkObject>().Spawn();
-        // go.GetComponent<WorldItem>().Setup(_slots[slotIndex].ItemID.ToString(), _slots[slotIndex].Quantity);
+        var slot = _slots[slotIndex];
+        if (slot.IsEmpty) return;
 
-        _slots[slotIndex] = NetworkInventorySlot.Empty;
+        int qtyToDrop = Mathf.Clamp(quantity, 1, slot.Quantity);
+        string itemID = slot.ItemID.ToString();
+
+        if (worldItemPrefab == null) {
+            Debug.LogError("[PlayerInventory] No worldItemPrefab assigned — cannot drop items.");
+            return;
+        }
+
+        Vector3 spawnPos = transform.position + transform.forward * dropDistance;
+        var go = Instantiate(worldItemPrefab, spawnPos, Quaternion.identity);
+        var netObj = go.GetComponent<NetworkObject>();
+        if (netObj == null) {
+            Debug.LogError($"[PlayerInventory] '{worldItemPrefab.name}' has no NetworkObject.");
+            Destroy(go);
+            return;
+        }
+
+        // Note: dropped items skip the pickup quiz entirely — see
+        // NetworkedQuizGate.SetSkipQuiz. Must be called before Spawn(), same
+        // as WorldItemSpawner's SetDifficulty() call for spawner-placed items.
+        var gate = go.GetComponent<NetworkedQuizGate>();
+        gate?.SetSkipQuiz(true);
+
+        netObj.Spawn();
+        go.GetComponent<WorldItem>().Setup(itemID, qtyToDrop);
+
+        int remaining = slot.Quantity - qtyToDrop;
+        _slots[slotIndex] = remaining <= 0
+            ? NetworkInventorySlot.Empty
+            : new NetworkInventorySlot { ItemID = slot.ItemID, Quantity = remaining };
     }
 }

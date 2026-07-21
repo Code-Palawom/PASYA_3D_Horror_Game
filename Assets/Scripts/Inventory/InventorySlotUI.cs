@@ -211,7 +211,10 @@ public class InventorySlotUI : MonoBehaviour,
         // flat 1f, since an inactive hotbar slot should settle back at 25%,
         // not full opacity.
         SetIconOpacity(BaseOpacity);
-        _ui.EndDragVisual();
+        // Pass SlotIndex + eventData along so InventoryUI can tell whether the
+        // pointer released over a slot (normal reorder, handled via OnDrop)
+        // or out in open space (a "drop this into the world" gesture).
+        _ui.EndDragVisual(SlotIndex, eventData);
     }
 
     private void SetIconOpacity(float alpha) {

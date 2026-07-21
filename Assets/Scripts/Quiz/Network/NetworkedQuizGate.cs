@@ -18,6 +18,11 @@ public class NetworkedQuizGate : NetworkBehaviour, IInteractable, IUnlockable {
     [SerializeField] QuestionDifficulty difficulty = QuestionDifficulty.Easy;
     [SerializeField] bool oneTimeUnlock = true;
     [SerializeField] float wrongAnswerCooldown = 10f;
+    [Tooltip("If true, Attempt() succeeds immediately with no question asked at all — no " +
+             "question is claimed from the coordinator, no interacting-player tracking happens. " +
+             "Set via SetSkipQuiz() before Spawn() (e.g. PlayerInventory does this for dropped " +
+             "items, so picking your own dropped stuff back up doesn't require a quiz).")]
+    [SerializeField] bool skipQuiz = false;
 
     [Header("Side Effects (Wrong Answer — applied to ALL interacting players)")]
     [SerializeField] SideEffectRegistry registry;
@@ -111,6 +116,19 @@ public class NetworkedQuizGate : NetworkBehaviour, IInteractable, IUnlockable {
         difficulty = newDifficulty;
     }
 
+    // Mirrors SetDifficulty: must be called after Instantiate() but before
+    // NetworkObject.Spawn(), since OnNetworkSpawn is what decides whether to
+    // claim a question at all. Calling this after spawn has no effect.
+    public void SetSkipQuiz(bool skip) {
+        if (IsSpawned) {
+            Debug.LogWarning($"[NetworkedQuizGate] '{name}': SetSkipQuiz called after spawn — " +
+                              "too late, spawn already decided whether to claim a question. " +
+                              "Call this before Spawn().");
+            return;
+        }
+        skipQuiz = skip;
+    }
+
     // ─────────────────────────────────────────────────────────
     // NetworkList must be created in Awake
     // ─────────────────────────────────────────────────────────
@@ -129,7 +147,7 @@ public class NetworkedQuizGate : NetworkBehaviour, IInteractable, IUnlockable {
     private QuestionRuntime _runtimeQuestion;
 
     public override void OnNetworkSpawn() {
-        if (IsServer) {
+        if (IsServer && !skipQuiz) {
             // Guard: coordinator must be initialized first
             if (QuizAssignmentCoordinator.Instance == null) {
                 Debug.LogError("[NetworkedQuizGate] QuizAssignmentCoordinator not ready. " +
@@ -164,6 +182,7 @@ public class NetworkedQuizGate : NetworkBehaviour, IInteractable, IUnlockable {
     // Attempt — called by interactables
     // ─────────────────────────────────────────────────────────
     public void Attempt(GameObject interactor, Action onSuccess, Action onFail) {
+        if (skipQuiz) { onSuccess?.Invoke(); return; }
         if (_unlocked.Value) { onSuccess?.Invoke(); return; }
 
         // ── Cooldown check ────────────────────────────────────

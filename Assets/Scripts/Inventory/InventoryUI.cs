@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 using PrimeTween;
@@ -43,6 +44,12 @@ public class InventoryUI : MonoBehaviour {
     [SerializeField] private Image dragGhost;
 
     [SerializeField] private InputAction action;
+
+    [Header("Drop-to-World")]
+    [Tooltip("Popup shown when a stack is dragged out of the inventory/hotbar and released " +
+             "in open space, asking how many to drop. Leave empty to always drop the whole " +
+             "stack immediately with no prompt.")]
+    [SerializeField] private DropQuantityPrompt dropQuantityPrompt;
 
 #if UNITY_EDITOR || UNITY_STANDALONE
     [SerializeField] Image backpackIcon;
@@ -224,7 +231,11 @@ public class InventoryUI : MonoBehaviour {
 
     // Called on release regardless of whether the drop landed on a valid
     // target — always hide the ghost so it never gets stuck on screen.
-    public void EndDragVisual() {
+    // sourceIndex/eventData let us tell a normal in-panel reorder (handled
+    // by OnDrop below, which already fired by the time this runs — uGUI
+    // calls IDropHandler.OnDrop before IEndDragHandler.OnEndDrag) apart from
+    // a genuine "dragged out into open space" gesture.
+    public void EndDragVisual(int sourceIndex, PointerEventData eventData) {
         if (dragGhost != null) dragGhost.enabled = false;
 
         // The pointer may end the drag sitting directly over a slot without
@@ -234,6 +245,38 @@ public class InventoryUI : MonoBehaviour {
         if (_hoveredDropTarget != null) {
             _hoveredDropTarget.SetDropTargetHighlight(false);
             _hoveredDropTarget = null;
+        }
+
+        // If OnDrop already ran (valid slot-to-slot move), it already reset
+        // _dragSourceIndex to -1 — nothing further to do here.
+        if (_dragSourceIndex < 0) return;
+        _dragSourceIndex = -1;
+
+        // Did the pointer release over ANY inventory/hotbar slot (including
+        // back onto its own source slot)? If so this was a no-op reorder,
+        // not a drop-to-world gesture — leave it alone.
+        var hitObject = eventData.pointerCurrentRaycast.gameObject;
+        var hitSlot = hitObject != null ? hitObject.GetComponentInParent<InventorySlotUI>() : null;
+        if (hitSlot != null) return;
+
+        TryBeginWorldDrop(sourceIndex);
+    }
+
+    // Dragged out of the inventory/hotbar entirely and released in open
+    // space — treat it as "drop this on the ground". Prompts for quantity
+    // if a stack of more than 1 and a prompt UI is assigned; otherwise
+    // drops the whole stack immediately.
+    private void TryBeginWorldDrop(int sourceIndex) {
+        if (sourceIndex < 0 || sourceIndex >= _inventory.SlotCount) return;
+        var slot = _inventory.GetSlot(sourceIndex);
+        if (slot.IsEmpty) return;
+
+        if (dropQuantityPrompt != null && slot.Quantity > 1) {
+            var item = Registry?.Get(slot.ItemID.ToString());
+            dropQuantityPrompt.Show(item, slot.Quantity,
+                onConfirm: qty => _inventory.DropItemServerRpc(sourceIndex, qty));
+        } else {
+            _inventory.DropItemServerRpc(sourceIndex, slot.Quantity);
         }
     }
 
