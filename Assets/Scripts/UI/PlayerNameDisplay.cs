@@ -1,12 +1,14 @@
 using System.Collections.Generic;
-using Unity.Netcode;
 using TMPro;
+using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class PlayerNameDisplay : NetworkBehaviour {
     [Header("References")]
     [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private Transform nameTagTransform; // the World Space Canvas
+    [SerializeField] private RectTransform nameTagBackground; // the World Space Canvas
     [SerializeField] private VoiceActivityIndicator voiceIndicator; // mic icon, same name tag
 
     // Static registry of all non-owner PlayerNameDisplay instances.
@@ -16,35 +18,21 @@ public class PlayerNameDisplay : NetworkBehaviour {
 
     private Camera _mainCamera;
     private bool nameTagsEnabled = true;
-    private bool _vivoxSubscribed;
-
-    private System.Collections.IEnumerator SubscribeToVivoxWhenReady() {
-        // VivoxManager is a separate DontDestroyOnLoad singleton whose Awake()
-        // ordering relative to this player prefab spawning isn't guaranteed -
-        // waiting here instead of a single one-shot null-check avoids silently
-        // skipping the sync forever if VivoxManager just hasn't run Awake() yet.
-        yield return new WaitUntil(() => VivoxManager.Instance != null);
-
-        Debug.Log($"[VoiceSync] VivoxManager ready, subscribing. IsLocallyMuted={VivoxManager.Instance.IsLocallyMuted}, CurrentChannelName='{VivoxManager.Instance.CurrentChannelName}'");
-
-        // Deliberate mute state - reported on toggle.
-        VivoxManager.Instance.OnLocalMuteChanged += HandleLocalMuteChanged;
-        HandleLocalMuteChanged(VivoxManager.Instance.IsLocallyMuted, false);
-
-        // Connection state - distinct from mute. IsMicOn reflects whether
-        // this client has actually joined a Vivox channel and can transmit
-        // at all, regardless of whether they've chosen to mute.
-        VivoxManager.Instance.OnChannelJoined += HandleChannelJoined;
-        VivoxManager.Instance.OnChannelLeft += HandleChannelLeft;
-        HandleMicOnChanged(!string.IsNullOrEmpty(VivoxManager.Instance.CurrentChannelName));
-
-        _vivoxSubscribed = true;
-    }
 
     public override void OnNetworkSpawn() {
         if (IsOwner) {
             nameTagTransform.gameObject.SetActive(false);
-            StartCoroutine(SubscribeToVivoxWhenReady());
+
+            if (!GameModeManager.Instance.IsRelayMode) return;
+            VivoxManager.Instance.OnLocalMuteChanged += HandleLocalMuteChanged;
+            HandleLocalMuteChanged(VivoxManager.Instance.IsLocallyMuted, false);
+
+            // Connection state - distinct from mute. IsMicOn reflects whether
+            // this client has actually joined a Vivox channel and can transmit
+            // at all, regardless of whether they've chosen to mute.
+            VivoxManager.Instance.OnChannelJoined += HandleChannelJoined;
+            VivoxManager.Instance.OnChannelLeft += HandleChannelLeft;
+            HandleMicOnChanged(!string.IsNullOrEmpty(VivoxManager.Instance.CurrentChannelName));
             return;
         }
 
@@ -52,8 +40,7 @@ public class PlayerNameDisplay : NetworkBehaviour {
         All.Add(this);
 
         // Read setting once on spawn
-        nameTagsEnabled = SettingsManager.Instance == null
-            || SettingsManager.Instance.Current.showNameTags;
+        nameTagsEnabled = SettingsManager.Instance == null || SettingsManager.Instance.Current.showNameTags;
 
         nameTagTransform.gameObject.SetActive(nameTagsEnabled);
 
@@ -70,7 +57,7 @@ public class PlayerNameDisplay : NetworkBehaviour {
         if (GameSessionManager.Instance != null)
             GameSessionManager.Instance.Players.OnListChanged -= OnPlayersChanged;
 
-        if (_vivoxSubscribed && VivoxManager.Instance != null) {
+        if (VivoxManager.Instance != null && GameModeManager.Instance.IsRelayMode) {
             VivoxManager.Instance.OnLocalMuteChanged -= HandleLocalMuteChanged;
             VivoxManager.Instance.OnChannelJoined -= HandleChannelJoined;
             VivoxManager.Instance.OnChannelLeft -= HandleChannelLeft;
@@ -128,6 +115,8 @@ public class PlayerNameDisplay : NetworkBehaviour {
         voiceIndicator.DisplayName = playerName; // matches Vivox DisplayName set at login
         voiceIndicator.IsMuted = player.IsMuted;
         voiceIndicator.IsMicOn = player.IsMicOn;
+
+        LayoutRebuilder.ForceRebuildLayoutImmediate(nameTagBackground);
     }
 
     private void LateUpdate() {

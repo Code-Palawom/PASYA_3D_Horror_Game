@@ -1746,7 +1746,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 3683115389
+  GlobalObjectIdHash: 2432858981
   InScenePlacedSourceGlobalObjectIdHash: 3683115389
   DeferredDespawnTick: 0
   Ownership: 1
@@ -4257,8 +4257,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1398212334812659468}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 328.2109, y: 1.6, z: 53.84344}
+  m_LocalRotation: {x: 0.12767383, y: 0.20613296, z: -0.027137911, w: 0.96977943}
+  m_LocalPosition: {x: 328.2109, y: 3.5, z: 53.84344}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -21578,8 +21578,8 @@ GameObject:
   - component: {fileID: 8756487037683590759}
   - component: {fileID: 1796903863354784092}
   - component: {fileID: 5029369416574561366}
-  - component: {fileID: 594370163850456001}
   - component: {fileID: 5436518077548425223}
+  - component: {fileID: 594370163850456001}
   m_Layer: 0
   m_Name: Background
   m_TagString: Untagged
@@ -21645,20 +21645,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &594370163850456001
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6727409610848465002}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
-  m_HorizontalFit: 2
-  m_VerticalFit: 2
 --- !u!114 &5436518077548425223
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -21685,6 +21671,20 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!114 &594370163850456001
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6727409610848465002}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3245ec927659c4140ac4f8d17403cc18, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
+  m_HorizontalFit: 2
+  m_VerticalFit: 2
 --- !u!1 &6774574052711589019
 GameObject:
   m_ObjectHideFlags: 0
@@ -22236,6 +22236,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   nameText: {fileID: 9133130485928418864}
   nameTagTransform: {fileID: 7899562683452470222}
+  nameTagBackground: {fileID: 8756487037683590759}
   voiceIndicator: {fileID: 8750371281343038555}
 --- !u!1 &6899957685898148868
 GameObject:
@@ -28190,7 +28191,7 @@ MonoBehaviour:
   - {fileID: 21300000, guid: bd593aaa7bab8964ca6df5530b4a8613, type: 3}
   mutedSprite: {fileID: 21300000, guid: 24b9b5eeb1ceb4745aed1dd41d424e7d, type: 3}
   minEnergyThreshold: 0.05
-  tier1Threshold: 0.25
+  tier1Threshold: 0.1
   tier2Threshold: 0.5
   tier3Threshold: 0.75
   speakingAlpha: 1
