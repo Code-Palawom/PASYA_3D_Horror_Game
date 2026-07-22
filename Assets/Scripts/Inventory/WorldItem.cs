@@ -18,15 +18,39 @@ public class WorldItem : NetworkBehaviour, IInteractable {
     [SerializeField] private ItemRegistry itemRegistry;
     [Tooltip("Empty child transform where the item's 3D worldModelPrefab gets instantiated.")]
     [SerializeField] private Transform modelAnchor;
+    [Tooltip("Physics collider on this WorldItem root. Auto-swapped each time the visual refreshes " +
+             "to match whatever Collider type (Box/Sphere/Capsule) is found on the item's " +
+             "worldModelPrefab, with that collider's shape values copied over — so a key's small " +
+             "SphereCollider and a crate's big BoxCollider each end up as the actual physics shape, " +
+             "instead of one fixed size for every item. If the model has no Collider at all, falls " +
+             "back to a BoxCollider sized from InventoryItem.worldColliderSize/worldColliderCenter. " +
+             "Assign any Collider here to start (e.g. a BoxCollider) — it'll be replaced as needed.")]
+    [SerializeField] private Collider physicsCollider;
     private ItemRegistry Registry => itemRegistry != null ? itemRegistry : ItemRegistry.Instance;
 
     private GameObject _currentModelInstance;
     private NetworkedQuizGate _gate;
     private InteractionRequirements _requirements; // optional — e.g. "need a lockpick to even attempt this"
+    private Rigidbody _rb;
 
     void Awake() {
         _gate = GetComponent<NetworkedQuizGate>();
         _requirements = GetComponent<InteractionRequirements>();
+
+        _rb = GetComponent<Rigidbody>();
+        if (_rb != null) {
+            // Discrete (the default) only checks for overlap at the start/end of
+            // each physics step — a small/fast Rigidbody can move further than
+            // its own size in one step and pass straight through a thin floor
+            // collider without ever registering the hit. This got noticeably
+            // worse once items got per-item collider sizes (a key's small
+            // SphereCollider tunnels far more easily than the old fixed generic
+            // box did). Continuous checks the whole swept path instead. Forced
+            // here in code rather than left to prefab setup so it can't get
+            // reset/forgotten when the prefab is touched later.
+            _rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+            _rb.interpolation = RigidbodyInterpolation.Interpolate; // smooths the visual fall too
+        }
     }
 
     private NetworkVariable<FixedString64Bytes> _itemID = new(
@@ -76,6 +100,7 @@ public class WorldItem : NetworkBehaviour, IInteractable {
 
         if (item.worldModelPrefab == null) {
             Debug.LogWarning($"[WorldItem] '{item.itemID}' has no worldModelPrefab assigned.");
+            ApplyColliderForItem(item, null); // still size the fallback collider even with no visual
             return;
         }
 
@@ -91,6 +116,71 @@ public class WorldItem : NetworkBehaviour, IInteractable {
         _currentModelInstance = Instantiate(item.worldModelPrefab, parent);
         _currentModelInstance.transform.localPosition = Vector3.zero;
         _currentModelInstance.transform.localRotation = Quaternion.identity;
+
+        ApplyColliderForItem(item, _currentModelInstance);
+    }
+
+    // Sizes/shapes physicsCollider to match this item — copied from a Collider
+    // found on the model instance if it has one, otherwise a BoxCollider
+    // fallback sized from the InventoryItem asset.
+    private void ApplyColliderForItem(InventoryItem item, GameObject modelInstance) {
+        var source = modelInstance != null
+            ? modelInstance.GetComponentInChildren<Collider>(includeInactive: true)
+            : null;
+
+        if (source != null) {
+            EnsureColliderType(source.GetType());
+            CopyColliderShape(source, physicsCollider);
+            // The model's collider was only a shape template — disable it so it
+            // doesn't ALSO count as a compound collider under this Rigidbody
+            // (the model sits under modelAnchor, a child of this GameObject).
+            source.enabled = false;
+        } else {
+            EnsureColliderType(typeof(BoxCollider));
+            if (physicsCollider is BoxCollider box) {
+                box.size = item.worldColliderSize;
+                box.center = item.worldColliderCenter;
+            }
+        }
+    }
+
+    // Swaps physicsCollider to a fresh component of colliderType if it isn't
+    // already one — e.g. going from a previous item's BoxCollider to this
+    // item's SphereCollider.
+    private void EnsureColliderType(System.Type colliderType) {
+        if (physicsCollider != null && physicsCollider.GetType() != colliderType) {
+            Destroy(physicsCollider);
+            physicsCollider = null;
+        }
+        if (physicsCollider == null)
+            physicsCollider = (Collider)gameObject.AddComponent(colliderType);
+    }
+
+    // Copies shape values for the collider types WorldItem supports. Mesh
+    // colliders aren't included — they need convex=true to work with a
+    // non-kinematic Rigidbody, which usually isn't what you want for a small
+    // pickup anyway; use Box/Sphere/Capsule on the model instead.
+    private static void CopyColliderShape(Collider source, Collider dest) {
+        switch (source) {
+            case BoxCollider srcBox when dest is BoxCollider dstBox:
+                dstBox.size = srcBox.size;
+                dstBox.center = srcBox.center;
+                break;
+            case SphereCollider srcSphere when dest is SphereCollider dstSphere:
+                dstSphere.radius = srcSphere.radius;
+                dstSphere.center = srcSphere.center;
+                break;
+            case CapsuleCollider srcCapsule when dest is CapsuleCollider dstCapsule:
+                dstCapsule.radius = srcCapsule.radius;
+                dstCapsule.height = srcCapsule.height;
+                dstCapsule.center = srcCapsule.center;
+                dstCapsule.direction = srcCapsule.direction;
+                break;
+            default:
+                Debug.LogWarning($"[WorldItem] Unsupported collider type '{source.GetType().Name}' " +
+                                  "on model — use Box/Sphere/Capsule Collider instead.");
+                break;
+        }
     }
 
     // ── IInteractable ─────────────────────────────────────────────────────────

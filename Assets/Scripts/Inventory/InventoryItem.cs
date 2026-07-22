@@ -18,13 +18,24 @@ public class InventoryItem : ScriptableObject {
     public bool stackable = true;
     public int maxStack = 64;
 
-    [Header("Key Settings")]
-    public bool isKey = false;
-    public string keyID; // Must match LockedDoor.requiredKeyID exactly
+    [Header("Usage")]
+    [Tooltip("If true, one of this item is consumed (removed from inventory) whenever it's used " +
+             "to satisfy an ItemRequirement — see ItemRequirement.OnConsumed. Lives on the item " +
+             "itself so every requirement referencing this itemID behaves consistently, rather " +
+             "than each requirement instance deciding separately.")]
     public bool consumeOnUnlock = false;
 
     [Header("Pickup Quiz")]
     [Tooltip("Quiz difficulty required to pick this item up via WorldItem. " +
              "Applied to the spawned WorldItem's NetworkedQuizGate before it spawns.")]
     public QuestionDifficulty pickupDifficulty = QuestionDifficulty.Easy;
+
+    [Header("World Physics")]
+    [Tooltip("Fallback only — used if worldModelPrefab has no Collider on it. Prefer adding a " +
+             "Box/Sphere/Capsule Collider directly to worldModelPrefab sized to fit the actual " +
+             "mesh; WorldItem copies its shape automatically. This field just covers items whose " +
+             "model doesn't bother with one.")]
+    public Vector3 worldColliderSize = new Vector3(0.3f, 0.3f, 0.3f);
+    [Tooltip("Fallback only — see worldColliderSize.")]
+    public Vector3 worldColliderCenter = Vector3.zero;
 }

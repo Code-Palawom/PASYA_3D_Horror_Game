@@ -14,11 +14,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::InventoryItem
   itemID: bato
   displayName: Bato
-  icon: {fileID: 21300000, guid: c8d63f103c29eff41ad71329f98b9790, type: 3}
-  worldModelPrefab: {fileID: 847954368522866426, guid: 5e53626d9d37c0c4eb2bd3068b964d2e, type: 3}
+  icon: {fileID: 21300000, guid: 7543350c4aefec54f9c9876ec99d5628, type: 3}
+  worldModelPrefab: {fileID: 6721928355764729142, guid: 94ce2cfaeb933ed4d966bec219956029, type: 3}
   stackable: 1
   maxStack: 64
   isKey: 0
   keyID: 
   consumeOnUnlock: 0
   pickupDifficulty: 0
+  worldColliderSize: {x: 0.3, y: 0.3, z: 0.3}
+  worldColliderCenter: {x: 0, y: 0, z: 0}

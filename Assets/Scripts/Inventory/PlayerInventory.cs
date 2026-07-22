@@ -35,6 +35,11 @@ public class PlayerInventory : NetworkBehaviour, IInventoryQuery {
     [SerializeField] private GameObject worldItemPrefab;
     [Tooltip("Dropped items spawn this far in front of the player (transform.forward).")]
     [SerializeField] private float dropDistance = 1.5f;
+    [Tooltip("Speed of the toss applied to the dropped item's Rigidbody, in m/s. Direction is " +
+             "player-forward blended with an upward arc — set by dropTossUpwardRatio.")]
+    [SerializeField] private float dropTossSpeed = 3f;
+    [Tooltip("0 = flat toss straight forward, 1 = mostly upward. 0.5 gives a gentle arc.")]
+    [SerializeField, Range(0f, 1f)] private float dropTossUpwardRatio = 0.5f;
 
     // ── Networked State ───────────────────────────────────────────────────────
 
@@ -197,15 +202,6 @@ public class PlayerInventory : NetworkBehaviour, IInventoryQuery {
         return false;
     }
 
-    // Returns true if the item in the active hotbar slot is a key
-    // matching the given keyID.
-    public bool HasKeyInActiveSlot(string keyID) {
-        var slot = GetSlot(_activeHotbarIndex.Value);
-        if (slot.IsEmpty) return false;
-        var item = Registry.Get(slot.ItemID.ToString());
-        return item != null && item.isKey && item.keyID == keyID;
-    }
-
     // Get the InventoryItem definition for the active hotbar slot.
     public InventoryItem GetActiveSlotItem() {
         var slot = GetSlot(_activeHotbarIndex.Value);
@@ -262,7 +258,7 @@ public class PlayerInventory : NetworkBehaviour, IInventoryQuery {
             return;
         }
 
-        Vector3 spawnPos = transform.position + transform.forward * dropDistance;
+        Vector3 spawnPos = transform.position + transform.forward * dropDistance + Vector3.up * 0.5f;
         var go = Instantiate(worldItemPrefab, spawnPos, Quaternion.identity);
         var netObj = go.GetComponent<NetworkObject>();
         if (netObj == null) {
@@ -279,6 +275,18 @@ public class PlayerInventory : NetworkBehaviour, IInventoryQuery {
 
         netObj.Spawn();
         go.GetComponent<WorldItem>().Setup(itemID, qtyToDrop);
+
+        // Gravity/physics: worldItemPrefab needs a Rigidbody + Collider + NetworkTransform +
+        // NetworkRigidbody for this to actually fall and sync across clients. Toss it forward
+        // and slightly up so it doesn't just spawn and drop straight down through the floor.
+        // Must happen AFTER Spawn() — NetworkRigidbody keeps the Rigidbody kinematic until
+        // network authority is established, and setting velocity on a still-kinematic body
+        // throws ("Setting linear velocity of a kinematic body is not supported").
+        var rb = go.GetComponent<Rigidbody>();
+        if (rb != null && !rb.isKinematic) {
+            Vector3 tossDir = Vector3.Lerp(transform.forward, Vector3.up, dropTossUpwardRatio).normalized;
+            rb.linearVelocity = tossDir * dropTossSpeed;
+        }
 
         int remaining = slot.Quantity - qtyToDrop;
         _slots[slotIndex] = remaining <= 0

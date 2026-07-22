@@ -5,10 +5,6 @@ public interface IInventoryQuery {
     // True if itemID exists anywhere in inventory (any slot).
     bool HasItem(string itemID);
 
-    // True if the item equipped in the active hotbar slot is a key
-    // matching keyID (InventoryItem.keyID, not itemID).
-    bool HasKeyInActiveSlot(string keyID);
-
     // The InventoryItem definition currently in the active hotbar slot, or null.
     InventoryItem GetActiveSlotItem();
 

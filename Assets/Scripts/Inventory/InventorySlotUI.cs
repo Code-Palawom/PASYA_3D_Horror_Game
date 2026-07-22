@@ -219,6 +219,8 @@ public class InventorySlotUI : MonoBehaviour,
 
     private void SetIconOpacity(float alpha) {
         var c = iconImage.color;
+        if (alpha == activeOpacity) alpha = 1f;
+        else alpha = 0.75f;
         iconImage.color = new Color(c.r, c.g, c.b, alpha);
     }
 

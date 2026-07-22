@@ -1728,7 +1728,7 @@ CharacterController:
   m_Enabled: 1
   serializedVersion: 3
   m_Height: 1.8
-  m_Radius: 0.25
+  m_Radius: 0.4
   m_SlopeLimit: 45
   m_StepOffset: 0.3
   m_SkinWidth: 0.08
@@ -2066,8 +2066,10 @@ MonoBehaviour:
   hotbarSize: 4
   mainInventorySize: 8
   itemRegistry: {fileID: 0}
-  worldItemPrefab: {fileID: 7603780430769849188, guid: 91a88fac53b2cb441bfc9e3438dfa7b5, type: 3}
+  worldItemPrefab: {fileID: 3080619183193447558, guid: 68c6a7cf86fba764287618df08e28b63, type: 3}
   dropDistance: 1.5
+  dropTossSpeed: 3
+  dropTossUpwardRatio: 0.5
 --- !u!114 &9039289814588520400
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4255,8 +4257,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1398212334812659468}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.12767383, y: 0.20613296, z: -0.027137911, w: 0.96977943}
-  m_LocalPosition: {x: 328.2109, y: 3.5, z: 53.84344}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 328.2109, y: 1.6, z: 53.84344}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
