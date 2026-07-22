@@ -5,30 +5,39 @@ using UnityEngine;
 public class TimeManager : NetworkBehaviour {
     public static TimeManager Instance { get; private set; }
 
-    [SerializeField] private Texture2D skyboxNight;
-    [SerializeField] private Texture2D skyboxSunrise;
-    [SerializeField] private Texture2D skyboxDay;
-    [SerializeField] private Texture2D skyboxSunset;
-
-    [SerializeField] private Gradient gradientNightToSunrise;
-    [SerializeField] private Gradient gradientSunriseToDay;
-    [SerializeField] private Gradient gradientDayToSunset;
-    [SerializeField] private Gradient gradientSunsetToNight;
-
     [SerializeField] private Light globalLight;
+    [SerializeField] private Material skyboxMat;
+
+    [Header("Day")]
+    [SerializeField] private Color day = new Color(0.53f, 0.81f, 0.98f);
+    [SerializeField] private Color dayHorizon = new Color(0.73f, 0.89f, 1f);
+    [SerializeField] private float dayIntensity = 1f;
+
+    [Header("Night")]
+    [SerializeField] private Color night = new Color(0.01f, 0.01f, 0.07f);
+    [SerializeField] private Color nightHorizon = new Color(0.01f, 0.01f, 0.05f);
+    [SerializeField] private float nightIntensity = 0.05f;
+
+    [Header("Sun / Moon (shader disc)")]
+    [SerializeField] private float sunSize = 0.05f;
+    [SerializeField] private float sunHaze = 0.1f;
+    [SerializeField] private Texture2D moonTexture;
+    [SerializeField] private float moonSize = 0.25f;
+    [Tooltip("Night amount (t) at which the shader swaps the sun disc for the moon.")]
+    [SerializeField, Range(0f, 1f)] private float nightThreshold = 0.5f;
+
+    [Header("Clouds (day/night tint only — shape stays static in Inspector)")]
+    [SerializeField] private Color cloudTintDay = Color.white;
+    [SerializeField] private Color cloudTintNight = new Color(0.6f, 0.65f, 0.8f);
 
     [Header("Time Speed")]
     [Tooltip("How many real-world minutes a full 24-hour in-game day takes.")]
     [SerializeField] private float dayLengthInRealMinutes = 24f;
 
-    [Tooltip("How many in-game minutes each skybox/light transition takes (e.g. 120 = 2 in-game hours).")]
-    [SerializeField] private float transitionLengthInGameMinutes = 120f;
-
     [Header("UI (optional scene-based clock)")]
     [SerializeField] private TMPro.TMP_Text clockText;
 
     private float SecondsPerGameMinute => (dayLengthInRealMinutes * 60f) / 1440f;
-    private float TransitionRealSeconds => transitionLengthInGameMinutes * SecondsPerGameMinute;
 
     // ---- Server-authoritative time state ----
     private readonly NetworkVariable<int> netMinutes = new NetworkVariable<int>(
@@ -47,9 +56,6 @@ public class TimeManager : NetworkBehaviour {
     public int DisplayDay => netDays.Value + 1; // "Day 1" on day zero
 
     private float tempSecond;
-    private Coroutine skyboxRoutine;
-    private Coroutine lightRoutine;
-
     private float absDayLengthInRealMinutes;
 
     // ---- Event other scripts (e.g. player prefab UI) can subscribe to ----
@@ -62,14 +68,6 @@ public class TimeManager : NetworkBehaviour {
     // a TimeManager now exists.
     public static event System.Action<TimeManager> OnAnyTimeManagerReady;
 
-    //private void Awake() {
-    //    if (Instance != null && Instance != this) {
-    //        Destroy(gameObject);
-    //        return;
-    //    }
-    //    Instance = this;
-    //}
-
     public override void OnNetworkSpawn() {
         Instance = this;
 
@@ -79,8 +77,17 @@ public class TimeManager : NetworkBehaviour {
         netMinutes.OnValueChanged += OnMinutesChanged;
         netDays.OnValueChanged += (_, _) => UpdateClockUI();
 
+        // One-time shader setup — these don't change with time of day.
+        if (skyboxMat != null) {
+            skyboxMat.SetFloat("_SunSize", sunSize);
+            skyboxMat.SetFloat("_SunHaze", sunHaze);
+            skyboxMat.SetFloat("_MoonSize", moonSize);
+            if (moonTexture != null) skyboxMat.SetTexture("_MoonTex", moonTexture);
+            RenderSettings.skybox = skyboxMat;
+        }
+
         // Snap instantly to correct visuals — no tween for late joiners / host start
-        ApplyInstantState();
+        ApplyVisualsForTime(netHours.Value, netMinutes.Value);
         UpdateClockUI();
 
         OnAnyTimeManagerReady?.Invoke(this);
@@ -165,73 +172,60 @@ public class TimeManager : NetworkBehaviour {
         dayLengthInRealMinutes = absDayLengthInRealMinutes / timeSpeed;
     }
 
-    // Stops any in-progress tween and snaps every client straight to the target hour.
+    // Snaps every client straight to the target hour/minute's visuals instantly.
     [Rpc(SendTo.ClientsAndHost)]
     private void SnapAllClientsRpc(int hour, int minute) {
-        if (skyboxRoutine != null) { StopCoroutine(skyboxRoutine); skyboxRoutine = null; }
-        if (lightRoutine != null) { StopCoroutine(lightRoutine); lightRoutine = null; }
-
-        ApplyInstantStateForHour(hour);
-        UpdateLightRotation();
+        ApplyVisualsForTime(hour, minute);
     }
 
     // ---- Runs on every client (incl. host) whenever synced state changes ----
     private void OnMinutesChanged(int oldValue, int newValue) {
-        UpdateLightRotation();
+        ApplyVisualsForTime(netHours.Value, netMinutes.Value);
         UpdateClockUI();
     }
 
     private void OnHoursChanged(int oldValue, int newValue) {
-        float t = TransitionRealSeconds;
-
-        if (newValue == 6) {
-            RestartRoutine(ref skyboxRoutine, LerpSkybox(skyboxNight, skyboxSunrise, t));
-            RestartRoutine(ref lightRoutine, LerpLight(gradientNightToSunrise, 20000f, 1500f, t));
-        } else if (newValue == 8) {
-            RestartRoutine(ref skyboxRoutine, LerpSkybox(skyboxSunrise, skyboxDay, t));
-            RestartRoutine(ref lightRoutine, LerpLight(gradientSunriseToDay, 1500f, 6500f, t));
-        } else if (newValue == 18) {
-            RestartRoutine(ref skyboxRoutine, LerpSkybox(skyboxDay, skyboxSunset, t));
-            RestartRoutine(ref lightRoutine, LerpLight(gradientDayToSunset, 6500f, 1500f, t));
-        } else if (newValue == 22) {
-            RestartRoutine(ref skyboxRoutine, LerpSkybox(skyboxSunset, skyboxNight, t));
-            RestartRoutine(ref lightRoutine, LerpLight(gradientSunsetToNight, 1500f, 20000f, t));
-        }
-
+        // Visuals are already refreshed by OnMinutesChanged (hour rollover
+        // always coincides with a minute change); this just covers the UI.
         UpdateClockUI();
     }
 
-    private void RestartRoutine(ref Coroutine slot, IEnumerator routine) {
-        if (slot != null) StopCoroutine(slot);
-        slot = StartCoroutine(routine);
-    }
+    // Continuous, phase-aligned day/night: t = 0 at noon (full day),
+    // t = 1 at midnight (full night), smoothly interpolating through
+    // sunrise (~06:00) and sunset (~18:00).
+    private void ApplyVisualsForTime(int hour, int minute) {
+        float totalMinutes = hour * 60 + minute;
+        float dayFraction = totalMinutes / 1440f; // 0 = midnight, 0.5 = noon
 
-    // Absolute sun angle from current synced time — safe for late joiners, no drift
-    private void UpdateLightRotation() {
-        float totalMinutes = netHours.Value * 60 + netMinutes.Value;
-        float angle = (totalMinutes / 1440f) * 180f;
+        float t = 0.5f * (1f + Mathf.Cos(dayFraction * 2f * Mathf.PI));
+
+        // Full 360° sweep, phase-shifted so noon = overhead, midnight = straight
+        // up (light shining upward = sun below horizon = dark). Sunrise/sunset
+        // land exactly at the horizon at 6am/6pm.
+        float angle = dayFraction * 360f - 90f;
         globalLight.transform.rotation = Quaternion.Euler(angle, -90f, 0f);
+        globalLight.intensity = Mathf.Lerp(dayIntensity, nightIntensity, t);
+
+        if (skyboxMat != null) {
+            skyboxMat.SetColor("_ZenithColor", Color.Lerp(day, night, t));
+            skyboxMat.SetColor("_HorizonColor", Color.Lerp(dayHorizon, nightHorizon, t));
+            skyboxMat.SetFloat("_AtmosphereThickness", Mathf.Lerp(0.5f, 1f, t));
+            skyboxMat.SetFloat("_EnableStars", t);
+            skyboxMat.SetFloat("_EnableMoon", t > nightThreshold ? 1f : 0f);
+            skyboxMat.SetColor("_CloudTint", Color.Lerp(cloudTintDay, cloudTintNight, t));
+        }
+
+        PushLightGlobals();
     }
 
-    // Snaps skybox + light to the correct phase instantly for a given hour, no tween.
-    private void ApplyInstantStateForHour(int h) {
-        Texture2D tex;
-        Gradient g;
-        float temp;
-
-        if (h >= 6 && h < 8) { tex = skyboxSunrise; g = gradientNightToSunrise; temp = 1500f; } else if (h >= 8 && h < 18) { tex = skyboxDay; g = gradientSunriseToDay; temp = 6500f; } else if (h >= 18 && h < 22) { tex = skyboxSunset; g = gradientDayToSunset; temp = 1500f; } else { tex = skyboxNight; g = gradientSunsetToNight; temp = 20000f; }
-
-        RenderSettings.skybox.SetTexture("_Texture1", tex);
-        RenderSettings.skybox.SetFloat("_Blend", 0);
-        globalLight.color = g.Evaluate(1f);
-        globalLight.colorTemperature = temp;
-        RenderSettings.fogColor = globalLight.color;
-    }
-
-    // Snaps skybox + light to the correct phase instantly, no tween — used on spawn
-    private void ApplyInstantState() {
-        ApplyInstantStateForHour(netHours.Value);
-        UpdateLightRotation();
+    // The shader was written against Built-in RP globals (_WorldSpaceLightPos0,
+    // _LightColor0), which URP does not populate automatically. Push them
+    // manually every time the light changes so the shader's sun/moon disc
+    // and lighting stay in sync with the actual networked time.
+    private void PushLightGlobals() {
+        Vector3 dir = globalLight.transform.forward;
+        Shader.SetGlobalVector("_WorldSpaceLightPos0", new Vector4(-dir.x, -dir.y, -dir.z, 0f));
+        Shader.SetGlobalColor("_LightColor0", globalLight.color * globalLight.intensity);
     }
 
     // ---- 12-hour formatting: "12:30AM", "9:00PM" ----
@@ -254,30 +248,5 @@ public class TimeManager : NetworkBehaviour {
     private void UpdateClockUI() {
         if (clockText != null) clockText.text = GetFormattedTime();
         OnTimeUpdated?.Invoke();
-    }
-
-    private IEnumerator LerpSkybox(Texture2D a, Texture2D b, float time) {
-        RenderSettings.skybox.SetTexture("_Texture1", a);
-        RenderSettings.skybox.SetTexture("_Texture2", b);
-        RenderSettings.skybox.SetFloat("_Blend", 0);
-        for (float i = 0; i < time; i += Time.deltaTime) {
-            RenderSettings.skybox.SetFloat("_Blend", i / time);
-            yield return null;
-        }
-        RenderSettings.skybox.SetTexture("_Texture1", b);
-    }
-
-    // startTemp/endTemp let each phase transition use its own Kelvin range,
-    // while keeping the same t*t easing curve used everywhere else.
-    private IEnumerator LerpLight(Gradient lightGradient, float startTemp, float endTemp, float time) {
-        for (float i = 0; i < time; i += Time.deltaTime) {
-            float t = i / time;
-            float easedT = t * t;
-            globalLight.color = lightGradient.Evaluate(t);
-            globalLight.colorTemperature = Mathf.Lerp(startTemp, endTemp, easedT);
-            RenderSettings.fogColor = globalLight.color;
-            yield return null;
-        }
-        globalLight.colorTemperature = endTemp;
     }
 }
