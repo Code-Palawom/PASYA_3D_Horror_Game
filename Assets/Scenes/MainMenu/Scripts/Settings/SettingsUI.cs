@@ -83,11 +83,11 @@ public class SettingsUI : MonoBehaviour {
         AuthManager.Instance.OnPlayerStatsLoaded += RefreshName;
         AuthManager.Instance.OnAuthStateChanged += (user) => {
             if (user == null) {
-                nameField.text = "";
-                nameChangeStatus.text = "Sign in to change your name.";
-                nameChangeStatus.color = cannotChangeNameColor;
-                nameSaveButton.interactable = false;
-                nameField.interactable = false;
+                nameField.text = SettingsManager.Instance.Current.playerName;
+                nameChangeStatus.text = "";
+                nameChangeStatus.color = canCangeNameColor;
+                nameSaveButton.interactable = true;
+                nameField.interactable = true;
             }
         };
 
@@ -224,6 +224,12 @@ public class SettingsUI : MonoBehaviour {
                 nameSaveButton.interactable = true;
                 nameField.interactable = true;
             }
+        } else {
+            nameField.text = SettingsManager.Instance.Current.playerName;
+            nameChangeStatus.text = "";
+            nameChangeStatus.color = canCangeNameColor;
+            nameSaveButton.interactable = true;
+            nameField.interactable = true;
         }
 
         _qualityIndex = Mathf.Clamp(s.qualityLevel, 0, _qualityNames.Length - 1);
@@ -287,47 +293,50 @@ public class SettingsUI : MonoBehaviour {
     private async void ChangeName() {
         string newName = nameField.text.Trim();
 
-        if (string.IsNullOrEmpty(newName)) {
-            nameChangeStatus.text = "Please enter a name.";
-            return;
-        } else if (AuthManager.Instance.CurrentProfile.DisplayName == newName) {
-            nameChangeStatus.text = "That's already your name.";
-            return;
+        if (AuthManager.Instance.CurrentProfile == null) {
+            SettingsManager.Instance.SaveOneString(SettingsManager.GameSetting.DisplayName, newName);
+        } else {
+            if (string.IsNullOrEmpty(newName)) {
+                nameChangeStatus.text = "Please enter a name.";
+                return;
+            } else if (AuthManager.Instance.CurrentProfile.DisplayName == newName) {
+                nameChangeStatus.text = "That's already your name.";
+                return;
+            }
+
+            nameSaveButton.interactable = false; // prevent double-taps while the request is in flight
+            nameField.interactable = false;
+            nameChangeStatus.text = "Changing name...";
+
+            NameChangeResult result = await AuthManager.Instance.RequestDisplayNameChangeAsync(newName);
+
+            nameField.interactable = true;
+            nameSaveButton.interactable = true;
+            switch (result) {
+                case NameChangeResult.Success:
+                nameChangeStatus.text = "Name changed!";
+                    nameField.interactable = false;
+                    nameSaveButton.interactable = false;
+                AuthManager.Instance.CurrentProfile.DisplayName = newName;
+                    break;
+
+                case NameChangeResult.NameTaken:
+                    nameChangeStatus.text = "That name is already taken.";
+                    break;
+                case NameChangeResult.OnCooldown:
+                    nameChangeStatus.text = "You can only change your name once every 14 days.";
+                    break;
+
+                case NameChangeResult.NotSignedIn:
+                    nameChangeStatus.text = "You're not signed in.";
+                    break;
+
+                case NameChangeResult.Error:
+                default:
+                    nameChangeStatus.text = "Something went wrong. Try again.";
+                    break;
+            }
         }
-
-        nameSaveButton.interactable = false; // prevent double-taps while the request is in flight
-        nameField.interactable = false;
-        nameChangeStatus.text = "Changing name...";
-
-        NameChangeResult result = await AuthManager.Instance.RequestDisplayNameChangeAsync(newName);
-
-        nameField.interactable = true;
-        nameSaveButton.interactable = true;
-        switch (result) {
-            case NameChangeResult.Success:
-            nameChangeStatus.text = "Name changed!";
-                nameField.interactable = false;
-                nameSaveButton.interactable = false;
-            AuthManager.Instance.CurrentProfile.DisplayName = newName;
-                break;
-
-            case NameChangeResult.NameTaken:
-                nameChangeStatus.text = "That name is already taken.";
-                break;
-            case NameChangeResult.OnCooldown:
-                nameChangeStatus.text = "You can only change your name once every 14 days.";
-                break;
-
-            case NameChangeResult.NotSignedIn:
-                nameChangeStatus.text = "You're not signed in.";
-                break;
-
-            case NameChangeResult.Error:
-            default:
-                nameChangeStatus.text = "Something went wrong. Try again.";
-                break;
-        }
-
     }
 
     public void DownloadLatestVersion() {

@@ -39,6 +39,19 @@ public class SettingsManager : MonoBehaviour {
         Debug.Log("[SettingsManager] Saved.");
     }
 
+    public void SaveOneString(GameSetting setting, string v) {
+        switch (setting) {
+            case GameSetting.DisplayName:
+                Current.playerName = v;
+                break;
+        }
+
+        File.WriteAllText(FilePath, Current.ToKeyValueString());
+        Apply(Current);
+        OnSettingsSaved?.Invoke(Current);
+        Debug.Log("[SettingsManager] Saved.");
+    }
+
     // ── Load ────────────────────────────────────────────────
     private void Load() {
         if (!File.Exists(FilePath)) {
@@ -69,5 +82,9 @@ public class SettingsManager : MonoBehaviour {
         QualitySettings.SetQualityLevel(s.qualityLevel, true);
         // POV is read by your camera/character via:
         // SettingsManager.Instance.Current.isFirstPerson
+    }
+
+    public enum GameSetting {
+        DisplayName
     }
 }
