@@ -38,4 +38,21 @@ public class InventoryItem : ScriptableObject {
     public Vector3 worldColliderSize = new Vector3(0.3f, 0.3f, 0.3f);
     [Tooltip("Fallback only — see worldColliderSize.")]
     public Vector3 worldColliderCenter = Vector3.zero;
+
+    [Header("Equipped Action")]
+    [Tooltip("If not None, equipping this item (making it the active hotbar slot) shows a HUD " +
+             "action button. Pressing it calls Activate() on whichever player component implements " +
+             "IItemAction with a matching ActionType (see PlayerItemActions, e.g. FlashlightController " +
+             "for Flashlight). None means no button.")]
+    public ItemActionType actionType = ItemActionType.None;
+    [Tooltip("Fallback icon used when actionIconOn/actionIconOff don't apply (e.g. this action has " +
+             "no on/off state) or aren't assigned. Leave empty to fall back further to this item's " +
+             "normal icon.")]
+    public Sprite actionIcon;
+    [Tooltip("Icon shown on the HUD action button while the equipped IItemAction.IsActive is true " +
+             "(e.g. flashlight ON). Leave empty to fall back to actionIcon.")]
+    public Sprite actionIconOn;
+    [Tooltip("Icon shown while the equipped IItemAction.IsActive is false (e.g. flashlight OFF). " +
+             "Leave empty to fall back to actionIcon.")]
+    public Sprite actionIconOff;
 }

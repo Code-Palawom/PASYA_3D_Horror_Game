@@ -44,6 +44,8 @@ public class Player : NetworkBehaviour {
 
     [Header("Player Inventory UI")]
     [SerializeField] private InventoryUI inventoryUI;
+    [SerializeField] private PlayerItemActions playerItemActions;
+    [SerializeField] private ItemActionButtonUI itemActionButtonUI;
 
     private float originalBasePlayerSpeed;
     private float originalSprintSpeed;
@@ -115,6 +117,8 @@ public class Player : NetworkBehaviour {
             var inventory = GetComponent<PlayerInventory>();
             if (inventoryUI != null && inventory != null) {
                 inventoryUI.Init(inventory);
+                playerItemActions.Init(inventory);
+                itemActionButtonUI.Init(playerItemActions);
             } else {
                 Debug.LogWarning("[NetworkSetup] Missing InventoryUI or PlayerInventory reference.");
             }
