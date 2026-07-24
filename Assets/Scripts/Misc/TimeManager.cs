@@ -61,6 +61,9 @@ public class TimeManager : NetworkBehaviour {
     [SerializeField] private Color ambientSkyNight = new Color(0.05f, 0.02f, 0.05f);
     [SerializeField] private Color ambientEquatorNight = new Color(0.05f, 0.02f, 0.03f);
     [SerializeField] private Color ambientGroundNight = new Color(0.02f, 0.01f, 0.01f);
+    [Tooltip("Scales ambient specular from skybox/reflection probes. Left at 1 this keeps reflecting full-strength sky onto surfaces at night, reading as metallic even on non-metal materials.")]
+    [SerializeField] private float reflectionIntensityDay = 1f;
+    [SerializeField] private float reflectionIntensityNight = 0.25f;
 
     [Header("Fog")]
     [SerializeField] private bool controlFog = true;
@@ -275,15 +278,18 @@ public class TimeManager : NetworkBehaviour {
 
         float t = 0.5f * (1f + Mathf.Cos(dayFraction * 2f * Mathf.PI));
 
-        // Elevation always stays >= 0 so the light never points below the
-        // horizon (which would mean it's not hitting the ground at all —
-        // the old formula did this at midnight and killed all shadows).
-        // Sun arcs from horizon -> overhead -> horizon across the day half,
-        // then the SAME light continues as the moon's arc across the night
-        // half: horizon -> overhead (midnight) -> horizon. Horizon points
-        // land exactly at 6am/6pm either way.
-        float elevation = 90f * Mathf.Abs(Mathf.Cos(dayFraction * 2f * Mathf.PI));
-        globalLight.transform.rotation = Quaternion.Euler(elevation, -90f, 0f);
+        // Single continuous rotation per day (like a real sun), but flipped
+        // to its antipodal position whenever it would dip below the horizon.
+        // This keeps sun/moon rising and setting at opposite horizon points
+        // — the moon rises where the sun just set, arcs overhead by
+        // midnight, and sets on the other side by dawn — instead of either
+        // going below the horizon (kills shadows) or bouncing back to the
+        // same point it rose from (previous fix's bug).
+        float thetaDeg = dayFraction * 360f - 90f;
+        if (Mathf.Sin(thetaDeg * Mathf.Deg2Rad) < 0f) {
+            thetaDeg -= 180f; // swap to the antipodal position, now above horizon
+        }
+        globalLight.transform.rotation = Quaternion.Euler(thetaDeg, -90f, 0f);
         globalLight.intensity = Mathf.Lerp(dayIntensity, nightIntensity, t);
         globalLight.color = Color.Lerp(dayLightColor, moonLightColor, t);
         globalLight.shadowStrength = Mathf.Lerp(dayShadowStrength, nightShadowStrength, t);
@@ -313,6 +319,7 @@ public class TimeManager : NetworkBehaviour {
         RenderSettings.ambientSkyColor = Color.Lerp(ambientSkyDay, ambientSkyNight, t);
         RenderSettings.ambientEquatorColor = Color.Lerp(ambientEquatorDay, ambientEquatorNight, t);
         RenderSettings.ambientGroundColor = Color.Lerp(ambientGroundDay, ambientGroundNight, t);
+        RenderSettings.reflectionIntensity = Mathf.Lerp(reflectionIntensityDay, reflectionIntensityNight, t);
 
         // Fog
         if (controlFog) {
