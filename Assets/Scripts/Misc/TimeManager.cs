@@ -1,6 +1,8 @@
 using System.Collections;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 
 public class TimeManager : NetworkBehaviour {
     public static TimeManager Instance { get; private set; }
@@ -12,11 +14,14 @@ public class TimeManager : NetworkBehaviour {
     [SerializeField] private Color day = new Color(0.53f, 0.81f, 0.98f);
     [SerializeField] private Color dayHorizon = new Color(0.73f, 0.89f, 1f);
     [SerializeField] private float dayIntensity = 1f;
+    [SerializeField] private Color dayLightColor = Color.white;
 
     [Header("Night")]
-    [SerializeField] private Color night = new Color(0.01f, 0.01f, 0.07f);
-    [SerializeField] private Color nightHorizon = new Color(0.01f, 0.01f, 0.05f);
+    [SerializeField] private Color night = new Color(0.08f, 0.0f, 0.0f);
+    [SerializeField] private Color nightHorizon = new Color(0.28f, 0.02f, 0.02f);
     [SerializeField] private float nightIntensity = 0.05f;
+    [Tooltip("Cool blue moonlight tint applied to globalLight at night.")]
+    [SerializeField] private Color moonLightColor = new Color(0.65f, 0.08f, 0.08f);
 
     [Header("Sun / Moon (shader disc)")]
     [SerializeField] private float sunSize = 0.05f;
@@ -28,7 +33,61 @@ public class TimeManager : NetworkBehaviour {
 
     [Header("Clouds (day/night tint only — shape stays static in Inspector)")]
     [SerializeField] private Color cloudTintDay = Color.white;
-    [SerializeField] private Color cloudTintNight = new Color(0.6f, 0.65f, 0.8f);
+    [SerializeField] private Color cloudTintNight = new Color(0.35f, 0.08f, 0.08f);
+
+    [Header("Sky Exposure / Ground / Horizon Fog")]
+    [Tooltip("The actual fix for a skybox that stays bright at night — a multiplier on top of the zenith/horizon colors.")]
+    [SerializeField] private float skyExposureDay = 1f;
+    [SerializeField] private float skyExposureNight = 0.2f;
+    [SerializeField] private float skySaturationDay = 1f;
+    [SerializeField] private float skySaturationNight = 0.5f;
+    [SerializeField] private Color groundColorDay = Color.white;
+    [SerializeField] private Color groundColorNight = new Color(0.03f, 0.01f, 0.01f);
+    [SerializeField] private Color horizonFogColorDay = Color.white;
+    [SerializeField] private Color horizonFogColorNight = new Color(0.1f, 0.03f, 0.03f);
+    [SerializeField] private float horizonFogDensityDay = 0.25f;
+    [SerializeField] private float horizonFogDensityNight = 0.4f;
+
+    [Header("Stars")]
+    [Tooltip("Intensity ramps with night depth instead of hard on/off — dimmer at dusk, fuller at true midnight.")]
+    [SerializeField] private float starIntensityMin = 0.1f;
+    [SerializeField] private float starIntensityMax = 0.4f;
+
+    [Header("Ambient (Environment Lighting — Gradient)")]
+    [Tooltip("Sets RenderSettings.ambientMode = Trilight so ambient light no longer just inherits skybox brightness.")]
+    [SerializeField] private Color ambientSkyDay = new Color(0.5f, 0.7f, 1f);
+    [SerializeField] private Color ambientEquatorDay = new Color(0.7f, 0.75f, 0.75f);
+    [SerializeField] private Color ambientGroundDay = new Color(0.4f, 0.4f, 0.35f);
+    [SerializeField] private Color ambientSkyNight = new Color(0.05f, 0.02f, 0.05f);
+    [SerializeField] private Color ambientEquatorNight = new Color(0.05f, 0.02f, 0.03f);
+    [SerializeField] private Color ambientGroundNight = new Color(0.02f, 0.01f, 0.01f);
+
+    [Header("Fog")]
+    [SerializeField] private bool controlFog = true;
+    [SerializeField] private Color fogColorDay = new Color(0.75f, 0.85f, 0.95f);
+    [SerializeField] private Color fogColorNight = new Color(0.05f, 0.02f, 0.04f);
+    [SerializeField] private float fogDensityDay = 0.005f;
+    [SerializeField] private float fogDensityNight = 0.02f;
+
+    [Header("Light Shadows / Indirect")]
+    [SerializeField] private float dayShadowStrength = 1f;
+    [SerializeField] private float nightShadowStrength = 0.85f;
+    [SerializeField] private float dayIndirectMultiplier = 1f;
+    [SerializeField] private float nightIndirectMultiplier = 0.2f;
+
+    [Header("Post-Processing (URP Global Volume)")]
+    [Tooltip("Assign the scene's global Volume. Needs Color Adjustments, Vignette, and Bloom overrides on its profile for these to take effect.")]
+    [SerializeField] private Volume globalVolume;
+    [SerializeField] private float dayPostExposure = 0f;
+    [SerializeField] private float nightPostExposure = -1f;
+    [SerializeField] private float dayVignetteIntensity = 0.15f;
+    [SerializeField] private float nightVignetteIntensity = 0.35f;
+    [SerializeField] private float dayBloomThreshold = 1.1f;
+    [SerializeField] private float nightBloomThreshold = 0.6f;
+
+    private ColorAdjustments colorAdjustments;
+    private Vignette vignette;
+    private Bloom bloom;
 
     [Header("Time Speed")]
     [Tooltip("How many real-world minutes a full 24-hour in-game day takes.")]
@@ -84,6 +143,23 @@ public class TimeManager : NetworkBehaviour {
             skyboxMat.SetFloat("_MoonSize", moonSize);
             if (moonTexture != null) skyboxMat.SetTexture("_MoonTex", moonTexture);
             RenderSettings.skybox = skyboxMat;
+        }
+
+        // Ambient light: switch off skybox-driven ambient so it stops just
+        // inheriting the skybox's brightness, and drive it from our own
+        // day/night gradient instead.
+        RenderSettings.ambientMode = AmbientMode.Trilight;
+
+        // Fog setup (one-time mode/type; color & density are lerped per-tick).
+        RenderSettings.fog = controlFog;
+        if (controlFog) RenderSettings.fogMode = FogMode.ExponentialSquared;
+
+        // Cache Volume override components once so we're not doing TryGet
+        // every frame/update.
+        if (globalVolume != null && globalVolume.profile != null) {
+            globalVolume.profile.TryGet(out colorAdjustments);
+            globalVolume.profile.TryGet(out vignette);
+            globalVolume.profile.TryGet(out bloom);
         }
 
         // Snap instantly to correct visuals — no tween for late joiners / host start
@@ -199,12 +275,19 @@ public class TimeManager : NetworkBehaviour {
 
         float t = 0.5f * (1f + Mathf.Cos(dayFraction * 2f * Mathf.PI));
 
-        // Full 360° sweep, phase-shifted so noon = overhead, midnight = straight
-        // up (light shining upward = sun below horizon = dark). Sunrise/sunset
-        // land exactly at the horizon at 6am/6pm.
-        float angle = dayFraction * 360f - 90f;
-        globalLight.transform.rotation = Quaternion.Euler(angle, -90f, 0f);
+        // Elevation always stays >= 0 so the light never points below the
+        // horizon (which would mean it's not hitting the ground at all —
+        // the old formula did this at midnight and killed all shadows).
+        // Sun arcs from horizon -> overhead -> horizon across the day half,
+        // then the SAME light continues as the moon's arc across the night
+        // half: horizon -> overhead (midnight) -> horizon. Horizon points
+        // land exactly at 6am/6pm either way.
+        float elevation = 90f * Mathf.Abs(Mathf.Cos(dayFraction * 2f * Mathf.PI));
+        globalLight.transform.rotation = Quaternion.Euler(elevation, -90f, 0f);
         globalLight.intensity = Mathf.Lerp(dayIntensity, nightIntensity, t);
+        globalLight.color = Color.Lerp(dayLightColor, moonLightColor, t);
+        globalLight.shadowStrength = Mathf.Lerp(dayShadowStrength, nightShadowStrength, t);
+        globalLight.bounceIntensity = Mathf.Lerp(dayIndirectMultiplier, nightIndirectMultiplier, t);
 
         if (skyboxMat != null) {
             skyboxMat.SetColor("_ZenithColor", Color.Lerp(day, night, t));
@@ -213,7 +296,34 @@ public class TimeManager : NetworkBehaviour {
             skyboxMat.SetFloat("_EnableStars", t);
             skyboxMat.SetFloat("_EnableMoon", t > nightThreshold ? 1f : 0f);
             skyboxMat.SetColor("_CloudTint", Color.Lerp(cloudTintDay, cloudTintNight, t));
+
+            skyboxMat.SetFloat("_SkyExposure", Mathf.Lerp(skyExposureDay, skyExposureNight, t));
+            skyboxMat.SetFloat("_SkySaturation", Mathf.Lerp(skySaturationDay, skySaturationNight, t));
+            skyboxMat.SetColor("_GroundColor", Color.Lerp(groundColorDay, groundColorNight, t));
+            skyboxMat.SetColor("_HorizonFogColor", Color.Lerp(horizonFogColorDay, horizonFogColorNight, t));
+            skyboxMat.SetFloat("_HorizonFogDensity", Mathf.Lerp(horizonFogDensityDay, horizonFogDensityNight, t));
+
+            // Stars ramp in past the same threshold used to swap the moon disc,
+            // instead of a hard on/off — dim right after dusk, fuller at true midnight.
+            float starRamp = Mathf.InverseLerp(nightThreshold, 1f, t);
+            skyboxMat.SetFloat("_StarIntensity", Mathf.Lerp(starIntensityMin, starIntensityMax, starRamp));
         }
+
+        // Ambient (Environment Lighting) — independent of skybox brightness now.
+        RenderSettings.ambientSkyColor = Color.Lerp(ambientSkyDay, ambientSkyNight, t);
+        RenderSettings.ambientEquatorColor = Color.Lerp(ambientEquatorDay, ambientEquatorNight, t);
+        RenderSettings.ambientGroundColor = Color.Lerp(ambientGroundDay, ambientGroundNight, t);
+
+        // Fog
+        if (controlFog) {
+            RenderSettings.fogColor = Color.Lerp(fogColorDay, fogColorNight, t);
+            RenderSettings.fogDensity = Mathf.Lerp(fogDensityDay, fogDensityNight, t);
+        }
+
+        // Post-processing (Volume overrides), if assigned/present on the profile.
+        if (colorAdjustments != null) colorAdjustments.postExposure.value = Mathf.Lerp(dayPostExposure, nightPostExposure, t);
+        if (vignette != null) vignette.intensity.value = Mathf.Lerp(dayVignetteIntensity, nightVignetteIntensity, t);
+        if (bloom != null) bloom.threshold.value = Mathf.Lerp(dayBloomThreshold, nightBloomThreshold, t);
 
         PushLightGlobals();
     }
