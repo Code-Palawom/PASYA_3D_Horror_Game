@@ -106,4 +106,23 @@ public class ActionbarToastNotification : NetworkBehaviour {
         }
         cg.alpha = to;
     }
+
+    public void ClearToast() {
+        foreach (var toast in activeToasts) {
+            if (toast.LifecycleCoroutine != null) StopCoroutine(toast.LifecycleCoroutine);
+            if (toast.GameObject != null) Destroy(toast.GameObject);
+        }
+        activeToasts.Clear();
+    }
+
+    // Server-only: clears toasts on every connected client
+    public void BroadcastClearToasts() {
+        if (!IsServer) return;
+        ClearToastClientRpc();
+    }
+
+    [ClientRpc]
+    private void ClearToastClientRpc() {
+        ClearToast();
+    }
 }

@@ -200,7 +200,7 @@ public class MainMenuUI : MonoBehaviour {
         settingsButton.onClick.AddListener(ShowSettingsPanel);
         aboutButton.onClick.AddListener(ShowAboutPanel);
         exitButton.onClick.AddListener(OnExitClicked);
-
+        
         // Multiplayer panel
         hostButton.onClick.AddListener(() => EnterWizard(GameMode.Host));
         multiplayerJoinButton.onClick.AddListener(OnMultiplayerJoinClicked);
@@ -401,18 +401,24 @@ public class MainMenuUI : MonoBehaviour {
         HideAllContentPanels();
         SetMultiplayerTabRowVisible(false);
         characterPanel.SetActive(true);
+
+        ActionbarToastNotification.Instance.ClearToast();
     }
 
     void ShowSettingsPanel() {
         HideAllContentPanels();
         SetMultiplayerTabRowVisible(false);
         settingsPanel.Show();
+
+        ActionbarToastNotification.Instance.ClearToast();
     }
 
     void ShowAboutPanel() {
         HideAllContentPanels();
         SetMultiplayerTabRowVisible(false);
         aboutPanel.SetActive(true);
+
+        ActionbarToastNotification.Instance.ClearToast();
     }
 
     void OnExitClicked() {
@@ -465,6 +471,8 @@ public class MainMenuUI : MonoBehaviour {
 
         hostButton.image.color = Color.orange;
         multiplayerJoinButton.image.color = Color.white;
+
+        ActionbarToastNotification.Instance.ClearToast();
     }
 
     void ShowLevelSelectPanel() {
