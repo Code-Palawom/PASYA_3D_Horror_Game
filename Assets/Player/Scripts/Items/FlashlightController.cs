@@ -40,6 +40,11 @@ public class FlashlightController : NetworkBehaviour, IItemAction {
     [SerializeField] private float toggleOnNoiseLoudness = 2f;
     [SerializeField] private float toggleOffNoiseLoudness = 1f;
 
+    [Header("Audio")]
+    [SerializeField] private AudioSource clickAudioSource;
+    [SerializeField] private AudioClip toggleOnClip;
+    [SerializeField] private AudioClip toggleOffClip;
+
     // Owner writes this directly — no ServerRpc round-trip — so the local
     // player's own toggle has zero input delay. Everyone else still reads it
     // fine (Everyone read permission), it just arrives via the normal
@@ -63,13 +68,23 @@ public class FlashlightController : NetworkBehaviour, IItemAction {
         _inventory = GetComponent<PlayerInventory>();
         if (noiseEmitter == null) noiseEmitter = GetComponent<PlayerNoiseEmitter>();
 
-        _isOn.OnValueChanged += (_, _) => { ApplyState(); OnStateChanged?.Invoke(); };
+        _isOn.OnValueChanged += (_, current) => {
+            ApplyState();
+            PlayToggleClick(current);
+            OnStateChanged?.Invoke();
+        };
         _inventory.OnActiveSlotChanged += _ => RefreshEquipped();
         _inventory.OnSlotChanged += index => {
             if (index == _inventory.ActiveHotbarIndex) RefreshEquipped();
         };
 
-        RefreshEquipped(); // covers late-joining clients too
+        RefreshEquipped();
+    }
+
+    private void PlayToggleClick(bool isOn) {
+        if (clickAudioSource == null) return;
+        var clip = isOn ? toggleOnClip : toggleOffClip;
+        if (clip != null) clickAudioSource.PlayOneShot(clip);
     }
 
     // Recomputes whether Flashlight is the currently active/equipped item.
