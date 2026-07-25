@@ -18,11 +18,19 @@ public class NetworkedQuizGate : NetworkBehaviour, IInteractable, IUnlockable {
     [SerializeField] QuestionDifficulty difficulty = QuestionDifficulty.Easy;
     [SerializeField] bool oneTimeUnlock = true;
     [SerializeField] float wrongAnswerCooldown = 10f;
-    [Tooltip("If true, Attempt() succeeds immediately with no question asked at all — no " +
-             "question is claimed from the coordinator, no interacting-player tracking happens. " +
-             "Set via SetSkipQuiz() before Spawn() (e.g. PlayerInventory does this for dropped " +
-             "items, so picking your own dropped stuff back up doesn't require a quiz).")]
+    [Tooltip("Inspector default for gates placed directly in the scene. Synced to clients via " +
+             "_skipQuiz below — see SetSkipQuiz() for the runtime (pre-spawn, e.g. dropped-item) path.")]
     [SerializeField] bool skipQuiz = false;
+
+    // Attempt() runs LOCALLY on whichever client calls it (WorldItem.OnInteract
+    // etc. call it directly, it's not an RPC) — so the skip flag must be a
+    // NetworkVariable, not a plain field. A plain bool set server-side via
+    // SetSkipQuiz() before Spawn() would only ever be true on the server's own
+    // instance; non-host clients would still see false and fall through into
+    // a quiz whose question the server never actually claimed, which reads to
+    // them as an instant wrong answer.
+    private NetworkVariable<bool> _skipQuiz = new(
+        false, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     [Header("Side Effects (Wrong Answer — applied to ALL interacting players)")]
     [SerializeField] SideEffectRegistry registry;
@@ -126,7 +134,7 @@ public class NetworkedQuizGate : NetworkBehaviour, IInteractable, IUnlockable {
                               "Call this before Spawn().");
             return;
         }
-        skipQuiz = skip;
+        _skipQuiz.Value = skip;
     }
 
     // ─────────────────────────────────────────────────────────
@@ -139,6 +147,11 @@ public class NetworkedQuizGate : NetworkBehaviour, IInteractable, IUnlockable {
             NetworkVariableWritePermission.Server
         );
 
+        // Seed from the Inspector default. If SetSkipQuiz() is called after
+        // this (e.g. by PlayerInventory right after Instantiate()), it
+        // overwrites this before Spawn() ever goes out.
+        _skipQuiz.Value = skipQuiz;
+
         _requirements = GetComponent<InteractionRequirements>();
     }
 
@@ -147,7 +160,7 @@ public class NetworkedQuizGate : NetworkBehaviour, IInteractable, IUnlockable {
     private QuestionRuntime _runtimeQuestion;
 
     public override void OnNetworkSpawn() {
-        if (IsServer && !skipQuiz) {
+        if (IsServer && !_skipQuiz.Value) {
             // Guard: coordinator must be initialized first
             if (QuizAssignmentCoordinator.Instance == null) {
                 Debug.LogError("[NetworkedQuizGate] QuizAssignmentCoordinator not ready. " +
@@ -182,7 +195,7 @@ public class NetworkedQuizGate : NetworkBehaviour, IInteractable, IUnlockable {
     // Attempt — called by interactables
     // ─────────────────────────────────────────────────────────
     public void Attempt(GameObject interactor, Action onSuccess, Action onFail) {
-        if (skipQuiz) { onSuccess?.Invoke(); return; }
+        if (_skipQuiz.Value) { onSuccess?.Invoke(); return; }
         if (_unlocked.Value) { onSuccess?.Invoke(); return; }
 
         // ── Cooldown check ────────────────────────────────────
