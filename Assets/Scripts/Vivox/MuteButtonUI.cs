@@ -1,13 +1,20 @@
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
 // A single control that both displays the local player's live mic intensity
-// (via a non-interactive Slider fill) and toggles mute on click. Also swaps
-// a mic icon between on/muted states and plays a mute/unmute SFX.
+// (via a non-interactive Slider fill) and toggles mute on click or keybind.
+// Also swaps a mic icon between on/muted states and plays a mute/unmute SFX.
+//
+// Lives on the player prefab, so one copy spawns per player (local + remote).
+// Only the owning client's copy activates - it's the only one with a real
+// local mic to represent, and VivoxManager's mute/speech events are global
+// (not per-player), so a non-owner copy left subscribed would react to the
+// LOCAL player's mute toggles and keybind presses as if they were its own.
 [RequireComponent(typeof(Slider))]
-public class MuteButtonUI : MonoBehaviour, IPointerClickHandler {
+public class MuteButtonUI : NetworkBehaviour, IPointerClickHandler {
     [Header("Intensity Slider (fill = live mic energy)")]
     [Tooltip("Auto-assigned from this GameObject if left empty. Kept non-interactive - click toggles mute, drag does nothing.")]
     [SerializeField] private Slider intensitySlider;
@@ -41,20 +48,39 @@ public class MuteButtonUI : MonoBehaviour, IPointerClickHandler {
     [Tooltip("Ignore tiny energy fluctuations below this so the fill doesn't flicker.")]
     [SerializeField, Range(0f, 1f)] private float minEnergyThreshold = 0.05f;
 
+    [Header("Mute Keybind")]
     [SerializeField] private InputAction action;
 
     private float _targetFill;
     private float _targetIconAlpha;
-
     private bool isActive;
+    private bool _subscribedToVivoxEvents;
 
     private void Awake() {
-        if (!GameModeManager.Instance.IsRelayMode) {
-            gameObject.SetActive(false);
-        }
+        if (intensitySlider == null)
+            intensitySlider = GetComponent<Slider>();
+        if (sfxSource == null)
+            sfxSource = GetComponent<AudioSource>();
     }
 
-    private void OnEnable() {
+    public override void OnNetworkSpawn() {
+        if (!IsOwner) {
+            // Not the local player - this copy has no real mic to represent and
+            // shouldn't react to the owner's global VivoxManager events, nor
+            // should its keybind ever be enabled.
+            gameObject.SetActive(false);
+            return;
+        }
+
+        if (!GameModeManager.Instance.IsRelayMode) {
+            gameObject.SetActive(false);
+            return;
+        }
+
+        InitializeButton();
+    }
+
+    private void InitializeButton() {
         iconImage.sprite = micMutedSprite;
         iconImage.color = Color.red;
 
@@ -65,22 +91,35 @@ public class MuteButtonUI : MonoBehaviour, IPointerClickHandler {
             if (!string.IsNullOrEmpty(VivoxManager.Instance.CurrentChannelName)) {
                 SetupMic();
             } else {
-                VivoxManager.Instance.OnChannelJoined += (_) => {
-                    SetupMic();
-                };
+                VivoxManager.Instance.OnChannelJoined += HandleChannelJoinedForSetup;
             }
         }
+    }
+
+    private void HandleChannelJoinedForSetup(string channelName) {
+        // Named handler so this can actually be unsubscribed - the previous
+        // inline lambda here could never be removed, leaking a subscription
+        // (and re-firing SetupMic) on every future channel join.
+        if (VivoxManager.Instance != null)
+            VivoxManager.Instance.OnChannelJoined -= HandleChannelJoinedForSetup;
+
+        SetupMic();
     }
 
     private void SetupMic() {
         fillImage.color = unmutedFillColor;
         isActive = true;
         iconImage.color = Color.white;
-        action.performed += _ => OnActionPerformed();
+
+        // Named handler instead of an inline lambda - SetupMic can run more
+        // than once (e.g. channel rejoin), and a fresh lambda each time would
+        // stack duplicate subscriptions rather than replacing the old one.
+        action.performed += OnActionPerformedCallback;
         action.Enable();
 
         VivoxManager.Instance.OnLocalMuteChanged += HandleMuteStateChanged;
         VivoxManager.Instance.OnParticipantSpeechChanged += HandleSpeechChanged;
+        _subscribedToVivoxEvents = true;
 
         RefreshVisual(VivoxManager.Instance.IsLocallyMuted);
         _targetFill = VivoxManager.Instance.IsLocallyMuted ? 0f : intensitySlider.value;
@@ -89,16 +128,23 @@ public class MuteButtonUI : MonoBehaviour, IPointerClickHandler {
     }
 
     private void OnDisable() {
+        action.performed -= OnActionPerformedCallback;
         action.Disable();
         action.Dispose();
 
         if (VivoxManager.Instance != null) {
-            VivoxManager.Instance.OnLocalMuteChanged -= HandleMuteStateChanged;
-            VivoxManager.Instance.OnParticipantSpeechChanged -= HandleSpeechChanged;
+            VivoxManager.Instance.OnChannelJoined -= HandleChannelJoinedForSetup;
+
+            if (_subscribedToVivoxEvents) {
+                VivoxManager.Instance.OnLocalMuteChanged -= HandleMuteStateChanged;
+                VivoxManager.Instance.OnParticipantSpeechChanged -= HandleSpeechChanged;
+            }
         }
+
+        _subscribedToVivoxEvents = false;
     }
 
-    void OnActionPerformed() {
+    private void OnActionPerformedCallback(InputAction.CallbackContext ctx) {
         VivoxManager.Instance.ToggleLocalMute();
     }
 
@@ -122,7 +168,8 @@ public class MuteButtonUI : MonoBehaviour, IPointerClickHandler {
     }
 
     // Slider is non-interactive so it never intercepts drag, but Image raycasts
-    // still register clicks - this is the only way mute gets toggled now.
+    // still register clicks - this is one of two ways mute gets toggled (the
+    // other being the keybind above).
     public void OnPointerClick(PointerEventData eventData) {
         if (!isActive) return;
         if (VivoxManager.Instance == null) {
@@ -171,6 +218,9 @@ public class MuteButtonUI : MonoBehaviour, IPointerClickHandler {
     }
 
     private void PlayMuteSfx(bool isMuted) {
+        if (sfxSource == null || !sfxSource.isActiveAndEnabled)
+            return;
+
         var clip = isMuted ? muteSound : unmuteSound;
         if (clip != null)
             sfxSource.PlayOneShot(clip, sfxVolume);

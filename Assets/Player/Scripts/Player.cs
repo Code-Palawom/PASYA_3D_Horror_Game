@@ -426,7 +426,7 @@ public class Player : NetworkBehaviour {
         if (cc != null) cc.enabled = true;
         StartCoroutine(HideLoadingScreen());
 
-        if (GameModeManager.Instance.IsRelayMode) {
+        if (GameModeManager.Instance.IsRelayMode && string.IsNullOrEmpty(VivoxManager.Instance.CurrentChannelName)) {
             if (VivoxManager.Instance.IsLoggedIn) {
                 JoinPositionalChannel($"{GameSessionManager.Instance.SessionId.Value}");
             } else {
