@@ -25,7 +25,6 @@ using UnityEngine;
 // PlayerItemActions, and assign flashlightLight (e.g. a spotlight parented
 // under the camera).
 public class FlashlightController : NetworkBehaviour, IItemAction {
-    [SerializeField] PlayerInventory _inventory;
     [SerializeField] private Light flashlightLight;
 
     [Tooltip("Leave empty to auto-resolve the current scene's registry via " +
@@ -43,16 +42,19 @@ public class FlashlightController : NetworkBehaviour, IItemAction {
         NetworkVariableWritePermission.Owner
     );
 
+    private PlayerInventory _inventory;
     private bool _isEquipped;
-
-    public event Action OnStateChanged;
 
     public ItemActionType ActionType => ItemActionType.Flashlight;
 
-    public bool IsActive => throw new NotImplementedException();
+    // Drives which of InventoryItem.actionIconOn/actionIconOff the HUD shows.
+    public bool IsActive => _isOn.Value;
+    public event Action OnStateChanged;
 
     public override void OnNetworkSpawn() {
-        _isOn.OnValueChanged += (_, _) => ApplyState();
+        _inventory = GetComponent<PlayerInventory>();
+
+        _isOn.OnValueChanged += (_, _) => { ApplyState(); OnStateChanged?.Invoke(); };
         _inventory.OnActiveSlotChanged += _ => RefreshEquipped();
         _inventory.OnSlotChanged += index => {
             if (index == _inventory.ActiveHotbarIndex) RefreshEquipped();

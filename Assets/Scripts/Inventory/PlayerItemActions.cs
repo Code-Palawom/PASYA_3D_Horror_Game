@@ -23,10 +23,14 @@ public class PlayerItemActions : MonoBehaviour {
     private PlayerInventory _inventory;
     private Dictionary<ItemActionType, IItemAction> _actions;
 
+    private InventoryItem _currentItem;
+    private IItemAction _currentAction;
+
     public ItemActionType CurrentActionType { get; private set; } = ItemActionType.None;
     public Sprite CurrentActionIcon { get; private set; }
 
-    // Fired whenever the equipped action changes (including to/from None) —
+    // Fired whenever the equipped action or its icon changes (including
+    // to/from None, or a toggle flipping while still equipped) —
     // ItemActionButtonUI uses this to show/hide and set its icon.
     public event Action<ItemActionType, Sprite> OnActiveActionChanged;
 
@@ -55,14 +59,48 @@ public class PlayerItemActions : MonoBehaviour {
     private void Refresh() {
         var slot = _inventory.GetSlot(_inventory.ActiveHotbarIndex);
         var item = slot.IsEmpty ? null : Registry?.Get(slot.ItemID.ToString());
-
         var type = item != null ? item.actionType : ItemActionType.None;
-        var icon = item != null ? (item.actionIcon != null ? item.actionIcon : item.icon) : null;
 
-        if (type == CurrentActionType && icon == CurrentActionIcon) return;
+        // item is a ScriptableObject asset reference — Registry.Get returns
+        // the same instance every time, so reference equality reliably
+        // detects "the equipped item actually changed" even when two
+        // different items share the same actionType (e.g. two flashlight
+        // variants), which a type-only comparison would miss.
+        if (type == CurrentActionType && item == _currentItem) return;
+
+        if (_currentAction != null) _currentAction.OnStateChanged -= HandleActionStateChanged;
+
         CurrentActionType = type;
-        CurrentActionIcon = icon;
+        _currentItem = item;
+        _currentAction = null;
+        if (type != ItemActionType.None && _actions.TryGetValue(type, out var action)) {
+            _currentAction = action;
+            _currentAction.OnStateChanged += HandleActionStateChanged;
+        }
+
+        UpdateIconAndNotify();
+    }
+
+    // The equipped action's own on/off state changed (e.g. flashlight
+    // toggled) without the equipped item itself changing — just refresh the
+    // icon, no need to re-resolve _currentAction.
+    private void HandleActionStateChanged() => UpdateIconAndNotify();
+
+    private void UpdateIconAndNotify() {
+        CurrentActionIcon = ComputeIcon();
         OnActiveActionChanged?.Invoke(CurrentActionType, CurrentActionIcon);
+    }
+
+    // actionIconOn/actionIconOff (state-specific) -> actionIcon (generic
+    // fallback) -> item.icon (item's normal icon) -> null.
+    private Sprite ComputeIcon() {
+        if (_currentItem == null) return null;
+
+        bool isActive = _currentAction != null && _currentAction.IsActive;
+        var stateIcon = isActive ? _currentItem.actionIconOn : _currentItem.actionIconOff;
+        if (stateIcon != null) return stateIcon;
+
+        return _currentItem.actionIcon != null ? _currentItem.actionIcon : _currentItem.icon;
     }
 
     // Called by ItemActionButtonUI when the player presses the HUD action button.
