@@ -1681,6 +1681,7 @@ GameObject:
   - component: {fileID: 6255446486927268548}
   - component: {fileID: 103289940080003592}
   - component: {fileID: 3448056747662676335}
+  - component: {fileID: 1761906129784793017}
   m_Layer: 3
   m_Name: Player
   m_TagString: Untagged
@@ -1801,6 +1802,15 @@ MonoBehaviour:
   inventoryUI: {fileID: 6560784741169748872}
   playerItemActions: {fileID: 103289940080003592}
   itemActionButtonUI: {fileID: 1749289013360190072}
+  noiseEmitter: {fileID: 1761906129784793017}
+  flashlightController: {fileID: 3448056747662676335}
+  walkNoiseLoudness: 3
+  crouchNoiseLoudness: 1
+  sprintNoiseLoudness: 8
+  walkFootstepInterval: 0.5
+  crouchFootstepInterval: 0.8
+  sprintFootstepInterval: 0.35
+  flashlightNoiseMultiplier: 1.5
   crouchYOffset: -0.5
   transitionSpeed: 8
 --- !u!114 &3602966004385802097
@@ -2201,6 +2211,22 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   flashlightLight: {fileID: 6445996134105957033}
   itemRegistry: {fileID: 0}
+  noiseEmitter: {fileID: 1761906129784793017}
+  toggleOnNoiseLoudness: 2
+  toggleOffNoiseLoudness: 1
+--- !u!114 &1761906129784793017
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 596334459946105256}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca801f88a030a2f478467492759a4c60, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerNoiseEmitter
+  ShowTopMostFoldoutHeaderGroup: 1
 --- !u!1 &686057756561175429
 GameObject:
   m_ObjectHideFlags: 0
@@ -24373,7 +24399,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 23.7, y: -8}
-  m_SizeDelta: {x: 0, y: 16}
+  m_SizeDelta: {x: 39.4, y: 16}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5810430530634385087
 CanvasRenderer:

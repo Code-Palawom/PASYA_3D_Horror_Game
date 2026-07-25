@@ -23,7 +23,9 @@ using UnityEngine;
 //
 // Setup: attach to the player prefab alongside PlayerInventory and
 // PlayerItemActions, and assign flashlightLight (e.g. a spotlight parented
-// under the camera).
+// under the camera). Also assign/auto-resolve a PlayerNoiseEmitter on the
+// same prefab — toggling the flashlight emits a noise burst (the click),
+// and Player.cs separately amplifies ongoing footstep noise while it's on.
 public class FlashlightController : NetworkBehaviour, IItemAction {
     [SerializeField] private Light flashlightLight;
 
@@ -31,6 +33,12 @@ public class FlashlightController : NetworkBehaviour, IItemAction {
              "ItemRegistry.Instance (set by that scene's GameBootstrap).")]
     [SerializeField] private ItemRegistry itemRegistry;
     private ItemRegistry Registry => itemRegistry != null ? itemRegistry : ItemRegistry.Instance;
+
+    [Header("Noise")]
+    [Tooltip("Leave empty to auto-resolve via GetComponent in OnNetworkSpawn.")]
+    [SerializeField] private PlayerNoiseEmitter noiseEmitter;
+    [SerializeField] private float toggleOnNoiseLoudness = 2f;
+    [SerializeField] private float toggleOffNoiseLoudness = 1f;
 
     // Owner writes this directly — no ServerRpc round-trip — so the local
     // player's own toggle has zero input delay. Everyone else still reads it
@@ -53,6 +61,7 @@ public class FlashlightController : NetworkBehaviour, IItemAction {
 
     public override void OnNetworkSpawn() {
         _inventory = GetComponent<PlayerInventory>();
+        if (noiseEmitter == null) noiseEmitter = GetComponent<PlayerNoiseEmitter>();
 
         _isOn.OnValueChanged += (_, _) => { ApplyState(); OnStateChanged?.Invoke(); };
         _inventory.OnActiveSlotChanged += _ => RefreshEquipped();
@@ -83,7 +92,15 @@ public class FlashlightController : NetworkBehaviour, IItemAction {
     // throws if written by anyone else.
     public void Activate() {
         if (!IsOwner) return;
+
         _isOn.Value = !_isOn.Value;
+
+        // The click of the switch itself is audible to enemies — separate
+        // from the ongoing amplification while the beam stays on.
+        if (noiseEmitter != null) {
+            float loudness = _isOn.Value ? toggleOnNoiseLoudness : toggleOffNoiseLoudness;
+            noiseEmitter.EmitNoise(transform.position, loudness);
+        }
     }
 
     private void ApplyState() {

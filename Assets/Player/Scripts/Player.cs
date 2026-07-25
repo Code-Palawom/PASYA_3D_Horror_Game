@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using Unity.Cinemachine;
 using Unity.Netcode;
-using Unity.Services.Vivox;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
@@ -46,6 +45,21 @@ public class Player : NetworkBehaviour {
     [SerializeField] private InventoryUI inventoryUI;
     [SerializeField] private PlayerItemActions playerItemActions;
     [SerializeField] private ItemActionButtonUI itemActionButtonUI;
+
+    // ---------------- Noise (horror enemy hearing) ----------------
+    [Header("Noise")]
+    [Tooltip("Leave empty to auto-resolve via GetComponent in Start.")]
+    [SerializeField] private PlayerNoiseEmitter noiseEmitter;
+    [Tooltip("Leave empty to auto-resolve via GetComponent in Start. Used to amplify footstep noise while the flashlight is on.")]
+    [SerializeField] private FlashlightController flashlightController;
+    [SerializeField] private float walkNoiseLoudness = 3f;
+    [SerializeField] private float crouchNoiseLoudness = 1f;
+    [SerializeField] private float sprintNoiseLoudness = 8f;
+    [SerializeField] private float walkFootstepInterval = 0.5f;
+    [SerializeField] private float crouchFootstepInterval = 0.8f;
+    [SerializeField] private float sprintFootstepInterval = 0.35f;
+    [SerializeField] private float flashlightNoiseMultiplier = 1.5f; // applied to footstep loudness while flashlight is on
+    private float noiseTimer = 0f;
 
     private float originalBasePlayerSpeed;
     private float originalSprintSpeed;
@@ -95,6 +109,9 @@ public class Player : NetworkBehaviour {
         cameraFollowOriginalLocalPos = cameraFollow.localPosition;
 
         renderers = GetComponentsInChildren<SkinnedMeshRenderer>();
+
+        if (noiseEmitter == null) noiseEmitter = GetComponent<PlayerNoiseEmitter>();
+        if (flashlightController == null) flashlightController = GetComponent<FlashlightController>();
     }
 
     // Replaces owner-specific Start() logic; guaranteed IsOwner is valid here
@@ -107,7 +124,7 @@ public class Player : NetworkBehaviour {
             playerCamera.tag = "MainCamera";
             audioListener.enabled = true;
 
-            if(GameModeManager.Instance.IsRelayMode) VivoxManager.Instance.RegisterLocalPlayerTransform(cameraFollow);
+            if (GameModeManager.Instance.IsRelayMode) VivoxManager.Instance.RegisterLocalPlayerTransform(cameraFollow);
 
             // Assign canvas to local player's camera explicitly — never rely on Camera.main
             playerCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -361,6 +378,57 @@ public class Player : NetworkBehaviour {
 
         UpdateMovementState();
         UpdateControllerCollider();
+        HandleNoiseEmission();
+    }
+
+    // ---------------- Noise (horror enemy hearing) ----------------
+
+    private void HandleNoiseEmission() {
+        if (noiseEmitter == null) return;
+
+        bool flashlightOn = flashlightController != null && flashlightController.IsActive;
+
+        bool hasMoveInput = moveInput != Vector2.zero;
+        bool isMovingLiterally = IsMovingLiterally();
+        bool isMoving = hasMoveInput || isMovingLiterally;
+
+        if (!stableGrounded || (!isMoving && !flashlightOn)) {
+            // airborne, or standing still with the flashlight off: no noise, reset cadence
+            noiseTimer = 0f;
+            return;
+        }
+
+        float loudness;
+        float interval;
+
+        if (!isMoving) {
+            // Standing still but flashlight on: the beam/hum is itself as
+            // noticeable as a crouch-walk footstep, on the same cadence.
+            loudness = crouchNoiseLoudness;
+            interval = crouchFootstepInterval;
+        } else if (isCrouching) {
+            loudness = crouchNoiseLoudness;
+            interval = crouchFootstepInterval;
+        } else if (isRunning) {
+            loudness = sprintNoiseLoudness;
+            interval = sprintFootstepInterval;
+        } else {
+            loudness = walkNoiseLoudness;
+            interval = walkFootstepInterval;
+        }
+
+        // Flashlight on = easier for enemies to notice/hear you approaching.
+        // (Standing-still already uses the crouch-equivalent baseline above,
+        // so this multiplier only applies while actually moving.)
+        if (flashlightOn && isMoving) {
+            loudness *= flashlightNoiseMultiplier;
+        }
+
+        noiseTimer += Time.deltaTime;
+        if (noiseTimer >= interval) {
+            noiseTimer = 0f;
+            noiseEmitter.EmitNoise(transform.position, loudness);
+        }
     }
 
     private void UpdateMovementState() {
