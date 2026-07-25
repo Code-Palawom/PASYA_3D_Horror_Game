@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using TMPro;
+using Unity.Cinemachine;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using Unity.VisualScripting;
@@ -133,6 +134,10 @@ public class MainMenuUI : MonoBehaviour {
     [SerializeField] GameObject aboutPanel;
     [SerializeField] Button aboutBackButton;
 
+    [Header("Cameras")]
+    [SerializeField] private CinemachineCamera cam;
+    [SerializeField] private CinemachineCamera characterCam;
+
     // ─────────────────────────────────────────────────────────
     private GameMode _pendingMode = GameMode.None;
     private string _selectedLevelSceneName;
@@ -154,6 +159,11 @@ public class MainMenuUI : MonoBehaviour {
     // Tracks known categories — "All" is always index 0
     private readonly List<string> _categories = new();
     private string _activeCategory = ""; // empty = All
+
+    private void Awake() {
+        cam.Priority = 0;
+        characterCam.Priority = 10;
+    }
 
     // ─────────────────────────────────────────────────────────
     void OnEnable() {
@@ -254,6 +264,11 @@ public class MainMenuUI : MonoBehaviour {
         };
 
         TipsManager.Instance.LoadCacheImmediately();
+        StartCoroutine(ShowMainPanelCourotine());
+    }
+
+    IEnumerator ShowMainPanelCourotine() {
+        yield return new WaitForSeconds(0.1f);
         ShowMainPanel();
     }
 
@@ -384,6 +399,9 @@ public class MainMenuUI : MonoBehaviour {
     void SetMultiplayerTabRowVisible(bool visible) => multiplayerPanel.SetActive(visible);
 
     void ShowMainPanel() {
+        cam.Priority = 10;
+        characterCam.Priority = 0;
+
         _pendingMode = GameMode.None;
         HideAllContentPanels();
         SetMultiplayerTabRowVisible(false);
@@ -398,6 +416,9 @@ public class MainMenuUI : MonoBehaviour {
     }
 
     void ShowCharacterPanel() {
+        cam.Priority = 0;
+        characterCam.Priority = 10;
+
         HideAllContentPanels();
         SetMultiplayerTabRowVisible(false);
         characterPanel.SetActive(true);
@@ -468,6 +489,12 @@ public class MainMenuUI : MonoBehaviour {
         _selectedQuizSetName = null;
         _selectedQuizSetId = null;
         ShowLevelSelectPanel();
+
+        if(mode == GameMode.SinglePlayer) {
+            hostModeButton.gameObject.SetActive(false);
+        } else {
+            hostModeButton.gameObject.SetActive(true);
+        }
 
         hostButton.image.color = Color.orange;
         multiplayerJoinButton.image.color = Color.white;

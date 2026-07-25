@@ -121362,6 +121362,8 @@ MonoBehaviour:
   settingsBackButton: {fileID: 2021904991}
   aboutPanel: {fileID: 1152313242}
   aboutBackButton: {fileID: 1688499875}
+  cam: {fileID: 454587557}
+  characterCam: {fileID: 879701323}
 --- !u!114 &1590153725
 MonoBehaviour:
   m_ObjectHideFlags: 0
