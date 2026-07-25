@@ -32,21 +32,34 @@ public class ChatUI : NetworkBehaviour {
     [SerializeField] private float toggleInDuration = 0.3f;
     [SerializeField] private float toggleOutDuration = 0.2f;
 
+    [Header("Notification Badge")]
+    [Tooltip("Small circle/pill GameObject. Should live OUTSIDE the chatUI CanvasGroup hierarchy " +
+             "(e.g. as a sibling attached to chatIcon) so it stays visible while the chat panel " +
+             "itself is scaled/faded to zero when closed.")]
+    [SerializeField] private GameObject notificationBadge;
+    [SerializeField] private TMP_Text notificationBadgeText;
+    [SerializeField] private float badgePopDuration = 0.25f;
+    [SerializeField] private float badgePopScale = 1.25f;
+
     private RectTransform _chatRect;
+    private RectTransform _badgeRect;
     private Tween _scaleTween;
     private Tween _fadeTween;
+    private Tween _badgePopTween;
 
     private readonly List<ChatMessageItemUI> _spawnedItems = new();
     public bool isChatActive = false;
     private bool isTyping = false;
+
+    private int unreadCount = 0;
 
     public override void OnNetworkSpawn() {
         if (!IsOwner) return;
 
         sendButton.onClick.AddListener(OnSend);
         inputField.onSubmit.AddListener(_ => OnSend());
-        inputField.onSelect.AddListener(_ => GameManager.Instance.SetPlayerInputEnabled(true));
-        inputField.onDeselect.AddListener(_ => GameManager.Instance.SetPlayerInputEnabled(false));
+        inputField.onSelect.AddListener(_ => GameManager.Instance.SetPlayerInputEnabled(false));
+        inputField.onDeselect.AddListener(_ => GameManager.Instance.SetPlayerInputEnabled(true));
 
         openChat.performed += _ => ToggleChat();
         openChat.Enable();
@@ -58,6 +71,13 @@ public class ChatUI : NetworkBehaviour {
         chatUI.alpha = 0f;
         chatUI.interactable = false;
         chatUI.blocksRaycasts = false;
+
+        // Badge starts hidden, no unread messages yet.
+        unreadCount = 0;
+        if (notificationBadge != null) {
+            _badgeRect = notificationBadge.GetComponent<RectTransform>();
+            notificationBadge.SetActive(false);
+        }
 
         if (ChatManager.Instance != null)
             InitChat();
@@ -82,6 +102,7 @@ public class ChatUI : NetworkBehaviour {
 
         if (_scaleTween.isAlive) _scaleTween.Stop();
         if (_fadeTween.isAlive) _fadeTween.Stop();
+        if (_badgePopTween.isAlive) _badgePopTween.Stop();
     }
 
     // ─── Init ─────────────────────────────────────────────────
@@ -108,6 +129,11 @@ public class ChatUI : NetworkBehaviour {
 
         isChatActive = !isChatActive;
         AnimateChatPanel(isChatActive);
+
+        if (isChatActive) {
+            unreadCount = 0;
+            UpdateNotificationBadge(animatePop: false);
+        }
 
 #if UNITY_EDITOR || UNITY_STANDALONE
         var c = chatIcon.color;
@@ -158,7 +184,14 @@ public class ChatUI : NetworkBehaviour {
         inputField.ActivateInputField();
     }
 
-    void OnNewMessage(ChatMessage msg) => SpawnMessageItem(msg);
+    void OnNewMessage(ChatMessage msg) {
+        SpawnMessageItem(msg);
+
+        if (!isChatActive) {
+            unreadCount++;
+            UpdateNotificationBadge(animatePop: true);
+        }
+    }
 
     void OnChatCleared() {
         foreach (var item in _spawnedItems) Destroy(item.gameObject);
@@ -181,5 +214,36 @@ public class ChatUI : NetworkBehaviour {
         LayoutRebuilder.ForceRebuildLayoutImmediate(messageContainer.GetComponent<RectTransform>());
         Canvas.ForceUpdateCanvases();
         scrollRect.verticalNormalizedPosition = 0f;
+    }
+
+    void UpdateNotificationBadge(bool animatePop) {
+        if (notificationBadge == null) return;
+
+        bool hasUnread = unreadCount > 0;
+
+        if (hasUnread) {
+            notificationBadgeText.text = unreadCount > 99 ? $"{99}+" : unreadCount.ToString();
+
+            bool wasInactive = !notificationBadge.activeSelf;
+            notificationBadge.SetActive(true);
+
+            if (animatePop && _badgeRect != null) {
+                if (_badgePopTween.isAlive) _badgePopTween.Stop();
+
+                if (wasInactive) {
+                    // First unread message: pop in from zero.
+                    _badgeRect.localScale = Vector3.zero;
+                    _badgePopTween = Tween.Scale(_badgeRect, endValue: Vector3.one, duration: badgePopDuration, ease: Ease.OutBack);
+                } else {
+                    // Subsequent unread messages: quick punch to draw the eye, then settle back to 1.
+                    _badgePopTween = Tween.Scale(_badgeRect, endValue: Vector3.one * badgePopScale, duration: badgePopDuration * 0.4f, ease: Ease.OutQuad)
+                        .OnComplete(() => Tween.Scale(_badgeRect, endValue: Vector3.one, duration: badgePopDuration * 0.6f, ease: Ease.OutBack));
+                }
+            }
+        } else {
+            if (_badgePopTween.isAlive) _badgePopTween.Stop();
+            notificationBadge.SetActive(false);
+            if (_badgeRect != null) _badgeRect.localScale = Vector3.one; // reset so next pop-in starts clean
+        }
     }
 }

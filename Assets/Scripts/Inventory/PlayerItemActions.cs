@@ -32,7 +32,7 @@ public class PlayerItemActions : MonoBehaviour {
     // Fired whenever the equipped action or its icon changes (including
     // to/from None, or a toggle flipping while still equipped) —
     // ItemActionButtonUI uses this to show/hide and set its icon.
-    public event Action<ItemActionType, Sprite> OnActiveActionChanged;
+    public event Action<ItemActionType, Sprite, bool> OnActiveActionChanged;
 
     public void Init(PlayerInventory inventory) {
         _inventory = inventory;
@@ -88,7 +88,7 @@ public class PlayerItemActions : MonoBehaviour {
 
     private void UpdateIconAndNotify() {
         CurrentActionIcon = ComputeIcon();
-        OnActiveActionChanged?.Invoke(CurrentActionType, CurrentActionIcon);
+        OnActiveActionChanged?.Invoke(CurrentActionType, CurrentActionIcon, _currentAction != null && _currentAction.IsActive);
     }
 
     // actionIconOn/actionIconOff (state-specific) -> actionIcon (generic

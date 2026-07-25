@@ -28,14 +28,14 @@ public class ItemActionButtonUI : MonoBehaviour {
 
         if (button != null) button.onClick.AddListener(() => _actions.TriggerCurrentAction());
 
-        Refresh(_actions.CurrentActionType, _actions.CurrentActionIcon);
+        Refresh(_actions.CurrentActionType, _actions.CurrentActionIcon, false);
     }
 
     void OnDestroy() {
         if (_actions != null) _actions.OnActiveActionChanged -= Refresh;
     }
 
-    private void Refresh(ItemActionType type, Sprite icon) {
+    private void Refresh(ItemActionType type, Sprite icon, bool isActive) {
         bool show = type != ItemActionType.None;
 
         if (buttonRoot != null) buttonRoot.SetActive(show);
@@ -44,6 +44,13 @@ public class ItemActionButtonUI : MonoBehaviour {
         if (iconImage != null) {
             iconImage.enabled = icon != null;
             iconImage.sprite = icon;
+
+            var c = iconImage.color;
+            if (isActive) {
+                iconImage.color = new Color(c.r, c.g, c.b, 0.50f);
+            } else {
+                iconImage.color = new Color(c.r, c.g, c.b, 0.25f);
+            }
         }
     }
 }

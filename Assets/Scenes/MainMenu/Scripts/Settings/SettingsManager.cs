@@ -79,6 +79,7 @@ public class SettingsManager : MonoBehaviour {
 
     // ── Apply to engine ─────────────────────────────────────
     private void Apply(GameSettings s) {
+        Application.targetFrameRate = s.targetFrameRate;
         QualitySettings.SetQualityLevel(s.qualityLevel, true);
         // POV is read by your camera/character via:
         // SettingsManager.Instance.Current.isFirstPerson
