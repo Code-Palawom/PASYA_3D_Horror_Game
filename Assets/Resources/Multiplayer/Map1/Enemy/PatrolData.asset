@@ -1,0 +1,24 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 730435b4c5e446446b49f05a0e83b149, type: 3}
+  m_Name: PatrolData
+  m_EditorClassIdentifier: Assembly-CSharp::ScenePatrolData
+  sceneName: Map1
+  patrolGroups:
+  - groupId: p1
+    points:
+    - position: {x: 323.5, y: 3.3, z: 69.78}
+      rotation: {x: 0, y: 0, z: 0, w: 0}
+    - position: {x: 320.2578, y: 2.600168, z: 96.67741}
+      rotation: {x: 0, y: 0, z: 0, w: 0}
+    - position: {x: 359.0103, y: 2.485315, z: 104.3509}
+      rotation: {x: 0, y: 0, z: 0, w: 0}

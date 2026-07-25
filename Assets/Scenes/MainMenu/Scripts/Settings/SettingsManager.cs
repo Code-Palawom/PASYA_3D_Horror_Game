@@ -36,6 +36,7 @@ public class SettingsManager : MonoBehaviour {
         File.WriteAllText(FilePath, settings.ToKeyValueString());
         Apply(Current);
         OnSettingsSaved?.Invoke(Current);
+        ActionbarToastNotification.Instance.ShowLocalToast("Settings Saved.", ToastType.Success);
         Debug.Log("[SettingsManager] Saved.");
     }
 
