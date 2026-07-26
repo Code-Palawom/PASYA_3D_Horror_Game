@@ -22,10 +22,8 @@ public class PlayerAnimation : MonoBehaviour {
     }
     
     public void UpdateAnimationState(Vector2 playerInput, bool isGrounded) {
-
         bool isIdling = playerState.CurrentPlayerMovementState == PlayerMovementState.Idling;
         bool isRunning = playerState.CurrentPlayerMovementState == PlayerMovementState.Running;
-        bool isSprinting = playerState.CurrentPlayerMovementState == PlayerMovementState.Sprinting;
         bool isJumping = playerState.CurrentPlayerMovementState == PlayerMovementState.Jumping;
         bool isFalling = playerState.CurrentPlayerMovementState == PlayerMovementState.Falling;
         bool isCrouching = playerState.CurrentPlayerMovementState == PlayerMovementState.Crouching;
@@ -36,7 +34,7 @@ public class PlayerAnimation : MonoBehaviour {
         animator.SetBool(isGroundedHash, isGrounded);
         animator.SetBool(isFallingHash, isFalling);
         animator.SetBool(isJumpingHash, isJumping);
-         animator.SetBool(isCrouchingHash, isCrouching);
+        animator.SetBool(isCrouchingHash, isCrouching);
 
         animator.SetFloat(inputXHash, currentBlendInput.x);
         animator.SetFloat(inputYHash, currentBlendInput.y);
