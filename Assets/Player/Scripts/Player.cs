@@ -5,6 +5,7 @@ using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
+using UnityEngine.SceneManagement;
 
 [RequireComponent(typeof(MicPermission))]
 public class Player : NetworkBehaviour {
@@ -123,8 +124,6 @@ public class Player : NetworkBehaviour {
             playerCamera.enabled = true;
             playerCamera.tag = "MainCamera";
             audioListener.enabled = true;
-
-            if (GameModeManager.Instance.IsRelayMode) VivoxManager.Instance.RegisterLocalPlayerTransform(cameraFollow);
 
             // Assign canvas to local player's camera explicitly — never rely on Camera.main
             playerCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -500,6 +499,8 @@ public class Player : NetworkBehaviour {
             } else {
                 VivoxManager.Instance.OnVivoxLoggedIn += () => JoinPositionalChannel($"{GameSessionManager.Instance.SessionId.Value}");
             }
+        }else if(!string.IsNullOrEmpty(VivoxManager.Instance.CurrentChannelName)) {
+            RegisterVivoxTransform();
         }
     }
 
@@ -510,30 +511,38 @@ public class Player : NetworkBehaviour {
 
     void JoinPositionalChannel(string id) {
         if (!IsOwner) return;
+
         VivoxManager.Instance.OnVivoxLoggedIn -= () => JoinPositionalChannel($"{GameSessionManager.Instance.SessionId.Value}");
 
         var micPermission = GetComponent<MicPermission>();
 
         micPermission.RequestMicThenJoin(
             onGranted: async () => {
-                ActionbarToastNotification.Instance.ShowLocalToast("Initializing voice chat.");
+                if(SceneManager.GetActiveScene().name == "Lobby") ActionbarToastNotification.Instance.ShowLocalToast("Initializing voice chat.");
                 Debug.Log($"Initializing voice chat: ${id}");
 
                 //await VivoxService.Instance.JoinEchoChannelAsync($"Channel_{id}", ChatCapability.AudioOnly);
                 VivoxManager.Instance.SetLocalMute(true, true);
                 if (await VivoxManager.Instance.JoinPositionalChannelAsync($"Channel_{id}")) {
-                    ActionbarToastNotification.Instance.ShowLocalToast("Voice chat active.", ToastType.Success);
+                    if (SceneManager.GetActiveScene().name == "Lobby") ActionbarToastNotification.Instance.ShowLocalToast("Voice chat active.", ToastType.Success);
+                    VivoxManager.Instance.RegisterLocalPlayerTransform(cameraFollow);
                     Debug.Log("Voice chat active.");
                 } else {
                     ActionbarToastNotification.Instance.ShowLocalToast("An error occured initializing voice chat.", ToastType.Error);
                     Debug.Log("An error occured initializing voice chat.");
                 }
+
+                Debug.Log($"Yooo {VivoxManager.Instance.CurrentChannelName}");
             },
             onDenied: () => {
                 ActionbarToastNotification.Instance.ShowLocalToast("Microphone permission denied cannot use voice chat.", ToastType.Error);
                 Debug.Log("Microphone permission denied cannot use voice chat.");
             }
         );
+    }
+
+    void RegisterVivoxTransform() {
+        if (IsOwner) VivoxManager.Instance.RegisterLocalPlayerTransform(cameraFollow);
     }
 
     IEnumerator HideLoadingScreen() {
