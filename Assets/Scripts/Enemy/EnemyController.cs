@@ -41,6 +41,8 @@ public class EnemyController : NetworkBehaviour {
             NetworkVariableReadPermission.Everyone,
             NetworkVariableWritePermission.Server);
 
+    public EnemyState CurrentState => currentState.Value;
+
     private int patrolIndex = -1;
     private Vector3 lastKnownPlayerPos;
     private NetworkObject targetPlayer;
@@ -68,6 +70,9 @@ public class EnemyController : NetworkBehaviour {
         if (NoiseManager.Singleton != null)
             NoiseManager.Singleton.RegisterEnemy(this);
 
+        if (StressManager.Singleton != null)
+            StressManager.Singleton.RegisterEnemy(this);
+
         Log("Spawned (server). Entering Patrol.");
         SetState(EnemyState.Patrol);
     }
@@ -75,6 +80,9 @@ public class EnemyController : NetworkBehaviour {
     public override void OnNetworkDespawn() {
         if (IsServer && NoiseManager.Singleton != null)
             NoiseManager.Singleton.UnregisterEnemy(this);
+
+        if (IsServer && StressManager.Singleton != null)
+            StressManager.Singleton.UnregisterEnemy(this);
 
         if (IsServer && huntedVisionActive)
             SetHuntedVision(huntedVisionTarget, false);
@@ -138,7 +146,6 @@ public class EnemyController : NetworkBehaviour {
         var rpcParams = new ClientRpcParams {
             Send = new ClientRpcSendParams { TargetClientIds = new[] { target.OwnerClientId } }
         };
-
         vision.SetHuntedClientRpc(hunted, rpcParams);
 
         huntedVisionTarget = hunted ? target : null;

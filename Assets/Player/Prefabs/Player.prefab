@@ -1685,6 +1685,8 @@ GameObject:
   - component: {fileID: 1761906129784793017}
   - component: {fileID: 1339537030215150861}
   - component: {fileID: 6634795981717689718}
+  - component: {fileID: 4634456522625622487}
+  - component: {fileID: 1628217689234693325}
   m_Layer: 3
   m_Name: Player
   m_TagString: Untagged
@@ -2311,7 +2313,7 @@ MonoBehaviour:
   volume: {fileID: 4324968238830787817}
   stressVignetteColor: {r: 0, g: 0, b: 0, a: 1}
   maxStressVignetteIntensity: 0.25
-  maxDesaturation: -100
+  maxDesaturation: -50
   huntedVignetteColor: {r: 1, g: 0, b: 0, a: 1}
   maxVignetteIntensity: 0.45
   maxRgbSplitIntensity: 0.6
@@ -2324,6 +2326,44 @@ MonoBehaviour:
   flickerChancePerSecond: 0.5
   flickerDuration: 0.08
   flickerMinIntensityMultiplier: 0.35
+--- !u!114 &4634456522625622487
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 596334459946105256}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8fcc8f6c5ecefa84b97e637079d89b49, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SanityController
+  ShowTopMostFoldoutHeaderGroup: 1
+  visionEffectController: {fileID: 0}
+  audioDistortionController: {fileID: 0}
+  smoothSpeed: 0.5
+--- !u!114 &1628217689234693325
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 596334459946105256}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68510561e8b13c8408eb460d84d00267, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AudioDistortionController
+  audioMixer: {fileID: 24100000, guid: f2b8cd90db31dc04ab0cc476c9d2fbaf, type: 2}
+  lowPassParam: MasterLowpassCutoff
+  clearCutoffHz: 22000
+  muffledCutoffHz: 800
+  muffleStartThreshold: 0.4
+  hallucinationSource: {fileID: 8587110887077318372}
+  hallucinationClips: []
+  hallucinationStartThreshold: 0.6
+  maxHallucinationsPerMinute: 6
+  minGapBetweenHallucinations: 4
 --- !u!1 &686057756561175429
 GameObject:
   m_ObjectHideFlags: 0
