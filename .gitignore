@@ -104,6 +104,8 @@ InitTestScene*.unity*
 /Assets/Scripts/Firebase/Auth/AuthManager.cs.meta
 /Assets/Scripts/Firebase/Auth/DesktopGoogleAuth.cs
 /Assets/Scripts/Firebase/Auth/DesktopGoogleAuth.cs.meta
+/Assets/Scripts/Firebase/PlayerProfile.cs
+/Assets/Scripts/Firebase/PlayerProfile.cs.meta
 /Assets/Scripts/Firebase/SecretStore.cs
 /Assets/Scripts/Firebase/SecretStore.cs.meta
 /Assets/Scripts/Firebase/SecretStoreEncoder.cs
@@ -118,6 +120,8 @@ InitTestScene*.unity*
 /Assets/Scripts/Multiplayer/LobbyManager.cs.meta
 /Assets/Scripts/Multiplayer/RelayManager.cs
 /Assets/Scripts/Multiplayer/RelayManager.cs.meta
+/Assets/Scripts/Quiz/Data/PendingPlayCountQueue.cs
+/Assets/Scripts/Quiz/Data/PendingPlayCountQueue.cs.meta
 /Assets/Scripts/Quiz/QuestionSource/QuizFetcher.cs
 /Assets/Scripts/Quiz/QuestionSource/QuizFetcher.cs.meta
 /Assets/Scripts/Quiz/QuestionSource/QuizRepository.cs
