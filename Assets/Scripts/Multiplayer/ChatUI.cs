@@ -59,12 +59,6 @@ public class ChatUI : NetworkBehaviour {
         sendButton.onClick.AddListener(OnSend);
         inputField.onSubmit.AddListener(_ => OnSend());
 
-        var c = chatIcon.color;
-        if (isChatActive) {
-            chatIcon.color = new Color(c.r, c.g, c.b, 0.50f);
-        } else {
-            chatIcon.color = new Color(c.r, c.g, c.b, 0.25f);
-        }
 #if UNITY_EDITOR || UNITY_STANDALONE
         inputField.onSelect.AddListener(_ => GameManager.Instance.SetPlayerInputEnabled(false));
         inputField.onDeselect.AddListener(_ => GameManager.Instance.SetPlayerInputEnabled(true));
