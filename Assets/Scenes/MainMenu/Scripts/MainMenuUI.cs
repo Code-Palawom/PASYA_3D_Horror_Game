@@ -640,10 +640,9 @@ public class MainMenuUI : MonoBehaviour {
         SpawnChatManager();
 
         // Call this when the game ends, not on start:
-        // QuizFetcher.Instance.IncrementPlayCount(_selectedQuizSetId);
+        QuizFetcher.Instance.IncrementPlayCount(_selectedQuizSetId);
 
-        int questionCount = QuizRepository.Instance
-            .GetSetByName(GameModeManager.Instance.SelectedQuizSetName)?.questions.Count ?? 0;
+        int questionCount = QuizRepository.Instance.GetSetByName(GameModeManager.Instance.SelectedQuizSetName)?.questions.Count ?? 0;
 
         // LAN only: broadcast via UDP so clients can discover this host.
         // Skipped in Relay mode — clients connect via join code instead.
@@ -686,10 +685,9 @@ public class MainMenuUI : MonoBehaviour {
 
         // No LAN broadcast, no Lobby — straight to the chosen level
         // Call this when the game ends, not on start:
-        // QuizFetcher.Instance.IncrementPlayCount(_selectedQuizSetId);
+        QuizFetcher.Instance.IncrementPlayCount(_selectedQuizSetId);
 
-        NetworkManager.Singleton.SceneManager.LoadScene(
-            GameModeManager.Instance.SelectedLevelSceneName, LoadSceneMode.Single);
+        NetworkManager.Singleton.SceneManager.LoadScene(GameModeManager.Instance.SelectedLevelSceneName, LoadSceneMode.Single);
     }
 
     // ─────────────────────────────────────────────────────────

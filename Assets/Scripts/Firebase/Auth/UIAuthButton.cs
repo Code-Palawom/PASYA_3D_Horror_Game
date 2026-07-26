@@ -50,15 +50,15 @@ public class UIAuthButton : MonoBehaviour {
 
         signedInPanel.SetActive(false);
 
-        AuthManager.Instance.OnAuthStateChanged += OnAuthStateChanged;
+        AuthManager.Instance.OnPlayerStatsLoaded += OnPlayerStatsLoaded;
 
         // Reflect whatever state auth is already in (e.g. cached session)
-        OnAuthStateChanged(AuthManager.Instance.CurrentUser);
+        OnPlayerStatsLoaded(AuthManager.Instance.CurrentProfile);
     }
 
     void OnDestroy() {
         if (AuthManager.Instance != null)
-            AuthManager.Instance.OnAuthStateChanged -= OnAuthStateChanged;
+            AuthManager.Instance.OnPlayerStatsLoaded -= OnPlayerStatsLoaded;
     }
 
     // ── Button click ──────────────────────────────────────────────────────
@@ -72,7 +72,7 @@ public class UIAuthButton : MonoBehaviour {
 
     // ── Auth state change ─────────────────────────────────────────────────
 
-    private void OnAuthStateChanged(FirebaseUser user) {
+    private void OnPlayerStatsLoaded(PlayerProfile user) {
         bool signedIn = user != null;
 
         // Update button label
