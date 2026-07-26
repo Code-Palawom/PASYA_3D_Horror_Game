@@ -1684,6 +1684,7 @@ GameObject:
   - component: {fileID: 3448056747662676335}
   - component: {fileID: 1761906129784793017}
   - component: {fileID: 1339537030215150861}
+  - component: {fileID: 6634795981717689718}
   m_Layer: 3
   m_Name: Player
   m_TagString: Untagged
@@ -2294,6 +2295,35 @@ MonoBehaviour:
   minPitch: 0.92
   maxPitch: 1.08
   crouchVolume: 0.4
+--- !u!114 &6634795981717689718
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 596334459946105256}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5e935e02fb30f6a4bb0fc9131a88ff75, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::VisionEffectController
+  ShowTopMostFoldoutHeaderGroup: 1
+  volume: {fileID: 4324968238830787817}
+  stressVignetteColor: {r: 0, g: 0, b: 0, a: 1}
+  maxStressVignetteIntensity: 0.25
+  maxDesaturation: -100
+  huntedVignetteColor: {r: 1, g: 0, b: 0, a: 1}
+  maxVignetteIntensity: 0.45
+  maxRgbSplitIntensity: 0.6
+  maxHuntedMotionBlurIntensity: 0.5
+  fadeSpeed: 4
+  pulse: 1
+  pulseSpeed: 2
+  pulseAmount: 0.15
+  flashlightLight: {fileID: 6445996134105957033}
+  flickerChancePerSecond: 0.5
+  flickerDuration: 0.08
+  flickerMinIntensityMultiplier: 0.35
 --- !u!1 &686057756561175429
 GameObject:
   m_ObjectHideFlags: 0
@@ -4367,6 +4397,7 @@ GameObject:
   - component: {fileID: 211474985380239829}
   - component: {fileID: 1002232861457834979}
   - component: {fileID: 6671912181153539192}
+  - component: {fileID: 4324968238830787817}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -4541,6 +4572,23 @@ MonoBehaviour:
   maxClickDistance: 1.5
   hoverColor: {r: 1, g: 1, b: 1, a: 0.3137255}
   textHoverColor: {r: 0, g: 0, b: 0, a: 1}
+--- !u!114 &4324968238830787817
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1398212334812659468}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 172515602e62fb746b5d573b38a5fe58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.Volume
+  m_IsGlobal: 1
+  priority: 0
+  blendDistance: 0
+  weight: 1
+  sharedProfile: {fileID: 11400000, guid: c04327ccb55578345ad21d731b228122, type: 2}
 --- !u!1 &1403050290231846158
 GameObject:
   m_ObjectHideFlags: 0

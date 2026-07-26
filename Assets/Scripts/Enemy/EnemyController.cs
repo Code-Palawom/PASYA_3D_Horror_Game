@@ -45,6 +45,11 @@ public class EnemyController : NetworkBehaviour {
     private Vector3 lastKnownPlayerPos;
     private NetworkObject targetPlayer;
 
+    // hunted vision (red screen effect on whichever player is currently
+    // being hunted/attacked — only ever sent to that one player's client)
+    private NetworkObject huntedVisionTarget;
+    private bool huntedVisionActive;
+
     // search state
     private Vector3 searchOrigin;
     private float currentSearchRadius;
@@ -70,6 +75,9 @@ public class EnemyController : NetworkBehaviour {
     public override void OnNetworkDespawn() {
         if (IsServer && NoiseManager.Singleton != null)
             NoiseManager.Singleton.UnregisterEnemy(this);
+
+        if (IsServer && huntedVisionActive)
+            SetHuntedVision(huntedVisionTarget, false);
     }
 
     public void SetPatrolPoints(List<Vector3> points) {
@@ -104,10 +112,37 @@ public class EnemyController : NetworkBehaviour {
         if (state == EnemyState.Hunt) OnEnterHuntClientRpc();
         if (state == EnemyState.Search) BeginSearch();
         if (state == EnemyState.Attack) attackElapsed = 0f;
+
+        // Hunt and Attack both count as "actively threatening a specific
+        // player" — vision stays on across that Hunt -> Attack handoff and
+        // only clears once we drop to Investigate/Search/Patrol.
+        bool shouldShowVision = state == EnemyState.Hunt || state == EnemyState.Attack;
+        if (shouldShowVision != huntedVisionActive) {
+            SetHuntedVision(shouldShowVision ? targetPlayer : huntedVisionTarget, shouldShowVision);
+            huntedVisionActive = shouldShowVision;
+        }
     }
 
     [ClientRpc]
     private void OnEnterHuntClientRpc() { /* jumpscare stinger, heartbeat sfx, etc */ }
+
+    // Sends the hunted-vision toggle to exactly one client — the target
+    // player's own OwnerClientId — via ClientRpcParams.Send.TargetClientIds.
+    // No one else's screen ever receives this RPC.
+    private void SetHuntedVision(NetworkObject target, bool hunted) {
+        if (target == null) return;
+
+        var vision = target.GetComponent<VisionEffectController>();
+        if (vision == null) return;
+
+        var rpcParams = new ClientRpcParams {
+            Send = new ClientRpcSendParams { TargetClientIds = new[] { target.OwnerClientId } }
+        };
+
+        vision.SetHuntedClientRpc(hunted, rpcParams);
+
+        huntedVisionTarget = hunted ? target : null;
+    }
 
     // ---------------- Patrol ----------------
 

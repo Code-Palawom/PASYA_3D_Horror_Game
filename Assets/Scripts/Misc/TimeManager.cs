@@ -88,9 +88,15 @@ public class TimeManager : NetworkBehaviour {
     [SerializeField] private float dayBloomThreshold = 1.1f;
     [SerializeField] private float nightBloomThreshold = 0.6f;
 
+    [Header("Time-of-day schedule")]
+    [SerializeField] private int nightStartHour = 18;
+    [SerializeField] private int nightEndHour = 6;
+
     private ColorAdjustments colorAdjustments;
     private Vignette vignette;
     private Bloom bloom;
+    private DepthOfField dof;
+    private ChromaticAberration chromaticAberration;
 
     [Header("Time Speed")]
     [Tooltip("How many real-world minutes a full 24-hour in-game day takes.")]
@@ -98,6 +104,8 @@ public class TimeManager : NetworkBehaviour {
 
     [Header("UI (optional scene-based clock)")]
     [SerializeField] private TMPro.TMP_Text clockText;
+
+    private bool isNight;
 
     private float SecondsPerGameMinute => (dayLengthInRealMinutes * 60f) / 1440f;
 
@@ -163,6 +171,8 @@ public class TimeManager : NetworkBehaviour {
             globalVolume.profile.TryGet(out colorAdjustments);
             globalVolume.profile.TryGet(out vignette);
             globalVolume.profile.TryGet(out bloom);
+            globalVolume.profile.TryGet(out dof);
+            globalVolume.profile.TryGet(out chromaticAberration);
         }
 
         // Snap instantly to correct visuals — no tween for late joiners / host start
@@ -331,8 +341,23 @@ public class TimeManager : NetworkBehaviour {
         if (colorAdjustments != null) colorAdjustments.postExposure.value = Mathf.Lerp(dayPostExposure, nightPostExposure, t);
         if (vignette != null) vignette.intensity.value = Mathf.Lerp(dayVignetteIntensity, nightVignetteIntensity, t);
         if (bloom != null) bloom.threshold.value = Mathf.Lerp(dayBloomThreshold, nightBloomThreshold, t);
-
         PushLightGlobals();
+
+        bool shouldBeNight = nightStartHour <= nightEndHour
+            ? hour >= nightStartHour && hour < nightEndHour          // e.g. 8 -> 18, same-day window
+            : hour >= nightStartHour || hour < nightEndHour;         // e.g. 22 -> 6, wraps past midnight
+
+        if (shouldBeNight == isNight) return;
+
+        isNight = shouldBeNight;
+
+        if (isNight) {
+            if (dof != null) dof.active = true;
+            if (chromaticAberration != null) chromaticAberration.active = true;
+        } else {
+            if (dof != null) dof.active = false;
+            if (chromaticAberration != null) chromaticAberration.active = true;
+        }
     }
 
     // The shader was written against Built-in RP globals (_WorldSpaceLightPos0,
