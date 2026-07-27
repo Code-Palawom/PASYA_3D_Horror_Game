@@ -6,11 +6,20 @@ using UnityEngine.SceneManagement;
 
 // Server-side. Spawns enemy NetworkObjects at points defined in a
 // SceneEnemySpawnData asset, using a matching ScenePatrolData asset
-// (paired by groupId) to assign each enemy's patrol route. Attach to
-// an empty GameObject with a NetworkObject, place in your scene, and
-// assign enemyPrefab + the two data assets for that scene.
+// (paired by groupId) to assign each enemy's patrol route. Supports
+// multiple enemy prefabs/types — a spawn point can pin a specific type
+// via EnemySpawnPointData.enemyType, or leave it empty for a random pick.
+// Attach to an empty GameObject with a NetworkObject, place in your
+// scene, and assign enemyTypes + the two data assets for that scene.
 public class EnemySpawnManager : NetworkBehaviour {
-    [SerializeField] private NetworkObject enemyPrefab;
+    [System.Serializable]
+    public class EnemyTypeEntry {
+        [Tooltip("Matches EnemySpawnPointData.enemyType. Leave any spawn point's enemyType empty to allow any of these to be picked at random for it.")]
+        public string typeId;
+        public NetworkObject prefab;
+    }
+
+    [SerializeField] private List<EnemyTypeEntry> enemyTypes = new();
     [SerializeField] private SceneEnemySpawnData spawnData;
     [SerializeField] private ScenePatrolData patrolData;
 
@@ -77,7 +86,7 @@ public class EnemySpawnManager : NetworkBehaviour {
         isNight = shouldBeNight;
 
         if (isNight)
-            SpawnEnemy();
+            SpawnWave();
         else
             DespawnAllEnemies();
     }
@@ -90,17 +99,43 @@ public class EnemySpawnManager : NetworkBehaviour {
         activeEnemies.Clear();
     }
 
-    // Call this to spawn one enemy (e.g. from a game-start event,
-    // a director/wave system, or after the previous enemy dies).
+    // Fills up to maxActiveEnemies, each at a distinct spawn point for
+    // this wave (so a single night doesn't stack two enemies on top of
+    // each other), each with its own resolved type + patrol route.
+    private void SpawnWave() {
+        activeEnemies.RemoveAll(e => e == null);
+        int toSpawn = maxActiveEnemies - activeEnemies.Count;
+        if (toSpawn <= 0) return;
+
+        var usedThisWave = new HashSet<EnemySpawnPointData>();
+        for (int i = 0; i < toSpawn; i++) {
+            if (!TrySpawnOne(usedThisWave)) break; // ran out of valid spawn points
+        }
+    }
+
+    // Call this to spawn one additional enemy on demand (e.g. after a
+    // previous enemy dies mid-night and you want to backfill it).
     public void SpawnEnemy() {
         if (!IsServer) return;
-        if (enemyPrefab == null || spawnData == null || spawnData.spawnPoints.Count == 0) return;
 
         activeEnemies.RemoveAll(e => e == null);
         if (activeEnemies.Count >= maxActiveEnemies) return;
 
-        EnemySpawnPointData point = PickSpawnPoint();
-        var instance = Instantiate(enemyPrefab, point.position, point.rotation);
+        TrySpawnOne(new HashSet<EnemySpawnPointData>());
+    }
+
+    private bool TrySpawnOne(HashSet<EnemySpawnPointData> usedThisWave) {
+        if (enemyTypes.Count == 0 || spawnData == null || spawnData.spawnPoints.Count == 0) return false;
+
+        EnemySpawnPointData point = PickSpawnPoint(usedThisWave);
+        if (point == null) return false;
+
+        NetworkObject prefab = ResolvePrefab(point.enemyType);
+        if (prefab == null) return false;
+
+        usedThisWave.Add(point);
+
+        var instance = Instantiate(prefab, point.position, point.rotation);
         instance.Spawn();
 
         var controller = instance.GetComponent<EnemyController>();
@@ -109,23 +144,34 @@ public class EnemySpawnManager : NetworkBehaviour {
 
         activeEnemies.Add(instance);
         lastSpawnPoint = point;
+        return true;
     }
 
-    private EnemySpawnPointData PickSpawnPoint() {
-        var points = spawnData.spawnPoints;
-        if (points.Count == 1) return points[0];
+    private NetworkObject ResolvePrefab(string typeId) {
+        if (!string.IsNullOrEmpty(typeId)) {
+            var match = enemyTypes.FirstOrDefault(t => t.typeId == typeId);
+            if (match != null && match.prefab != null) return match.prefab;
+            Debug.LogWarning($"EnemySpawnManager: no enemyType entry matches '{typeId}' — picking a random type for this spawn instead.");
+        }
+        return enemyTypes[Random.Range(0, enemyTypes.Count)].prefab;
+    }
+
+    private EnemySpawnPointData PickSpawnPoint(HashSet<EnemySpawnPointData> usedThisWave) {
+        var available = spawnData.spawnPoints.Where(p => !usedThisWave.Contains(p)).ToList();
+        if (available.Count == 0) return null;
+        if (available.Count == 1) return available[0];
 
         // Try to avoid repeating the same point (or one too close to it) back-to-back.
         for (int attempt = 0; attempt < 10; attempt++) {
-            EnemySpawnPointData candidate = points[Random.Range(0, points.Count)];
+            EnemySpawnPointData candidate = available[Random.Range(0, available.Count)];
             if (lastSpawnPoint == null) return candidate;
 
             float dist = Vector3.Distance(candidate.position, lastSpawnPoint.position);
             if (dist >= minSpawnPointSeparation) return candidate;
         }
 
-        // fallback: just take any random point
-        return points[Random.Range(0, points.Count)];
+        // fallback: just take any random available point
+        return available[Random.Range(0, available.Count)];
     }
 
     private List<Vector3> GetPatrolPointsFor(string groupId) {
@@ -139,7 +185,7 @@ public class EnemySpawnManager : NetworkBehaviour {
     }
 
     // Call when an enemy dies/despawns if you want the manager to
-    // track counts and potentially respawn.
+    // track counts and potentially backfill via SpawnEnemy().
     public void NotifyEnemyRemoved(NetworkObject enemy) {
         activeEnemies.Remove(enemy);
     }

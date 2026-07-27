@@ -17,3 +17,4 @@ MonoBehaviour:
   - position: {x: 323.5, y: 3.3, z: 76.9}
     rotation: {x: 0, y: 0, z: 0, w: 0}
     groupId: p1
+    enemyType: 1
