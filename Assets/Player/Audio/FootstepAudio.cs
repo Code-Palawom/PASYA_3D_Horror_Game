@@ -1,6 +1,7 @@
+using Unity.Netcode;
 using UnityEngine;
 
-public class FootstepAudio : MonoBehaviour {
+public class FootstepAudio : NetworkBehaviour {
     [SerializeField] private AudioSource audioSource;
     [SerializeField] private float raycastDistance = 1.2f;
     [SerializeField] private LayerMask groundMask;
@@ -24,12 +25,30 @@ public class FootstepAudio : MonoBehaviour {
 
     private void Awake() => playerState = GetComponent<PlayerState>();
 
+    // Called via Animation Event. Only reliable on the owner's own local
+    // Animator playback (NetworkAnimator can skip event frames on remote
+    // clients when it snaps synced playback time) — so instead of playing
+    // audio directly here, the owner resolves which surface it's on and
+    // broadcasts that + the movement state, and every client (including
+    // the owner) resolves clips and plays locally off the RPC.
     public void Footstep() {
-        SurfaceClipSet set = GetSurfaceSet();
-        Debug.Log($"[Footstep] Called.");
+        if (!IsOwner) return;
+
+        int surfaceIndex = GetSurfaceIndex();
+        FootstepServerRpc(surfaceIndex, (int)playerState.CurrentPlayerMovementState);
+    }
+
+    [ServerRpc]
+    private void FootstepServerRpc(int surfaceIndex, int state) =>
+        FootstepClientRpc(surfaceIndex, state);
+
+    [ClientRpc]
+    private void FootstepClientRpc(int surfaceIndex, int state) {
+        SurfaceClipSet set = ResolveSurfaceSet(surfaceIndex);
         if (set == null) return;
 
-        AudioClip[] pool = playerState.CurrentPlayerMovementState switch {
+        PlayerMovementState movementState = (PlayerMovementState)state;
+        AudioClip[] pool = movementState switch {
             PlayerMovementState.Walking => set.walkClips,
             PlayerMovementState.Running => set.walkClips,
             PlayerMovementState.Crouching => set.crouchClips,
@@ -38,19 +57,21 @@ public class FootstepAudio : MonoBehaviour {
         if (pool == null || pool.Length == 0) return;
 
         audioSource.pitch = Random.Range(minPitch, maxPitch);
-        audioSource.volume = playerState.CurrentPlayerMovementState == PlayerMovementState.Crouching
-            ? crouchVolume : 1f;
+        audioSource.volume = movementState == PlayerMovementState.Crouching ? crouchVolume : 1f;
         audioSource.PlayOneShot(pool[Random.Range(0, pool.Length)]);
-        Debug.Log("[Footstep] Played.");
     }
 
-    private SurfaceClipSet GetSurfaceSet() {
+    // Returns the index into surfaceSets, or -1 for defaultSet.
+    private int GetSurfaceIndex() {
         Vector3 origin = transform.position + Vector3.up * 0.2f;
         if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, raycastDistance, groundMask)) {
-            foreach (var set in surfaceSets)
-                if (hit.collider.CompareTag(set.surfaceTag))
-                    return set;
+            for (int i = 0; i < surfaceSets.Length; i++)
+                if (hit.collider.CompareTag(surfaceSets[i].surfaceTag))
+                    return i;
         }
-        return defaultSet;
+        return -1;
     }
+
+    private SurfaceClipSet ResolveSurfaceSet(int index) =>
+        index >= 0 && index < surfaceSets.Length ? surfaceSets[index] : defaultSet;
 }
