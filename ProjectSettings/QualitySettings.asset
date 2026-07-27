@@ -169,4 +169,7 @@ QualitySettings:
     excludedTargetPlatforms:
     - iPhone
   m_TextureMipmapLimitGroupNames: []
-  m_PerPlatformDefaultQuality: {}
+  m_PerPlatformDefaultQuality:
+    Android: 0
+    Nintendo Switch 2: 2
+    Standalone: 0

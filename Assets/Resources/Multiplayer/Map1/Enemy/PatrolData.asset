@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ScenePatrolData
   sceneName: Map1
   patrolGroups:
-  - groupId: p1
+  - groupId: patrol1
     points:
     - position: {x: 323.5, y: 3.3, z: 69.78}
       rotation: {x: 0, y: 0, z: 0, w: 0}

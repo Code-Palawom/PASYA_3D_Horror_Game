@@ -11,6 +11,10 @@ public class EnemyController : NetworkBehaviour {
     [SerializeField] private NavMeshAgent agent;
     [SerializeField] private EnemyPerception perception;
 
+    [Tooltip("Matches EnemySpawnPointData.enemyType / EnemyTypeEntry.typeId — " +
+             "used to look up this enemy's fixed jumpscare spot in JumpscareLocationSet.")]
+    [SerializeField] private string enemyType;
+
     [Header("Debug")]
     [SerializeField] private bool debugLogs = true;
 
@@ -300,7 +304,7 @@ public class EnemyController : NetworkBehaviour {
 
             if (targetHealth != null) {
                 Log($"TickAttack: landing hit on {targetPlayer.OwnerClientId}");
-                targetHealth.ApplyJumpscareHit(transform.position, transform.rotation);
+                targetHealth.ApplyJumpscareHit(enemyType);
             } else {
                 Log("TickAttack: targetPlayer or its PlayerHealth is missing — no hit applied.");
             }

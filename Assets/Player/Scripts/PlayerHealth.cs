@@ -31,20 +31,20 @@ public class PlayerHealth : NetworkBehaviour {
     // this player is the attack target. Removes one heart, runs the
     // jumpscare -> death message -> teleport -> respawn-reveal sequence,
     // then unlocks the player.
-    public void ApplyJumpscareHit(Vector3 enemyPos, Quaternion enemyRot) {
+    public void ApplyJumpscareHit(string enemyType) {
         if (!IsServer) return;
         if (isInSequence) return; // already dying, ignore re-entrant hits
         if (CurrentHearts.Value <= 0) return;
 
-        StartCoroutine(JumpscareSequence(enemyPos, enemyRot));
+        StartCoroutine(JumpscareSequence(enemyType));
     }
 
-    private IEnumerator JumpscareSequence(Vector3 enemyPos, Quaternion enemyRot) {
+    private IEnumerator JumpscareSequence(string enemyType) {
         isInSequence = true;
 
         // Phase 1: jumpscare + death message (owner only), player vanishes
         // for everyone the moment the hit lands.
-        jumpscareUI.TriggerJumpscareRpc(enemyPos, enemyRot);
+        jumpscareUI.TriggerJumpscareRpc(enemyType);
         SetVisibilityClientRpc(false);
         yield return new WaitForSeconds(3f);
 
@@ -52,9 +52,8 @@ public class PlayerHealth : NetworkBehaviour {
         // RPC, then reveal — player becomes visible again at the new spot
         // for everyone right as the respawn-location countdown starts.
         Vector3 respawnPos = RespawnManager.Instance.GetRandomRespawnPoint(out Quaternion respawnRot);
-        player.TeleportClientRpc(respawnPos, respawnRot);
+        jumpscareUI.ShowRespawnLocationRpc(respawnPos, respawnRot);
 
-        jumpscareUI.ShowRespawnLocationRpc(respawnRot);
         yield return new WaitForSeconds(3f);
 
         jumpscareUI.EndJumpscareRpc();

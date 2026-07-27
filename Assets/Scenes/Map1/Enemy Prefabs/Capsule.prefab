@@ -227,6 +227,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   agent: {fileID: 4004041004886619860}
   perception: {fileID: 2104762719628866395}
+  enemyType: enemy1
   debugLogs: 1
   huntSpeed: 4
   patrolSpeed: 2
