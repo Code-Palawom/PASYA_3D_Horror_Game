@@ -57,8 +57,9 @@ public class EnemyController : NetworkBehaviour {
     private float currentSearchRadius;
     private float searchElapsed;
 
-    // attack state safety net
+    // attack state
     private float attackElapsed;
+    private bool hasHitThisAttack;
 
     private void Log(string msg) {
         if (debugLogs) Debug.Log($"[EnemyController:{name}] {msg}", this);
@@ -119,7 +120,16 @@ public class EnemyController : NetworkBehaviour {
 
         if (state == EnemyState.Hunt) OnEnterHuntClientRpc();
         if (state == EnemyState.Search) BeginSearch();
-        if (state == EnemyState.Attack) attackElapsed = 0f;
+        if (state == EnemyState.Attack) {
+            attackElapsed = 0f;
+            hasHitThisAttack = false;
+            // Freeze the agent for the attack — otherwise it keeps steering
+            // toward the (about to be teleported) target while the jumpscare
+            // sequence is playing on the victim's client.
+            if (agent.isOnNavMesh) agent.isStopped = true;
+        } else if (agent.isOnNavMesh) {
+            agent.isStopped = false;
+        }
 
         // Hunt and Attack both count as "actively threatening a specific
         // player" — vision stays on across that Hunt -> Attack handoff and
@@ -277,16 +287,38 @@ public class EnemyController : NetworkBehaviour {
     // ---------------- Attack ----------------
 
     private void TickAttack() {
-        // TODO: this is currently a stub — no damage is dealt and nothing
-        // ever moves the enemy out of Attack, so once it enters this state
-        // it will sit here permanently. That is very likely your "freeze
-        // after Hunt" symptom.
-        //
-        // attackStateTimeout below is a temporary safety net so you can
-        // confirm the diagnosis — remove it once real attack logic exists.
+        // Fire the hit exactly once per Attack-state entry (hasHitThisAttack
+        // is reset in SetState whenever we transition into Attack). The
+        // actual jumpscare/heart/respawn sequence lives on PlayerHealth and
+        // runs as a server coroutine there — this just kicks it off.
+        if (!hasHitThisAttack) {
+            hasHitThisAttack = true;
+
+            PlayerHealth targetHealth = targetPlayer != null
+                ? targetPlayer.GetComponent<PlayerHealth>()
+                : null;
+
+            if (targetHealth != null) {
+                Log($"TickAttack: landing hit on {targetPlayer.OwnerClientId}");
+                targetHealth.ApplyJumpscareHit(transform.position, transform.rotation);
+            } else {
+                Log("TickAttack: targetPlayer or its PlayerHealth is missing — no hit applied.");
+            }
+
+            // The victim is about to be teleported away by PlayerHealth's
+            // sequence, so there's nothing left to chase here. Drop back to
+            // Search around the current position rather than sitting in
+            // Attack until the timeout.
+            searchOrigin = transform.position;
+            SetState(EnemyState.Search);
+            return;
+        }
+
+        // Safety net only — should not normally be reached since the hit
+        // branch above always transitions out on the same tick it fires.
         attackElapsed += Time.deltaTime;
         if (attackElapsed >= attackStateTimeout) {
-            Log($"TickAttack stub timed out after {attackStateTimeout}s with no real logic -> Search (safety net)");
+            Log($"TickAttack safety-net timeout after {attackStateTimeout}s -> Search");
             searchOrigin = transform.position;
             SetState(EnemyState.Search);
         }

@@ -301,7 +301,7 @@ public class Player : NetworkBehaviour {
     }
 
     void Update() {
-        if (!IsOwner) return;
+        if (!IsOwner || !controller.enabled) return;
 
         Vector3 camPos = playerCamera.transform.position;
         Vector3 targetPos = cameraFollow.position;
