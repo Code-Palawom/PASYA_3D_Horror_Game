@@ -11,30 +11,21 @@ public class PlayerHealth : NetworkBehaviour {
     [SerializeField] private Collider[] collidersToHide;
 
     [Header("Hearts")]
+    [SerializeField] private HeartsUI heartsUI;
     [SerializeField] private int maxHearts = 3;
 
-    public NetworkVariable<int> CurrentHearts = new(
-        3, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    public int currentHearts;
 
     private bool isInSequence;
     private SkinnedMeshRenderer[] renderersToHide;
 
     private void Awake() {
         renderersToHide = GetComponentsInChildren<SkinnedMeshRenderer>();
+        currentHearts = maxHearts;
     }
 
-    public override void OnNetworkSpawn() {
-        if (IsServer) CurrentHearts.Value = maxHearts;
-    }
-
-    // Server-only entry point. Called by EnemyController.TickAttack() when
-    // this player is the attack target. Removes one heart, runs the
-    // jumpscare -> death message -> teleport -> respawn-reveal sequence,
-    // then unlocks the player.
     public void ApplyJumpscareHit(string enemyType) {
-        if (!IsServer) return;
         if (isInSequence) return; // already dying, ignore re-entrant hits
-        if (CurrentHearts.Value <= 0) return;
 
         StartCoroutine(JumpscareSequence(enemyType));
     }
@@ -55,17 +46,13 @@ public class PlayerHealth : NetworkBehaviour {
         jumpscareUI.ShowRespawnLocationRpc(respawnPos, respawnRot);
 
         yield return new WaitForSeconds(3f);
-
-        jumpscareUI.EndJumpscareRpc();
-        SetVisibilityClientRpc(true);
-        CurrentHearts.Value = Mathf.Max(0, CurrentHearts.Value - 1);
+        heartsUI.heartsChanged(currentHearts, currentHearts - 1);
+        currentHearts--;
         isInSequence = false;
+    }
 
-        if (CurrentHearts.Value <= 0) {
-            // Out of hearts — hook up game-over/spectate/elimination flow here
-            // once that system exists. Left intentionally unimplemented.
-            Debug.Log($"[PlayerHealth] {OwnerClientId} is out of hearts.");
-        }
+    public void RestoreVisibility() {
+        SetVisibilityClientRpc(true);
     }
 
     // Broadcast to everyone — during the jumpscare the victim should be

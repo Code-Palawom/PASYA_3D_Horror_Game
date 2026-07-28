@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using PrimeTween;
 
-public class HeartsUI : NetworkBehaviour {
+public class HeartsUI : MonoBehaviour {
     [SerializeField] private PlayerHealth playerHealth;
     [SerializeField] private Image[] heartIcons; // ordered left-to-right, index 0 = first heart
 
@@ -16,9 +16,7 @@ public class HeartsUI : NetworkBehaviour {
     private RectTransform[] heartRects;
     private Vector2[] originalPositions;
 
-    public override void OnNetworkSpawn() {
-        if (!IsOwner) { enabled = false; return; }
-
+    void Start() {
         heartRects = new RectTransform[heartIcons.Length];
         originalPositions = new Vector2[heartIcons.Length];
         for (int i = 0; i < heartIcons.Length; i++) {
@@ -26,15 +24,10 @@ public class HeartsUI : NetworkBehaviour {
             originalPositions[i] = heartRects[i].anchoredPosition;
         }
 
-        playerHealth.CurrentHearts.OnValueChanged += OnHeartsChanged;
-        SnapTo(playerHealth.CurrentHearts.Value); // sync current value immediately on spawn, no animation
+        SnapTo(playerHealth.currentHearts); // sync current value immediately on spawn, no animation
     }
 
-    public override void OnNetworkDespawn() {
-        if (IsOwner) playerHealth.CurrentHearts.OnValueChanged -= OnHeartsChanged;
-    }
-
-    private void OnHeartsChanged(int previous, int current) {
+    public void heartsChanged(int previous, int current) {
         if (current < previous) {
             // Animate every heart lost this change (normally just one, but
             // covers multi-hit edge cases without skipping icons).

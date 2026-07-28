@@ -34,8 +34,7 @@ public class UIAuthButton : MonoBehaviour {
     [SerializeField] private TMP_Text createdAt;
 
     [Header("Multiplayer Button")]
-    [SerializeField] private Button multiplayerBtn;
-    [SerializeField] private TMP_Text multiplayerBtnLabel;
+    [SerializeField] private GameObject hostModeWrapper;
 
     [Header("Settings Panel")]
     [SerializeField] private Button signInBtn;
@@ -96,9 +95,7 @@ public class UIAuthButton : MonoBehaviour {
             AuthManager.Instance.OnPlayerStatsLoaded += UpdateUserStatsUI;
         }
 
-        multiplayerBtn.enabled = signedIn;
-        multiplayerBtn.interactable = signedIn;
-        multiplayerBtnLabel.color = signedIn ? Color.white : Color.gray;
+        hostModeWrapper.SetActive(signedIn);
 
         signInBtn.gameObject.SetActive(!signedIn);
         logoutBtn.gameObject.SetActive(signedIn);

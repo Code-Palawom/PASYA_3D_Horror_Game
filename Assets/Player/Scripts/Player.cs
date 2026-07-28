@@ -74,6 +74,7 @@ public class Player : NetworkBehaviour {
     private bool isRunning = false;
     private bool isCrouching = false;
     private bool isToggledRunning = false;
+    private bool isJumpscared = false;
 
     private float standHeight;
     private Vector3 standCenter;
@@ -485,12 +486,16 @@ public class Player : NetworkBehaviour {
         crouchSpeed = originalCrouchSpeed;
     }
 
+    public void IsJumpscared(bool jumpscared) {
+        isJumpscared = jumpscared;
+    }
+
     [ClientRpc]
     public void TeleportClientRpc(Vector3 position, Quaternion rotation) {
         var cc = GetComponent<CharacterController>();
         if (cc != null) cc.enabled = false;
         transform.SetPositionAndRotation(position, rotation);
-        if (cc != null) cc.enabled = true;
+        if (cc != null && !isJumpscared) cc.enabled = true;
         StartCoroutine(HideLoadingScreen());
 
         if (GameModeManager.Instance.IsRelayMode && string.IsNullOrEmpty(VivoxManager.Instance.CurrentChannelName)) {

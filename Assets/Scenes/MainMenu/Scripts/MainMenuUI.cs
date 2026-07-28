@@ -717,6 +717,7 @@ public class MainMenuUI : MonoBehaviour {
         joinStatusText.text = "Searching...";
         roomDetailPanel.ShowEmpty();
 
+        if (AuthManager.Instance.CurrentUser == null) return;
         // Both run concurrently — LAN via UDP broadcast, online via Lobby query
         LanDiscovery.Instance.StartClientDiscovery(OnHostDiscovered, duration: 4f);
         _ = QueryOnlineSessionsAsync();

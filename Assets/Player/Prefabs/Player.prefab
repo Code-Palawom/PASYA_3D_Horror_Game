@@ -1710,6 +1710,7 @@ Transform:
   m_Children:
   - {fileID: 4564052281919187941}
   - {fileID: 5405706583826919811}
+  - {fileID: 6725929178277809948}
   - {fileID: 4675119197364449412}
   - {fileID: 6445996134095623081}
   - {fileID: 1037571334629436295}
@@ -1757,7 +1758,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 3683115389
+  GlobalObjectIdHash: 2432858981
   InScenePlacedSourceGlobalObjectIdHash: 3683115389
   DeferredDespawnTick: 0
   Ownership: 1
@@ -2383,12 +2384,9 @@ MonoBehaviour:
   player: {fileID: 2036994067828019122}
   collidersToHide:
   - {fileID: 6525935170575094197}
+  heartsUI: {fileID: 6856289891540900414}
   maxHearts: 3
-  CurrentHearts:
-    UpdateTraits:
-      MinSecondsBetweenUpdates: 0
-      MaxSecondsBetweenUpdates: 0
-    m_InternalValue: 3
+  currentHearts: 0
 --- !u!1 &686057756561175429
 GameObject:
   m_ObjectHideFlags: 0
@@ -4478,8 +4476,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1398212334812659468}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 328.2109, y: 1.6, z: 53.84344}
+  m_LocalRotation: {x: 0.12767383, y: 0.20613296, z: -0.027137911, w: 0.96977943}
+  m_LocalPosition: {x: 328.2109, y: 3.5, z: 53.84344}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4854,6 +4852,37 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 5148247002316474181}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1530826644237226296
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6725929178277809948}
+  m_Layer: 0
+  m_Name: JumpscareCameraFollow
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6725929178277809948
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1530826644237226296}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.6, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 190666774804602483}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1587035663637245289
 GameObject:
@@ -9655,12 +9684,12 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2890663918468302530}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 7143423267237895241}
+  m_Father: {fileID: 580173757054172536}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
@@ -12761,7 +12790,9 @@ RectTransform:
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 5723668714974113495}
+  - {fileID: 7407502932641291033}
   m_Father: {fileID: 7143423267237895241}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -21755,6 +21786,113 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!1 &6608408374500652687
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1461006586732034468}
+  - component: {fileID: 948043070460188802}
+  - component: {fileID: 7937501560402135524}
+  - component: {fileID: 8704689204076678562}
+  m_Layer: 0
+  m_Name: Jumpscare Cam
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1461006586732034468
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6608408374500652687}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 328.2109, y: 1.6, z: 53.84344}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4564052281919187941}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &948043070460188802
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6608408374500652687}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f9dfa5b682dcd46bda6128250e975f58, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineCamera
+  Priority:
+    Enabled: 1
+    m_Value: 0
+  OutputChannel: 1
+  StandbyUpdate: 2
+  m_StreamingVersion: 20241001
+  m_LegacyPriority: 0
+  Target:
+    TrackingTarget: {fileID: 6725929178277809948}
+    LookAtTarget: {fileID: 0}
+    CustomLookAtTarget: 0
+  Lens:
+    FieldOfView: 60
+    OrthographicSize: 5
+    NearClipPlane: 0.3
+    FarClipPlane: 1000
+    Dutch: 0
+    ModeOverride: 0
+    PhysicalProperties:
+      GateFit: 2
+      SensorSize: {x: 21.946, y: 16.002}
+      LensShift: {x: 0, y: 0}
+      FocusDistance: 10
+      Iso: 200
+      ShutterSpeed: 0.005
+      Aperture: 16
+      BladeCount: 5
+      Curvature: {x: 2, y: 11}
+      BarrelClipping: 0.25
+      Anamorphism: 0
+  BlendHint: 0
+--- !u!114 &7937501560402135524
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6608408374500652687}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 36d1163fa822e8b418a0a603ec078d5c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineHardLockToTarget
+  Damping: 0
+--- !u!114 &8704689204076678562
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6608408374500652687}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 68bb026fafb42b14791938953eaace77, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Cinemachine::Unity.Cinemachine.CinemachineBasicMultiChannelPerlin
+  NoiseProfile: {fileID: 11400000, guid: 46965f9cbaf525742a6da4c2172a99cd, type: 2}
+  PivotOffset: {x: 0, y: 0, z: 0}
+  AmplitudeGain: 1
+  FrequencyGain: 0.5
+  m_NoiseOffsets: {x: 481.76022, y: -683.55493, z: 271.71945}
 --- !u!1 &6639627442779396562
 GameObject:
   m_ObjectHideFlags: 0
@@ -24223,12 +24361,12 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7368721106907938505}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 7143423267237895241}
+  m_Father: {fileID: 580173757054172536}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
@@ -26570,6 +26708,7 @@ Transform:
   - {fileID: 8099649939846427870}
   - {fileID: 1314964356715177671}
   - {fileID: 5036934777844847722}
+  - {fileID: 1461006586732034468}
   m_Father: {fileID: 190666774804602483}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &8189458391004025239
@@ -27431,7 +27570,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 29ec4fa38d8a4274188ac15feb581c31, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::HeartsUI
-  ShowTopMostFoldoutHeaderGroup: 1
   playerHealth: {fileID: 1223380177693693863}
   heartIcons:
   - {fileID: 2287936525674950629}
@@ -27791,8 +27929,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 580173757054172536}
-  - {fileID: 5723668714974113495}
-  - {fileID: 7407502932641291033}
   m_Father: {fileID: 1658931173907540277}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -27812,18 +27948,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c2578e36aa9caba488f9cb7b66d9cd3a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::JumpscareUI
-  ShowTopMostFoldoutHeaderGroup: 1
   overlayGroup: {fileID: 1282646722722921560}
   deathMessageText: {fileID: 255568391520799337}
   countdownText: {fileID: 4159641895557736254}
   player: {fileID: 2036994067828019122}
+  playerHealth: {fileID: 1223380177693693863}
   firstPersonCam: {fileID: 2141992304890565519}
   thirdPersonCam: {fileID: 399260874606490360}
+  jumpscareCam: {fileID: 948043070460188802}
   panTilt: {fileID: 5240064665015112383}
   fpYawTarget: {fileID: 190666774804602483}
+  characterController: {fileID: 6525935170575094197}
   inputScriptsToDisable:
-  - {fileID: 4960347632880926090}
-  - {fileID: 4741344464008231056}
+  - {fileID: 0}
   gameplayUI: {fileID: 3908460152924479554}
   respawnCountdownSeconds: 3
   jumpscareLocations: {fileID: 11400000, guid: 88729d562d4c35f4698754e95c4932e8, type: 2}

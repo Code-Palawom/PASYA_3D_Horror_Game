@@ -1,20 +1,24 @@
+using PrimeTween;
 using System.Collections;
+using TMPro;
+using Unity.Cinemachine;
 using Unity.Netcode;
 using UnityEngine;
-using TMPro;
-using PrimeTween;
-using Unity.Cinemachine;
+using UnityEngine.UIElements;
+using static UnityEditor.FilePathAttribute;
 
-public class JumpscareUI : NetworkBehaviour {
+public class JumpscareUI : MonoBehaviour {
     [Header("Refs")]
     [SerializeField] private CanvasGroup overlayGroup;
     [SerializeField] private TMP_Text deathMessageText;
     [SerializeField] private TMP_Text countdownText;
     [SerializeField] private Player player; // existing component, exposes TeleportClientRpc(pos, rot)
+    [SerializeField] private PlayerHealth playerHealth;
 
     [Header("Cinemachine")]
     [SerializeField] private CinemachineCamera firstPersonCam;
     [SerializeField] private CinemachineCamera thirdPersonCam;
+    [SerializeField] private CinemachineCamera jumpscareCam;
 
     [Header("Cinemachine Look")]
     [SerializeField] private CinemachinePanTilt panTilt;
@@ -30,51 +34,10 @@ public class JumpscareUI : NetworkBehaviour {
     [Header("Jumpscare locations")]
     [SerializeField] private JumpscareLocationSet jumpscareLocations;
 
-    // Priorities captured right before we force first-person, so we can put
-    // the same two values back afterward without needing to know the
-    // project's actual numeric scheme for "active"/"inactive".
-    private int fpPriorityBackup;
-    private int tpPriorityBackup;
 
-    public override void OnNetworkSpawn() {
-        if (!IsOwner) { enabled = false; return; }
-        overlayGroup.alpha = 0f;
-        overlayGroup.gameObject.SetActive(false);
-    }
-
-    // Forces the FP vcam active regardless of the current gameplay setting,
-    // remembering both priorities so RestoreCameraModeFromSettings can put
-    // them back in the right slot afterward.
-    private void ForceFirstPersonCamera() {
-        fpPriorityBackup = firstPersonCam.Priority.Value;
-        tpPriorityBackup = thirdPersonCam.Priority.Value;
-
-        int activeValue = Mathf.Max(fpPriorityBackup, tpPriorityBackup);
-        int inactiveValue = Mathf.Min(fpPriorityBackup, tpPriorityBackup);
-
-        firstPersonCam.Priority = activeValue;
-        thirdPersonCam.Priority = inactiveValue;
-    }
-
-    // Re-reads GameSettings.IsFirstPerson (the player may have flipped it
-    // while dead) and hands the "active" priority slot to whichever cam
-    // that setting calls for.
-    private void RestoreCameraModeFromSettings() {
-        bool firstPerson = SettingsManager.Instance.Current.isFirstPerson;
-        int activeValue = Mathf.Max(fpPriorityBackup, tpPriorityBackup);
-        int inactiveValue = Mathf.Min(fpPriorityBackup, tpPriorityBackup);
-
-        firstPersonCam.Priority = firstPerson ? activeValue : inactiveValue;
-        thirdPersonCam.Priority = firstPerson ? inactiveValue : activeValue;
-    }
-
-    // Phase 1 — jumpscare hit lands: teleport the player's NetworkObject to
-    // the fixed spot for this enemy type (facing the prop, since the
-    // teleport sets rotation too), force first-person, trigger the prop's
-    // animation, show overlay + death message, hide gameplay buttons.
-    [Rpc(SendTo.Owner)]
     public void TriggerJumpscareRpc(string enemyType) {
         SetInputLocked(true);
+        player.IsJumpscared(true);
         if (gameplayUI != null) gameplayUI.SetActive(false);
 
         var entry = jumpscareLocations != null ? jumpscareLocations.GetEntry(enemyType) : null;
@@ -88,40 +51,23 @@ public class JumpscareUI : NetworkBehaviour {
         // Server-authoritative teleport of the whole player object — see the
         // comment on RequestTeleportRpc if you already have a dedicated
         // teleport path (e.g. the one respawn uses) to route through instead.
-        RequestTeleport(entry.playerPosition, targetRot);
+        player.TeleportClientRpc(entry.playerPosition, targetRot);
 
-        Quaternion yawRot = Quaternion.Euler(0f, entry.playerEulerRotation.y, 0f);
-        RequestTeleport(entry.playerPosition, yawRot);
-        OrientCameraToJumpscare(entry.playerEulerRotation);
-
-        ForceFirstPersonCamera();
+        jumpscareCam.Priority = 99;
 
         var propAnimator = JumpscarePropRegistry.Instance != null
             ? JumpscarePropRegistry.Instance.GetAnimator(entry.propId)
             : null;
         if (propAnimator != null) propAnimator.SetTrigger(entry.animationTrigger);
 
-        deathMessageText.text = "You died.";
+        deathMessageText.text = "";
         countdownText.text = "";
         overlayGroup.gameObject.SetActive(true);
         Tween.Alpha(overlayGroup, 1f, 0.25f, Ease.OutQuad);
     }
 
-    // Host-authoritative: server moves the player's NetworkObject and the
-    // NetworkTransform syncs it back down to owner + observers. If PlayerHealth
-    // (or whatever already teleports players for respawn) exposes a server-side
-    // teleport method, call that instead of setting transform here directly.
-    private void RequestTeleport(Vector3 position, Quaternion rotation) {
-        player.TeleportClientRpc(position, rotation);
-    }
-
-    // Phase 2 — respawn point chosen: teleport the player there and drop the
-    // camera back into whatever mode GameSettings.IsFirstPerson calls for,
-    // clear the death message, start the countdown.
-    [Rpc(SendTo.Owner)]
     public void ShowRespawnLocationRpc(Vector3 respawnPosition, Quaternion respawnRotation) {
-        RequestTeleport(respawnPosition, respawnRotation);
-        RestoreCameraModeFromSettings();
+        player.TeleportClientRpc(respawnPosition, respawnRotation);
 
         if (panTilt != null)
             panTilt.TiltAxis.Value = 0f;
@@ -131,38 +77,30 @@ public class JumpscareUI : NetworkBehaviour {
     }
 
     private IEnumerator CountdownRoutine(int seconds) {
+        deathMessageText.text = "Respawning in...";
         for (int i = seconds; i > 0; i--) {
             countdownText.text = i.ToString();
             yield return new WaitForSeconds(1f);
         }
+        deathMessageText.text = "";
         countdownText.text = "";
+
+        EndJumpscare();
+        jumpscareCam.Priority = 0;
     }
 
-    // Phase 3 — sequence over: fade out the death overlay and hand control
-    // back. Camera mode was already settled in Phase 2, so nothing to do here.
-    [Rpc(SendTo.Owner)]
-    public void EndJumpscareRpc() {
+    private void EndJumpscare() {
         Tween.Alpha(overlayGroup, 0f, 0.25f, Ease.OutQuad)
             .OnComplete(() => overlayGroup.gameObject.SetActive(false));
         if (gameplayUI != null) gameplayUI.SetActive(true);
         SetInputLocked(false);
+        player.IsJumpscared(false);
+        playerHealth.RestoreVisibility();
     }
 
     private void SetInputLocked(bool locked) {
-        foreach (var script in inputScriptsToDisable)
+        foreach (var script in inputScriptsToDisable) {
             if (script != null) script.enabled = !locked;
-    }
-
-    private void OrientCameraToJumpscare(Vector3 eulerRotation) {
-        if (panTilt == null) return;
-
-        float yaw = eulerRotation.y;
-        float pitch = eulerRotation.x;
-
-        panTilt.PanAxis.Value = yaw;
-        panTilt.TiltAxis.Value = Mathf.Clamp(pitch, panTilt.TiltAxis.Range.x, panTilt.TiltAxis.Range.y);
-
-        if (fpYawTarget != null)
-            fpYawTarget.rotation = Quaternion.Euler(0f, yaw, 0f);
+        }
     }
 }

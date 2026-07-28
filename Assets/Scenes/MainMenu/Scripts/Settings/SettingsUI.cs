@@ -268,25 +268,29 @@ public class SettingsUI : MonoBehaviour {
     }
 
     private void RefreshName(PlayerProfile profile) {
-        nameField.text = profile.DisplayName;
+        if (profile != null) {
+            nameField.text = profile.DisplayName;
 
-        if (profile.LastNameChange is Timestamp lastChange) {
-            var elapsed = DateTime.UtcNow - lastChange.ToDateTime();
-            if (elapsed.TotalDays > 14) {
+            if (profile.LastNameChange is Timestamp lastChange) {
+                var elapsed = DateTime.UtcNow - lastChange.ToDateTime();
+                if (elapsed.TotalDays > 14) {
+                    nameChangeStatus.color = canCangeNameColor;
+                    nameChangeStatus.text = "Name change available";
+                    nameSaveButton.interactable = true;
+                    nameField.interactable = true;
+                } else {
+                    double daysLeft = 14 - elapsed.TotalDays;
+                    nameChangeStatus.color = cannotChangeNameColor;
+                    nameChangeStatus.text = $"Available in {daysLeft:F1} day(s).";
+                }
+            } else {
                 nameChangeStatus.color = canCangeNameColor;
                 nameChangeStatus.text = "Name change available";
                 nameSaveButton.interactable = true;
                 nameField.interactable = true;
-            } else {
-                double daysLeft = 14 - elapsed.TotalDays;
-                nameChangeStatus.color = cannotChangeNameColor;
-                nameChangeStatus.text = $"Available in {daysLeft:F1} day(s).";
             }
         } else {
-            nameChangeStatus.color = canCangeNameColor;
-            nameChangeStatus.text = "Name change available";
-            nameSaveButton.interactable = true;
-            nameField.interactable = true;
+            nameField.text = SettingsManager.Instance.Current.playerName;
         }
     }
 
