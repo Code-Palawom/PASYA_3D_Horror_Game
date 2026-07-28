@@ -2,10 +2,7 @@ using PrimeTween;
 using System.Collections;
 using TMPro;
 using Unity.Cinemachine;
-using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.UIElements;
-using static UnityEditor.FilePathAttribute;
 
 public class JumpscareUI : MonoBehaviour {
     [Header("Refs")]
