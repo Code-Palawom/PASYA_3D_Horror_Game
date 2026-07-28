@@ -3,16 +3,21 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 
 
-// Raycast origin:    player body at eye height
-// Raycast direction: MainCamera forward
+// Detection origin:  player body at eye height
+// Detection method:  OverlapBox offset forward from eye position
+// Box direction:     camera forward, but pitch is clamped so looking
+//                     straight up/down doesn't swing the box to detect
+//                     something directly above/below the player.
 
 // Each frame the player looks at an IInteractable, calls OnFocus()
 // so the interactable can push custom prompt/cooldown data to the UI.
 // Disabled on non-owner clients so only the local player interacts.
 public class InteractionController : NetworkBehaviour {
     [Header("Detection")]
-    [SerializeField] float interactRange = 3f;
-    [SerializeField] float maxRangeMultiplier = 2.5f; // cap how much extra range downward looks get
+    [SerializeField] Vector3 boxHalfExtents = new Vector3(0.5f, 0.5f, 0.5f);
+    [SerializeField] float boxForwardOffset = 0.25f;
+    [SerializeField] float boxVerticalOffset = 0f; // additional offset along world up, applied after eye height
+    [SerializeField] float maxPitchClamp = 30f; // degrees, clamps how far the box tilts up/down with camera
     [SerializeField] LayerMask interactLayer;
 
     [Header("References")]
@@ -24,6 +29,10 @@ public class InteractionController : NetworkBehaviour {
 
     private PlayerInput _input;
     private IInteractable _currentTarget;
+
+    // cached each frame for gizmos + reuse
+    private Vector3 _lastBoxCenter;
+    private Quaternion _lastBoxRotation = Quaternion.identity;
 
     // ─────────────────────────────────────────────────────────
     public override void OnNetworkSpawn() {
@@ -46,36 +55,60 @@ public class InteractionController : NetworkBehaviour {
 
     void DetectInteractable() {
         Vector3 origin = transform.position + Vector3.up * eyeHeight;
-        Vector3 direction = playerCamera.transform.forward;
+        Vector3 clampedForward = GetClampedForward();
+        Vector3 flatForward = GetFlatForward();
 
-        float effectiveRange = GetEffectiveRange(direction);
+        Vector3 center = origin + clampedForward * boxForwardOffset + Vector3.up * boxVerticalOffset;
+        Quaternion rotation = Quaternion.LookRotation(flatForward, Vector3.up); // yaw only, box stays upright
 
-        Debug.DrawRay(origin, direction * effectiveRange, Color.cyan);
+        _lastBoxCenter = center;
+        _lastBoxRotation = rotation;
 
-        if (Physics.Raycast(origin, direction, out RaycastHit hit, effectiveRange, interactLayer)) {
-            if (hit.collider.TryGetComponent(out IInteractable interactable)) {
-                _currentTarget = interactable;
-                _currentTarget.OnFocus(interactionUI);
-                return;
+        Collider[] hits = Physics.OverlapBox(center, boxHalfExtents, rotation, interactLayer);
+
+        IInteractable nearest = null;
+        float nearestSqrDist = float.MaxValue;
+
+        for (int i = 0; i < hits.Length; i++) {
+            if (!hits[i].TryGetComponent(out IInteractable interactable)) continue;
+
+            float sqrDist = (hits[i].transform.position - origin).sqrMagnitude;
+            if (sqrDist < nearestSqrDist) {
+                nearestSqrDist = sqrDist;
+                nearest = interactable;
             }
+        }
+
+        if (nearest != null) {
+            _currentTarget = nearest;
+            _currentTarget.OnFocus(interactionUI);
+            return;
         }
 
         _currentTarget = null;
         interactionUI.Hide();
     }
 
-    float GetEffectiveRange(Vector3 direction) {
-        // Angle between look direction and the horizontal plane
-        Vector3 flatDir = new Vector3(direction.x, 0f, direction.z).normalized;
-        float pitchAngle = Vector3.Angle(direction, flatDir); // 0 = flat, 90 = straight down
+    // Clamps the camera's forward pitch so extreme up/down looks don't
+    // swing the box to cover something directly overhead/underfoot.
+    // Used only to offset the box's position, not its rotation.
+    Vector3 GetClampedForward() {
+        Vector3 forward = playerCamera.transform.forward;
+        Vector3 flatDir = GetFlatForward();
 
-        // Only extend range when looking down (positive pitch below horizon)
-        if (direction.y >= 0f) return interactRange;
+        float pitchAngle = Vector3.SignedAngle(flatDir, forward, Vector3.Cross(Vector3.up, flatDir));
+        float clampedPitch = Mathf.Clamp(pitchAngle, -maxPitchClamp, maxPitchClamp);
 
-        float cos = Mathf.Cos(pitchAngle * Mathf.Deg2Rad);
-        cos = Mathf.Max(cos, 1f / maxRangeMultiplier); // clamp so it doesn't go infinite near straight-down
+        return Quaternion.AngleAxis(clampedPitch, Vector3.Cross(Vector3.up, flatDir)) * flatDir;
+    }
 
-        return interactRange / cos;
+    // Camera forward flattened onto the horizontal plane (yaw only).
+    // Used for the box's rotation so it always stays upright, regardless of pitch.
+    Vector3 GetFlatForward() {
+        Vector3 forward = playerCamera.transform.forward;
+        Vector3 flatDir = new Vector3(forward.x, 0f, forward.z).normalized;
+        if (flatDir.sqrMagnitude < 0.0001f) flatDir = transform.forward; // guard: looking straight up/down
+        return flatDir;
     }
 
     // ─────────────────────────────────────────────────────────
@@ -91,9 +124,25 @@ public class InteractionController : NetworkBehaviour {
     // ─────────────────────────────────────────────────────────
     void OnDrawGizmosSelected() {
         if (playerCamera == null) return;
-        Vector3 origin = transform.position + Vector3.up * eyeHeight;
         Gizmos.color = Color.cyan;
-        Gizmos.DrawWireSphere(origin, 0.1f);
-        Gizmos.DrawRay(origin, playerCamera.transform.forward * interactRange);
+
+        Vector3 origin = transform.position + Vector3.up * eyeHeight;
+        Gizmos.DrawWireSphere(origin, 0.05f);
+
+        Vector3 center = _lastBoxCenter;
+        Quaternion rotation = _lastBoxRotation;
+
+        // Update() doesn't run in edit mode, so compute a live preview instead
+        // of relying on stale/default cached values.
+        if (!Application.isPlaying) {
+            Vector3 clampedForward = GetClampedForward();
+            center = origin + clampedForward * boxForwardOffset + Vector3.up * boxVerticalOffset;
+            rotation = Quaternion.LookRotation(GetFlatForward(), Vector3.up);
+        }
+
+        Matrix4x4 prevMatrix = Gizmos.matrix;
+        Gizmos.matrix = Matrix4x4.TRS(center, rotation, Vector3.one);
+        Gizmos.DrawWireCube(Vector3.zero, boxHalfExtents * 2f);
+        Gizmos.matrix = prevMatrix;
     }
 }
