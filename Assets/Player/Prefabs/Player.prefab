@@ -1876,7 +1876,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 3683115389
+  GlobalObjectIdHash: 2432858981
   InScenePlacedSourceGlobalObjectIdHash: 3683115389
   DeferredDespawnTick: 0
   Ownership: 1
@@ -4748,8 +4748,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1398212334812659468}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 328.2109, y: 1.6, z: 53.84344}
+  m_LocalRotation: {x: 0.12767383, y: 0.20613296, z: -0.027137911, w: 0.96977943}
+  m_LocalPosition: {x: 328.2109, y: 3.5, z: 53.84344}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -6014,6 +6014,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::QuizCanvasController
   mainPanel: {fileID: 7866271942783499540}
   chatUI: {fileID: 1297143970453986753}
+  taskPanel: {fileID: 4715501846638598784}
+  promptPanel: {fileID: 8453112727711566123}
   quizPanel: {fileID: 1957263603399357491}
   questionText: {fileID: 8220157366071771451}
   difficultyBadge: {fileID: 3389862918295000082}
@@ -7806,7 +7808,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 371.91, y: -33.9}
+  m_AnchoredPosition: {x: 371.91, y: -25}
   m_SizeDelta: {x: 200, y: 40}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7101477302951853316
@@ -22790,6 +22792,7 @@ GameObject:
   - component: {fileID: 280322781014883675}
   - component: {fileID: 456824895042136662}
   - component: {fileID: 5468368660568678151}
+  - component: {fileID: 8453112727711566123}
   m_Layer: 0
   m_Name: PromptPanel
   m_TagString: Untagged
@@ -22898,6 +22901,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.ContentSizeFitter
   m_HorizontalFit: 2
   m_VerticalFit: 2
+--- !u!225 &8453112727711566123
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6810203694540651940}
+  m_Enabled: 1
+  m_Alpha: 1
+  m_Interactable: 1
+  m_BlocksRaycasts: 1
+  m_IgnoreParentGroups: 0
 --- !u!1 &6818679465777125271
 GameObject:
   m_ObjectHideFlags: 0

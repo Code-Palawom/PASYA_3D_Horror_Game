@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ce523329f94506d45b6f89f6da7b4698, type: 3}
   m_Name: FactsAboutComputers
   m_EditorClassIdentifier: Assembly-CSharp::QuizSetData
-  setName: First Quiz
-  category: Random
+  setName: Facts About Computers
+  category: Trivia
   authorId: Dev
   authorName: Dev
   questions:

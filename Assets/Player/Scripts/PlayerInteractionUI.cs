@@ -71,7 +71,7 @@ public class PlayerInteractionUI : MonoBehaviour {
         
         // Hide normal prompt text entirely — cooldown row covers messaging
         interactButton.gameObject.SetActive(false);
-        keyHintWrapper.SetActive(false);
+        if (keyHintText.CompareTag("PlatformPC")) keyHintWrapper.SetActive(false);
 
         _cooldownEnd = Time.time + (float)cooldownRemaining;
         _cooldownTotal = cooldownTotal;
@@ -125,7 +125,7 @@ public class PlayerInteractionUI : MonoBehaviour {
 
             // Restore normal prompt visibility for next Show() call
             interactButton.gameObject.SetActive(true);
-            keyHintWrapper.SetActive(true);
+            if (keyHintText.CompareTag("PlatformPC")) keyHintWrapper.SetActive(true);
         }
     }
 

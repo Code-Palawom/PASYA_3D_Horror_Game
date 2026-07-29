@@ -8,6 +8,8 @@ public class QuizCanvasController : MonoBehaviour {
     [Header("Panel")]
     [SerializeField] GameObject mainPanel;
     [SerializeField] GameObject chatUI;
+    [SerializeField] GameObject taskPanel;
+    [SerializeField] CanvasGroup promptPanel;
 
     [Header("Root")]
     [SerializeField] GameObject quizPanel;
@@ -38,7 +40,7 @@ public class QuizCanvasController : MonoBehaviour {
     [SerializeField] TextAnswerInputUI textAnswerInput;
     
     private Action<QuizAnswer> _onAnswer;
-    private bool _answered;
+    private bool _answered = true;
 
     // ─────────────────────────────────────────────────────────
     public void ShowQuestion(QuestionRuntime question, Action<QuizAnswer> onAnswer) {
@@ -47,7 +49,9 @@ public class QuizCanvasController : MonoBehaviour {
 
         mainPanel.SetActive(false);
         chatUI.SetActive(false);
+        taskPanel.SetActive(false);
         quizPanel.SetActive(true);
+        promptPanel.alpha = 0f;
         //panelAnimator.SetTrigger("Open");
 
         SetupHeader(question);
@@ -76,6 +80,8 @@ public class QuizCanvasController : MonoBehaviour {
         quizPanel.SetActive(false);
         mainPanel.SetActive(true);
         chatUI.SetActive(true);
+        taskPanel.SetActive(true);
+        promptPanel.alpha = 1f;
     }
 
     // ─────────────────────────────────────────────────────────

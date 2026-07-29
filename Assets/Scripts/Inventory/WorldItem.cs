@@ -26,6 +26,9 @@ public class WorldItem : NetworkBehaviour, IInteractable {
              "back to a BoxCollider sized from InventoryItem.worldColliderSize/worldColliderCenter. " +
              "Assign any Collider here to start (e.g. a BoxCollider) — it'll be replaced as needed.")]
     [SerializeField] private Collider physicsCollider;
+    [Tooltip("Floating name label shown above/below this item while it's the local player's " +
+             "interaction focus. Position (above/below) comes from InventoryItem.displayBelow.")]
+    [SerializeField] private WorldItemNameLabel nameLabel;
     private ItemRegistry Registry => itemRegistry != null ? itemRegistry : ItemRegistry.Instance;
 
     private GameObject _currentModelInstance;
@@ -101,6 +104,8 @@ public class WorldItem : NetworkBehaviour, IInteractable {
         if (item.worldModelPrefab == null) {
             Debug.LogWarning($"[WorldItem] '{item.itemID}' has no worldModelPrefab assigned.");
             ApplyColliderForItem(item, null); // still size the fallback collider even with no visual
+            nameLabel?.SetText(item.displayName);
+            nameLabel?.RepositionForCollider(physicsCollider, item.displayBelow);
             return;
         }
 
@@ -118,6 +123,9 @@ public class WorldItem : NetworkBehaviour, IInteractable {
         _currentModelInstance.transform.localRotation = Quaternion.identity;
 
         ApplyColliderForItem(item, _currentModelInstance);
+
+        nameLabel?.SetText(item.displayName);
+        nameLabel?.RepositionForCollider(physicsCollider, item.displayBelow);
     }
 
     // Sizes/shapes physicsCollider to match this item — copied from a Collider
@@ -198,13 +206,15 @@ public class WorldItem : NetworkBehaviour, IInteractable {
 
             var item = Registry?.Get(_itemID.Value.ToString());
             string name = item != null ? item.displayName : "Item";
-            return $"Pick up {name}";
+            return $"Pick up Item";
         }
     }
 
     public bool IsLocked => !_gate.IsUnlocked;
 
     public void OnFocus(PlayerInteractionUI ui) {
+        nameLabel?.Show();
+
         if (_gate.IsCooldownActive)
             ui.ShowWithCooldown(_gate.CooldownRemaining, _gate.WrongAnswerCooldown);
         else
