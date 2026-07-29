@@ -80,7 +80,7 @@ public class GameSessionManager : NetworkBehaviour {
                 : Guid.NewGuid().ToString();
             SessionId.Value = new FixedString64Bytes(sessionId);
 
-            string hostName = AuthManager.Instance.CurrentProfile.DisplayName ?? SettingsManager.Instance.Current.playerName;
+            string hostName = AuthManager.Instance.CurrentProfile?.DisplayName ?? SettingsManager.Instance.Current.playerName;
 
             PlayerRole hostRole = AuthManager.Instance != null && AuthManager.Instance.CurrentProfile != null
                 ? AuthManager.Instance.CurrentProfile.RoleEnum
