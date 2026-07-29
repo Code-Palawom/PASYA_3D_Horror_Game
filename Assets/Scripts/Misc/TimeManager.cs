@@ -152,7 +152,6 @@ public class TimeManager : NetworkBehaviour {
             skyboxMat.SetFloat("_SunSize", sunSize);
             skyboxMat.SetFloat("_SunHaze", sunHaze);
             skyboxMat.SetFloat("_MoonSize", moonSize);
-            skyboxMat.SetInt("_CloudCoverage", 0);
             if (moonTexture != null) skyboxMat.SetTexture("_MoonTex", moonTexture);
             RenderSettings.skybox = skyboxMat;
         }

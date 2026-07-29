@@ -7,11 +7,11 @@
         _AtmosphereThickness ("Atmosphere Thickness", Range(0.1,5)) = 0.5
         _ZenithColor ("Zenith Color", Color)  = (0.3921568,0.7058823,1,1)
         _HorizonColor ("Horizon Color", Color) = (1,1,1,1)
-        _GroundColor     ("Ground Color", Color) = (1,1,1,1)
+        _GroundColor ("Ground Color", Color) = (1,1,1,1)
         _SkyExposure ("Sky Exposure", Range(0,4)) = 1
         _SkySaturation("Sky Saturation", Range(0,2)) = 1
         _HorizonHeight ("Horizon Height", Range(-0.5,0.5)) = 0
-         _HorizonSharpness("Horizon Sharpness", Range(0,1)) = 0.5
+        _HorizonSharpness("Horizon Sharpness", Range(0,1)) = 0.5
         _HorizonFogDensity("Horizon Fog Density", Range(0, 2)) = 0.25
         _HorizonFogColor("Horizon Fog Color", Color) = (1,1,1,1)
         [Toggle] _EnableMoon("Enable Moon", Float) = 0
@@ -30,6 +30,8 @@
         _CloudBaseHeight ("Cloud Base Height", Range(0,0.5)) = 0.25
         _CloudWindDirection("Cloud Wind Direction", Vector) = (1, 0, 0, 0)
         _CloudSpeed("Cloud Speed", Range(0, 2)) = 0.05
+        _CloudZenithFadeStart ("Cloud Zenith Fade Start", Range(0,1)) = 0.35
+        _CloudZenithFadeEnd ("Cloud Zenith Fade End", Range(0,1)) = 0.75
     }
 
     SubShader
@@ -76,6 +78,8 @@
             float  _CloudBaseHeight;
             float4 _CloudWindDirection;
             float  _CloudSpeed;
+            float  _CloudZenithFadeStart;
+            float  _CloudZenithFadeEnd;
 
             static const float LITE_SUN_CONVERGENCE   = 4.5;
             static const float LITE_CLOUD_LIGHT_INT   = 1.0;
@@ -237,7 +241,7 @@
             {
                 float v = 0.0;
                 float a = 0.5;
-                [unroll] for (int i = 0; i < 4; ++i)
+                [unroll] for (int i = 0; i < 3; ++i)
                 {
                     v += noise3(p) * a;
                     p *= 2.0;
@@ -271,6 +275,9 @@
                 float baseOffset = rotDir.y - _CloudBaseHeight;
                 if (baseOffset <= 0.0) return fixed4(skyCol, 0);
 
+                float zenithFade = 1.0 - smoothstep(_CloudZenithFadeStart, max(_CloudZenithFadeEnd, _CloudZenithFadeStart + 1e-3), rotDir.y);
+                if (zenithFade <= 0.001) return fixed4(skyCol, 0);
+
                 float3 rdir = normalize(rotDir);
                 float3 pos  = float3(rotDir.x, baseOffset, rotDir.z) * _CloudScale;
 
@@ -285,8 +292,8 @@
                 pos.xz += windRot * (_Time.y * _CloudSpeed * _CloudScale);
 
                 const float cellSize = 1.5;
-                const int   LAYERS   = 3;
-                const float STEP     = 0.6;
+                const int   LAYERS = 2;
+                const float STEP = 0.6;
 
                 float density = 0.0;
 
@@ -330,6 +337,7 @@
 
                 density = saturate(density / LAYERS);
                 density = saturate(density - (1.0 - _CloudCoverage));
+                density *= zenithFade;
 
                 float heightFade = saturate(baseOffset / 0.15);
                 density *= heightFade;
