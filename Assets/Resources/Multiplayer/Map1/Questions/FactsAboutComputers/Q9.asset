@@ -10,19 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7a8f2681beee8634d81ae9b1491968ed, type: 3}
-  m_Name: Q3
+  m_Name: Q9
   m_EditorClassIdentifier: Assembly-CSharp::QuestionData
-  questionText: "E = mc\xB2 was formulated by ___"
-  questionType: 2
-  difficulty: 1
+  questionText: A "gigabyte" is larger than a "terabyte."
+  questionType: 1
+  difficulty: 0
   timeLimit: 15
   pointValue: 100
-  questionImage: {fileID: 0}
   choices: []
   correctChoiceIndex: 0
-  correctAnswer: Albert Einstein
-  alternativeAnswers:
-  - Einstein
+  answer: 0
+  correctAnswer: 
+  alternativeAnswers: []
   acceptableAnswers: []
   requiredKeywords: []
   requiredKeywordCount: 1

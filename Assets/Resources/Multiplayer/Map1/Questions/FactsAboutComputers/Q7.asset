@@ -10,15 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7a8f2681beee8634d81ae9b1491968ed, type: 3}
-  m_Name: Q10
+  m_Name: Q7
   m_EditorClassIdentifier: Assembly-CSharp::QuestionData
-  questionText: Yo yo yo
-  questionType: 1
-  difficulty: 0
+  questionText: What was the name of the first commercially successful personal computer,
+    released by Apple in 1977?
+  questionType: 0
+  difficulty: 1
   timeLimit: 15
   pointValue: 100
-  choices: []
-  correctChoiceIndex: 0
+  choices:
+  - Macintosh
+  - Apple I
+  - Apple II
+  - Lisa
+  correctChoiceIndex: 2
   answer: 1
   correctAnswer: 
   alternativeAnswers: []

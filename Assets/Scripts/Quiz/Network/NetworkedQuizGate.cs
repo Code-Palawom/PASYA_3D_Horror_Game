@@ -15,12 +15,8 @@ using UnityEngine;
 //   other doors unlocked, etc) checked BEFORE the quiz even starts
 public class NetworkedQuizGate : NetworkBehaviour, IInteractable, IUnlockable {
     [Header("Quiz")]
-    [SerializeField] QuestionDifficulty difficulty = QuestionDifficulty.Easy;
     [SerializeField] bool oneTimeUnlock = true;
     [SerializeField] float wrongAnswerCooldown = 10f;
-    [Tooltip("Inspector default for gates placed directly in the scene. Synced to clients via " +
-             "_skipQuiz below — see SetSkipQuiz() for the runtime (pre-spawn, e.g. dropped-item) path.")]
-    [SerializeField] bool skipQuiz = false;
 
     // Attempt() runs LOCALLY on whichever client calls it (WorldItem.OnInteract
     // etc. call it directly, it's not an RPC) — so the skip flag must be a
@@ -69,6 +65,17 @@ public class NetworkedQuizGate : NetworkBehaviour, IInteractable, IUnlockable {
                                           : 0;
 
     private QuestionRuntime _cachedQuestion;
+    private QuestionDifficulty difficulty = QuestionDifficulty.Easy;
+
+    // Inspector default for gates placed directly in the scene. Synced to clients via
+    // _skipQuiz below — see SetSkipQuiz() for the runtime (pre-spawn, e.g. dropped-item) path.
+    private bool skipQuiz = false;
+
+    // Stable id for TaskDefinition (SpecificGate type) to reference this exact gate
+    private string gateId;
+
+    // Tags for TaskDefinition (DifficultyOrTag type) to match against.
+    private List<string> tags = new();
 
     // ── IInteractable ─────────────────────────────────────────
     public string InteractPrompt => "Open Gate";
@@ -135,6 +142,32 @@ public class NetworkedQuizGate : NetworkBehaviour, IInteractable, IUnlockable {
             return;
         }
         _skipQuiz.Value = skip;
+    }
+
+    // Sets the id a TaskDefinition's SpecificGate type matches against
+    // (NotifyGateSolved reads gateId server-side). Not part of the question-
+    // claiming logic like difficulty/skipQuiz, so it isn't strictly required
+    // before spawn, but kept to the same before-spawn convention for
+    // consistency with prefab-spawned items (e.g. WorldItemSpawner).
+    public void SetGateId(string newGateId) {
+        if (IsSpawned) {
+            Debug.LogWarning($"[NetworkedQuizGate] '{name}': SetGateId called after spawn — " +
+                              "call this before Spawn() instead.");
+            return;
+        }
+        gateId = newGateId;
+    }
+
+    // Mirrors SetGateId — for TaskDefinition's DifficultyOrTag type. Same
+    // before-spawn convention, same reason (not required by spawn logic,
+    // just consistent with how prefab-spawned items set everything else).
+    public void SetTags(List<string> newTags) {
+        if (IsSpawned) {
+            Debug.LogWarning($"[NetworkedQuizGate] '{name}': SetTags called after spawn — " +
+                              "call this before Spawn() instead.");
+            return;
+        }
+        tags = newTags ?? new List<string>();
     }
 
     // ─────────────────────────────────────────────────────────
@@ -290,6 +323,10 @@ public class NetworkedQuizGate : NetworkBehaviour, IInteractable, IUnlockable {
     void RequestUnlockRpc() {
         Debug.Log("[RPC][Server] RequestUnlock");
         if (oneTimeUnlock) _unlocked.Value = true;
+
+        // Fires on every correct answer, oneTimeUnlock or not — task progress
+        // is about "answered correctly", not about the gate's lock state.
+        TaskManager.Instance.NotifyGateSolved(gateId, difficulty, tags);
     }
 
     [Rpc(SendTo.Server)]

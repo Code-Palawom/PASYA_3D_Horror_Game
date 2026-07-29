@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ce523329f94506d45b6f89f6da7b4698, type: 3}
-  m_Name: First Quiz
+  m_Name: FactsAboutComputers
   m_EditorClassIdentifier: Assembly-CSharp::QuizSetData
   setName: First Quiz
   category: Random
@@ -19,8 +19,8 @@ MonoBehaviour:
   questions:
   - {fileID: 11400000, guid: 82a85a831ad7b1445ba6561d20b17afd, type: 2}
   - {fileID: 11400000, guid: f8280addb2f2b024d99a2c31af1a43a4, type: 2}
-  - {fileID: 11400000, guid: 95cbad98ce6ee6044807ab636941298c, type: 2}
   - {fileID: 11400000, guid: 2d1ef518ddece2048a498a5b94430b32, type: 2}
+  - {fileID: 11400000, guid: 95cbad98ce6ee6044807ab636941298c, type: 2}
   - {fileID: 11400000, guid: fc17a1ac882895446bbf5489f1697cc7, type: 2}
   - {fileID: 11400000, guid: b62ababada8d9ea47b6c6ba1f741fc4f, type: 2}
   - {fileID: 11400000, guid: ccf3273a7df329946a88384e66bb2758, type: 2}
@@ -28,3 +28,17 @@ MonoBehaviour:
   - {fileID: 11400000, guid: 8327b14f95311cb46998ade48f8e4ffc, type: 2}
   - {fileID: 11400000, guid: 2db50cd9979f79c41813e47388d3f207, type: 2}
   - {fileID: 11400000, guid: 00e7ec375071395468228391cb2799c6, type: 2}
+  - {fileID: 11400000, guid: d48e7d37efb584047b8244c384eb5d9e, type: 2}
+  - {fileID: 11400000, guid: 79dcb88839f3177439877b766bf232b3, type: 2}
+  - {fileID: 11400000, guid: b73f4624629b6d443b8bf2723f4eadfb, type: 2}
+  - {fileID: 11400000, guid: cf0aa9fd2e8b197479079ff1ff976510, type: 2}
+  - {fileID: 11400000, guid: 1a8530e133079aa45af1c160457d173f, type: 2}
+  - {fileID: 11400000, guid: bc0a296510817bb4e8ed557f2be15539, type: 2}
+  - {fileID: 11400000, guid: 3159914bc9e8d87498ccdc75f2cc005b, type: 2}
+  - {fileID: 11400000, guid: 1a64a8c9ba6b343469357dfaa79d1ac0, type: 2}
+  - {fileID: 11400000, guid: 9f4fde30b0867ea409be51fd8d5c4655, type: 2}
+  - {fileID: 11400000, guid: ed1b78570aa342344b6fecbc3996fe34, type: 2}
+  - {fileID: 11400000, guid: 12c517a55a2410a469d9f7d3e5dc5edb, type: 2}
+  - {fileID: 11400000, guid: 1696a507f3260a141a75b1c5db4382df, type: 2}
+  - {fileID: 11400000, guid: 1b4053e12761fbf46829260779e88680, type: 2}
+  - {fileID: 11400000, guid: 2eaef73b3b34f9c499bff9fb82e959dd, type: 2}

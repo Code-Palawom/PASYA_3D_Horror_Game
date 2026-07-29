@@ -10,21 +10,23 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7a8f2681beee8634d81ae9b1491968ed, type: 3}
-  m_Name: Q4
+  m_Name: Q19
   m_EditorClassIdentifier: Assembly-CSharp::QuestionData
-  questionText: Explain what gravity is.
-  questionType: 3
+  questionText: Which programming language, created in 1972, is still widely used
+    today and heavily influenced C++, Java, and others?
+  questionType: 0
   difficulty: 2
   timeLimit: 15
   pointValue: 100
-  questionImage: {fileID: 0}
-  choices: []
-  correctChoiceIndex: 0
+  choices:
+  - FORTRAN
+  - COBOL
+  - C
+  - BASIC
+  correctChoiceIndex: 2
+  answer: 1
   correctAnswer: 
   alternativeAnswers: []
   acceptableAnswers: []
-  requiredKeywords:
-  - force
-  - mass
-  - attraction
-  requiredKeywordCount: 2
+  requiredKeywords: []
+  requiredKeywordCount: 1

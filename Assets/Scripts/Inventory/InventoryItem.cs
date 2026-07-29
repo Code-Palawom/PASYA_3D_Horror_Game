@@ -29,6 +29,13 @@ public class InventoryItem : ScriptableObject {
     [Tooltip("Quiz difficulty required to pick this item up via WorldItem. " +
              "Applied to the spawned WorldItem's NetworkedQuizGate before it spawns.")]
     public QuestionDifficulty pickupDifficulty = QuestionDifficulty.Easy;
+    [Tooltip("Optional. TaskDefinition (SpecificGate type) matches against this. Leave blank to " +
+             "just use itemID — only set this if you need the gate id to differ from the item's " +
+             "own id (e.g. two spawners share this item but should count as separate tasks).")]
+    public string pickupGateId;
+    [Tooltip("Optional. TaskDefinition (DifficultyOrTag type) matches against these. Applied to " +
+             "the spawned WorldItem's NetworkedQuizGate before it spawns, same as pickupDifficulty.")]
+    public System.Collections.Generic.List<string> pickupTags = new();
 
     [Header("World Physics")]
     [Tooltip("Fallback only — used if worldModelPrefab has no Collider on it. Prefer adding a " +

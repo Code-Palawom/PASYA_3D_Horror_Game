@@ -10,15 +10,20 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7a8f2681beee8634d81ae9b1491968ed, type: 3}
-  m_Name: Q7
+  m_Name: Q14
   m_EditorClassIdentifier: Assembly-CSharp::QuestionData
-  questionText: Bato is bato
-  questionType: 1
-  difficulty: 0
+  questionText: Approximately how many transistors were in the first commercial microprocessor,
+    the Intel 4004 (1971)?
+  questionType: 0
+  difficulty: 1
   timeLimit: 15
   pointValue: 100
-  choices: []
-  correctChoiceIndex: 0
+  choices:
+  - 230
+  - 2,300
+  - 23,000
+  - 230,000
+  correctChoiceIndex: 1
   answer: 1
   correctAnswer: 
   alternativeAnswers: []

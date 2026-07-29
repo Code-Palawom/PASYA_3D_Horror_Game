@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: ItemRegistry
   m_EditorClassIdentifier: Assembly-CSharp::ItemRegistry
   items:
+  - {fileID: 11400000, guid: 002a508d2fd8ad242916363f99c5f7cf, type: 2}
   - {fileID: 11400000, guid: b6e90f72684e3a94780bdcc772780e9c, type: 2}
   - {fileID: 11400000, guid: 985a69e8eb42d004fbd32d9f249b96de, type: 2}
   - {fileID: 11400000, guid: 389bb0db2f75d504b96198f59a0e49f0, type: 2}
