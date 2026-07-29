@@ -17,6 +17,8 @@ MonoBehaviour:
   difficulty: 0
   timeLimit: 15
   pointValue: 100
+  description: Wi-Fi is actually a trademarked term that doesn't officially stand
+    for anything, though it was inspired by "Hi-Fi.
   choices: []
   correctChoiceIndex: 0
   answer: 0

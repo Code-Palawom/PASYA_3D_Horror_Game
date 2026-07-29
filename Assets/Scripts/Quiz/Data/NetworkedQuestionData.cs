@@ -15,6 +15,7 @@ public struct NetworkedQuestionData : INetworkSerializable, IEquatable<Networked
     public FixedString512Bytes QuestionText;
     public float TimeLimit;
     public int PointValue;
+    public FixedString512Bytes Description; // optional, shown in feedback toast
 
     // ── Multiple Choice ───────────────────────────────────────
     public FixedString512Bytes Choices;           // pipe-separated: "A|B|C|D"
@@ -46,6 +47,7 @@ public struct NetworkedQuestionData : INetworkSerializable, IEquatable<Networked
         serializer.SerializeValue(ref AcceptableAnswers);
         serializer.SerializeValue(ref RequiredKeywords);
         serializer.SerializeValue(ref RequiredKeywordCount);
+        serializer.SerializeValue(ref Description);
     }
 
     public bool Equals(NetworkedQuestionData other) =>
@@ -63,6 +65,7 @@ public struct NetworkedQuestionData : INetworkSerializable, IEquatable<Networked
             QuestionText = new FixedString512Bytes(q.questionText ?? ""),
             TimeLimit = q.timeLimit,
             PointValue = q.pointValue,
+            Description = new FixedString512Bytes(q.description ?? ""),
         };
 
         switch (q.questionType) {
@@ -98,6 +101,7 @@ public struct NetworkedQuestionData : INetworkSerializable, IEquatable<Networked
             difficulty = (QuestionDifficulty)DifficultyInt,
             timeLimit = TimeLimit,
             pointValue = PointValue,
+            description = Description.ToString(),
         };
 
         switch ((global::QuestionType)QuestionTypeInt) {

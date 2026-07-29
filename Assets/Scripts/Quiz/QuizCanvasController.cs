@@ -60,11 +60,17 @@ public class QuizCanvasController : MonoBehaviour {
         timer.OnTimeUp += OnTimerUp;
         timer.StartTimer(question.timeLimit);
     }
-    
-    public void ShowFeedback(bool isCorrect, Action afterFeedback) {
+
+    public void ShowFeedback(bool isCorrect, string description, Action afterFeedback) {
         if (isCorrect) ScreenFlashController.Local?.FlashCorrect(); else ScreenFlashController.Local?.FlashWrong();
-        ActionbarToastNotification.Instance.ShowLocalToast(isCorrect ? "Correct!" : "Wrong!", isCorrect ? ToastType.Success : ToastType.Error);
-        if (!isCorrect) ActionbarToastNotification.Instance.ShowLocalToast("Door/Item Locked", ToastType.Error);
+
+        string msg = !string.IsNullOrEmpty(description)
+            ? description
+            : (isCorrect ? "Correct!" : "Wrong!");
+
+        ActionbarToastNotification.Instance.ShowLocalToast(isCorrect ? msg : "Wrong!", isCorrect ? ToastType.Success : ToastType.Error);
+        if (!isCorrect) ActionbarToastNotification.Instance.ShowLocalToast("Door/Item Locked");
+
         afterFeedback?.Invoke();
     }
 

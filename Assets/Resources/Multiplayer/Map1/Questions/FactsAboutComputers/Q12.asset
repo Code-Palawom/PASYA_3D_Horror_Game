@@ -17,6 +17,7 @@ MonoBehaviour:
   difficulty: 1
   timeLimit: 15
   pointValue: 100
+  description: She wrote an algorithm for Babbage's Analytical Engine in the 1840s
   choices: []
   correctChoiceIndex: 0
   answer: 1

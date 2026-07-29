@@ -12,6 +12,7 @@ public class QuestionRuntime {
     public QuestionDifficulty difficulty;
     public float timeLimit = 15f;
     public int pointValue = 100;
+    public string description = ""; // optional, shown in feedback toast
 
     // ── Multiple Choice ───────────────────────────────────────
     public List<string> choices = new();

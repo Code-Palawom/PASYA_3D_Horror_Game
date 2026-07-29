@@ -17,6 +17,8 @@ MonoBehaviour:
   difficulty: 0
   timeLimit: 15
   pointValue: 100
+  description: A moth was found stuck in a relay of the Harvard Mark II computer
+    in 1947, leading to the term "debugging"
   choices: []
   correctChoiceIndex: 0
   answer: 1

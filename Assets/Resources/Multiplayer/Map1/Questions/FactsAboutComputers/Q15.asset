@@ -18,6 +18,7 @@ MonoBehaviour:
   difficulty: 2
   timeLimit: 15
   pointValue: 100
+  description: The IBM 305 RAMAC stored only about 3.75 MB and weighed over a ton
   choices: []
   correctChoiceIndex: 0
   answer: 0

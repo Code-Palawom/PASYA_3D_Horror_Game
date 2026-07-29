@@ -12,6 +12,8 @@ public class QuestionData : ScriptableObject {
     public QuestionDifficulty difficulty;
     public float timeLimit = 15f;
     public int pointValue = 100;
+    [Tooltip("Optional fun-fact / explanation shown after the player answers.")]
+    [TextArea] public string description;
 
     [Header("Multiple Choice")]
     public List<string> choices;
@@ -36,6 +38,7 @@ public class QuestionData : ScriptableObject {
             difficulty = difficulty,
             timeLimit = timeLimit,
             pointValue = pointValue,
+            description = description,
         };
 
         switch (questionType) {

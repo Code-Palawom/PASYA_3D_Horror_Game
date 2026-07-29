@@ -13,6 +13,7 @@ public class QuestionDataEditor : Editor {
         EditorGUILayout.PropertyField(serializedObject.FindProperty("difficulty"));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("timeLimit"));
         EditorGUILayout.PropertyField(serializedObject.FindProperty("pointValue"));
+        EditorGUILayout.PropertyField(serializedObject.FindProperty("description"));
 
         EditorGUILayout.Space();
 

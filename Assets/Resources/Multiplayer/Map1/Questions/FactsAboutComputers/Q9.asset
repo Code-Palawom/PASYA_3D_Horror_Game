@@ -17,6 +17,7 @@ MonoBehaviour:
   difficulty: 0
   timeLimit: 15
   pointValue: 100
+  description: 1 terabyte = 1,024 gigabytes
   choices: []
   correctChoiceIndex: 0
   answer: 0

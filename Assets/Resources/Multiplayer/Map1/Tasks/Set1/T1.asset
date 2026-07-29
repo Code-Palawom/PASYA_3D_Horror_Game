@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: T1
   m_EditorClassIdentifier: Assembly-CSharp::TaskDefinition
   taskId: get_key_for_room103
-  title: Pick-up key to Room 103
+  title: Pick-up key for Room 103
   description: Found near the guard entrance.
   type: 0
   targetGateId: room103_key

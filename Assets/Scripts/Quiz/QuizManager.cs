@@ -84,8 +84,11 @@ public class QuizManager : MonoBehaviour {
 
         // Report to server for end-game stats
         GameSessionManager.Instance.RecordAnswerRpc(isCorrect, score);
+        string toastMsg = !string.IsNullOrWhiteSpace(_session.question.description)
+            ? _session.question.description
+            : (isCorrect ? "Correct!" : "Wrong!");
 
-        _activeCanvas.ShowFeedback(isCorrect, () => ResolveSession(isCorrect, answer));
+        _activeCanvas.ShowFeedback(isCorrect, toastMsg, () => ResolveSession(isCorrect, answer));
     }
 
     public void OnTimerExpired() {
