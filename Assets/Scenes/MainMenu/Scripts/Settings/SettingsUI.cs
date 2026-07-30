@@ -116,7 +116,7 @@ public class SettingsUI : MonoBehaviour {
                 StopCoroutine(_frameRateDebounceRoutine);
                 _frameRateDebounceRoutine = null;
             }
-            AutoSave();
+            AutoSave(s => s.targetFrameRate = _targetFrameRate);
             _hasPendingFrameRateSave = false;
         }
 
@@ -133,7 +133,7 @@ public class SettingsUI : MonoBehaviour {
         // Infinite wrap
         _qualityIndex = (_qualityIndex + direction + _qualityNames.Length) % _qualityNames.Length;
         qualityLabel.text = _qualityNames[_qualityIndex];
-        AutoSave();
+        AutoSave(s => s.qualityLevel = _qualityIndex);
     }
 
     // ── POV toggle ───────────────────────────────────────────
@@ -141,12 +141,12 @@ public class SettingsUI : MonoBehaviour {
         _isFirstPerson = firstPerson;
         SetButtonColor(btnFirstPerson, firstPerson);
         SetButtonColor(btnThirdPerson, !firstPerson);
-        AutoSave();
+        AutoSave(s => s.isFirstPerson = firstPerson);
     }
 
     private void SetNameTagVisibility(bool show) {
         _showNameTags = show;
-        AutoSave();
+        AutoSave(s => s.showNameTags = show);
     }
 
     // ── VSync toggle ─────────────────────────────────────────
@@ -160,7 +160,7 @@ public class SettingsUI : MonoBehaviour {
         if (!isOn)
             Application.targetFrameRate = _targetFrameRate;
 
-        AutoSave();
+        AutoSave(s => s.vsyncEnabled = isOn);
     }
 
     // ── Frame rate slider ────────────────────────────────────
@@ -182,22 +182,15 @@ public class SettingsUI : MonoBehaviour {
 
     private System.Collections.IEnumerator DebouncedFrameRateSave() {
         yield return new WaitForSecondsRealtime(autoSaveDebounceSeconds);
-        AutoSave();
+        AutoSave(s => s.targetFrameRate = _targetFrameRate);
         _hasPendingFrameRateSave = false;
         _frameRateDebounceRoutine = null;
     }
 
     // ── Auto-save ────────────────────────────────────────────
-    private void AutoSave() {
+    private void AutoSave(Action<GameSettings> mutate) {
         if (SettingsManager.Instance == null) return;
-
-        SettingsManager.Instance.Save(new GameSettings {
-            isFirstPerson = _isFirstPerson,
-            qualityLevel = _qualityIndex,
-            showNameTags = _showNameTags,
-            vsyncEnabled = _vsyncEnabled,
-            targetFrameRate = _targetFrameRate
-        });
+        SettingsManager.Instance.Save(mutate);
     }
 
     // ── Populate from loaded settings ────────────────────────
@@ -298,7 +291,9 @@ public class SettingsUI : MonoBehaviour {
         string newName = nameField.text.Trim();
 
         if (AuthManager.Instance.CurrentProfile == null) {
-            SettingsManager.Instance.SaveOneString(SettingsManager.GameSetting.DisplayName, newName);
+            if (AuthManager.Instance.CurrentProfile == null) {
+                SettingsManager.Instance.Save(s => s.playerName = newName);
+            }
         } else {
             if (string.IsNullOrEmpty(newName)) {
                 nameChangeStatus.text = "Please enter a name.";

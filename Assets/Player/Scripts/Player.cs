@@ -259,9 +259,7 @@ public class Player : NetworkBehaviour {
         isFirstPerson = !isFirstPerson;
 
         if (SettingsManager.Instance != null) {
-            var s = SettingsManager.Instance.Current;
-            s.isFirstPerson = isFirstPerson;
-            SettingsManager.Instance.Save(s);
+            SettingsManager.Instance.Save(s => s.isFirstPerson = isFirstPerson);
         }
 
         SetCamera(isFirstPerson);

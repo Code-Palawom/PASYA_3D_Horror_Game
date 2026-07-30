@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System;
 
 public class SettingsPanelController : MonoBehaviour {
 
@@ -65,13 +66,13 @@ public class SettingsPanelController : MonoBehaviour {
     void OnPrevQuality() {
         _qualityIndex = (_qualityIndex - 1 + _qualityNames.Length) % _qualityNames.Length;
         RefreshQualityLabel();
-        AutoSave();
+        AutoSave(s => s.qualityLevel = _qualityIndex);
     }
 
     void OnNextQuality() {
         _qualityIndex = (_qualityIndex + 1) % _qualityNames.Length;
         RefreshQualityLabel();
-        AutoSave();
+        AutoSave(s => s.qualityLevel = _qualityIndex);
     }
 
     void RefreshQualityLabel() {
@@ -82,13 +83,13 @@ public class SettingsPanelController : MonoBehaviour {
     void OnSelectFirstPerson() {
         _isFirstPerson = true;
         RefreshPOVButtons();
-        AutoSave();
+        AutoSave(s => s.isFirstPerson = true);
     }
 
     void OnSelectThirdPerson() {
         _isFirstPerson = false;
         RefreshPOVButtons();
-        AutoSave();
+        AutoSave(s => s.isFirstPerson = false);
     }
 
     void RefreshPOVButtons() {
@@ -101,26 +102,19 @@ public class SettingsPanelController : MonoBehaviour {
     // ── Debug toggle ─────────────────────────────────────────
     void OnDebugToggled(bool value) {
         _showDebug = value;
-        AutoSave();
+        AutoSave(s => s.showDebugOverlay = value);
         debug.RefreshDebugMode();
     }
 
     void OnNameTagToggled(bool value) {
         _nameTag = value;
         PlayerNameDisplay.All.ForEach(p => p.SetNameTagVisible(_nameTag));
-        AutoSave();
+        AutoSave(s => s.showNameTags = value);
     }
 
     // ── Auto-save on every change ────────────────────────────
-    void AutoSave() {
-        GameSettings current = SettingsManager.Instance.Current;
-
-        SettingsManager.Instance.Save(new GameSettings {
-            playerName = current.playerName,
-            qualityLevel = _qualityIndex,
-            isFirstPerson = _isFirstPerson,
-            showDebugOverlay = _showDebug,
-            showNameTags = _nameTag
-        });
+    private void AutoSave(Action<GameSettings> mutate) {
+        if (SettingsManager.Instance == null) return;
+        SettingsManager.Instance.Save(mutate);
     }
 }

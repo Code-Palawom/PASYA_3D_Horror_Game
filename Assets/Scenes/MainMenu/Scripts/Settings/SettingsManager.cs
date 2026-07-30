@@ -30,26 +30,14 @@ public class SettingsManager : MonoBehaviour {
     }
 
     // ── Save ────────────────────────────────────────────────
-    public void Save(GameSettings settings) {
-        Current = settings;
-
-        File.WriteAllText(FilePath, settings.ToKeyValueString());
-        Apply(Current);
-        OnSettingsSaved?.Invoke(Current);
-        ActionbarToastNotification.Instance.ShowLocalToast("Settings Saved.", ToastType.Success);
-        Debug.Log("[SettingsManager] Saved.");
-    }
-
-    public void SaveOneString(GameSetting setting, string v) {
-        switch (setting) {
-            case GameSetting.DisplayName:
-                Current.playerName = v;
-                break;
-        }
+    // ── Save ────────────────────────────────────────────────
+    public void Save(Action<GameSettings> mutate) {
+        mutate(Current);
 
         File.WriteAllText(FilePath, Current.ToKeyValueString());
         Apply(Current);
         OnSettingsSaved?.Invoke(Current);
+        ActionbarToastNotification.Instance.ShowLocalToast("Settings Saved.", ToastType.Success);
         Debug.Log("[SettingsManager] Saved.");
     }
 
@@ -82,11 +70,7 @@ public class SettingsManager : MonoBehaviour {
     private void Apply(GameSettings s) {
         Application.targetFrameRate = s.targetFrameRate;
         QualitySettings.SetQualityLevel(s.qualityLevel, true);
-        // POV is read by your camera/character via:
+        // POV is read by camera/character via:
         // SettingsManager.Instance.Current.isFirstPerson
-    }
-
-    public enum GameSetting {
-        DisplayName
     }
 }
