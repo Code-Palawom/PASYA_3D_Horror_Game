@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 // Minimal list UI: shows the active group's name and its visible tasks,
@@ -15,12 +16,24 @@ public class TaskListUI : MonoBehaviour {
     [SerializeField] TMP_Text groupTitleText; // optional
 
     void OnEnable() {
-        if (TaskManager.Instance != null) TaskManager.Instance.OnTasksChanged += Refresh;
-        Refresh();
+        groupTitleText.gameObject.SetActive(false);
+        SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
     void OnDisable() {
         if (TaskManager.Instance != null) TaskManager.Instance.OnTasksChanged -= Refresh;
+        SceneManager.sceneLoaded -= OnSceneLoaded;
+    }
+
+    void OnSceneLoaded(Scene scene, LoadSceneMode mode) {
+        if (scene.name == "Lobby") {
+            groupTitleText.gameObject.SetActive(false);
+            return;
+        }
+
+        groupTitleText.gameObject.SetActive(true);
+        if (TaskManager.Instance != null) TaskManager.Instance.OnTasksChanged += Refresh;
+        Refresh();
     }
 
     void Refresh() {

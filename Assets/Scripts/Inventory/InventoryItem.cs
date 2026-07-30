@@ -7,7 +7,6 @@ public class InventoryItem : ScriptableObject {
     [Header("Identity")]
     public string itemID; // Unique string, e.g. "key_red_door"
     public string displayName;
-    public bool displayBelow;
 
     [Header("Visuals")]
     [Tooltip("2D icon shown in inventory/UI slots.")]

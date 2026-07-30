@@ -171,7 +171,6 @@ public class LobbyReadyManager : NetworkBehaviour {
 
         LanDiscovery.Instance.StopHostBroadcast();
         _ = LobbyManager.Instance.DeleteHostedLobbyAsync();
-        _ = VivoxManager.Instance.LeaveCurrentChannelAsync();
         NetworkManager.Singleton.SceneManager.LoadScene(levelScene, UnityEngine.SceneManagement.LoadSceneMode.Single);
     }
 

@@ -87,6 +87,7 @@ public class TaskManager : NetworkBehaviour {
         _activeGroupIndex.OnValueChanged += (_, _) => OnTasksChanged?.Invoke();
 
         if (IsServer) SeedProgressFromTaskSet();
+        OnTasksChanged?.Invoke();
     }
 
     public override void OnNetworkDespawn() {

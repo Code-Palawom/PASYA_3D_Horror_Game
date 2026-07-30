@@ -230,8 +230,9 @@ public class VivoxManager : MonoBehaviour {
         } catch (Exception e) {
             Debug.LogWarning($"[VivoxManager] Error leaving channel '{channelName}': {e.Message}");
         } finally {
-            CurrentChannelName = null;
-            _localPlayerTransform = null;
+            if (CurrentChannelName == channelName) {
+                CurrentChannelName = null;
+            }
             OnChannelLeft?.Invoke(channelName);
         }
     }

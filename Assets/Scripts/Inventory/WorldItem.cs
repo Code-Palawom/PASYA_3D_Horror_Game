@@ -26,8 +26,9 @@ public class WorldItem : NetworkBehaviour, IInteractable {
              "back to a BoxCollider sized from InventoryItem.worldColliderSize/worldColliderCenter. " +
              "Assign any Collider here to start (e.g. a BoxCollider) — it'll be replaced as needed.")]
     [SerializeField] private Collider physicsCollider;
-    [Tooltip("Floating name label shown above/below this item while it's the local player's " +
-             "interaction focus. Position (above/below) comes from InventoryItem.displayBelow.")]
+    [Tooltip("Floating name label shown above this item while it's the local player's " +
+             "interaction focus. Always tracks true world 'up' via the collider's world-space " +
+             "bounds, so it stays upright even while the item's Rigidbody is tumbling.")]
     [SerializeField] private WorldItemNameLabel nameLabel;
     private ItemRegistry Registry => itemRegistry != null ? itemRegistry : ItemRegistry.Instance;
 
@@ -105,7 +106,7 @@ public class WorldItem : NetworkBehaviour, IInteractable {
             Debug.LogWarning($"[WorldItem] '{item.itemID}' has no worldModelPrefab assigned.");
             ApplyColliderForItem(item, null); // still size the fallback collider even with no visual
             nameLabel?.SetText(item.displayName);
-            nameLabel?.RepositionForCollider(physicsCollider, item.displayBelow);
+            nameLabel?.SetCollider(physicsCollider);
             return;
         }
 
@@ -125,7 +126,7 @@ public class WorldItem : NetworkBehaviour, IInteractable {
         ApplyColliderForItem(item, _currentModelInstance);
 
         nameLabel?.SetText(item.displayName);
-        nameLabel?.RepositionForCollider(physicsCollider, item.displayBelow);
+        nameLabel?.SetCollider(physicsCollider);
     }
 
     // Sizes/shapes physicsCollider to match this item — copied from a Collider

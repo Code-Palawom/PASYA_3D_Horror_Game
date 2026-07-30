@@ -91,6 +91,8 @@ public class Player : NetworkBehaviour {
     private PlayerState playerState;
     private PlayerAnimation playerAnimation;
 
+    Action _onVivoxLoggedInHandler;
+
     private bool isVisible = true;
     private SkinnedMeshRenderer[] renderers;
 
@@ -500,7 +502,8 @@ public class Player : NetworkBehaviour {
             if (VivoxManager.Instance.IsLoggedIn) {
                 JoinPositionalChannel($"{GameSessionManager.Instance.SessionId.Value}");
             } else {
-                VivoxManager.Instance.OnVivoxLoggedIn += () => JoinPositionalChannel($"{GameSessionManager.Instance.SessionId.Value}");
+                _onVivoxLoggedInHandler = () => JoinPositionalChannel(GameSessionManager.Instance.SessionId.Value.ToString());
+                VivoxManager.Instance.OnVivoxLoggedIn += _onVivoxLoggedInHandler;
             }
         }else if(!string.IsNullOrEmpty(VivoxManager.Instance.CurrentChannelName)) {
             RegisterVivoxTransform();
@@ -515,7 +518,7 @@ public class Player : NetworkBehaviour {
     void JoinPositionalChannel(string id) {
         if (!IsOwner) return;
 
-        VivoxManager.Instance.OnVivoxLoggedIn -= () => JoinPositionalChannel($"{GameSessionManager.Instance.SessionId.Value}");
+        VivoxManager.Instance.OnVivoxLoggedIn -= _onVivoxLoggedInHandler;
 
         var micPermission = GetComponent<MicPermission>();
 
