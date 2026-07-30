@@ -14,9 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::QuestionData
   questionText: What does "QWERTY" refer to?
   questionType: 0
-  difficulty: 1
+  difficulty: 0
   timeLimit: 15
   pointValue: 100
+  description: 
   choices:
   - A programming language
   - A type of computer virus

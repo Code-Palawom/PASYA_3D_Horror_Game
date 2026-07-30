@@ -15,7 +15,7 @@ MonoBehaviour:
   questionText: The first message ever sent over ARPANET (the precursor to the internet)
     was the word "LOGIN," but it crashed after just two letters.
   questionType: 1
-  difficulty: 1
+  difficulty: 0
   timeLimit: 15
   pointValue: 100
   description: The system crashed after transmitting "LO" in 1969

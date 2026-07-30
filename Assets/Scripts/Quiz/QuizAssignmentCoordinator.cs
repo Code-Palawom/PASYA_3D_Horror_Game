@@ -9,6 +9,8 @@ public class QuizAssignmentCoordinator : MonoBehaviour {
     // Per-difficulty shuffled queues
     private Dictionary<QuestionDifficulty, Queue<QuestionRuntime>> _pools = new();
 
+    private bool _initialized;
+
     void Awake() {
         Instance = this;
 
@@ -26,6 +28,12 @@ public class QuizAssignmentCoordinator : MonoBehaviour {
 
     // Call this on the server before any gate spawns.
     public void Initialize(string setName) {
+        if (_initialized) {
+            Debug.LogWarning("[QuizAssignmentCoordinator] Initialize() called again — ignoring, pools already built.");
+            return;
+        }
+        _initialized = true;
+
         _pools.Clear();
 
         var set = QuizRepository.Instance.GetSetByName(setName);

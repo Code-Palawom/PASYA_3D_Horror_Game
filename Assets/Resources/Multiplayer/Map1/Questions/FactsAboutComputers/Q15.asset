@@ -15,7 +15,7 @@ MonoBehaviour:
   questionText: The first hard disk drive, introduced by IBM in 1956, could store
     more than 1 gigabyte of data.
   questionType: 1
-  difficulty: 2
+  difficulty: 0
   timeLimit: 15
   pointValue: 100
   description: The IBM 305 RAMAC stored only about 3.75 MB and weighed over a ton

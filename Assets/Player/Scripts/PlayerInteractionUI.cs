@@ -47,7 +47,6 @@ public class PlayerInteractionUI : MonoBehaviour {
             return;
         }
 
-
         // Prompt text is active, cooldown row is not — no overlap
         promptText.gameObject.SetActive(true);
         interactButton.gameObject.SetActive(true);
@@ -71,7 +70,7 @@ public class PlayerInteractionUI : MonoBehaviour {
         
         // Hide normal prompt text entirely — cooldown row covers messaging
         interactButton.gameObject.SetActive(false);
-        if (keyHintText.CompareTag("PlatformPC")) keyHintWrapper.SetActive(false);
+        keyHintWrapper.SetActive(false);
 
         _cooldownEnd = Time.time + (float)cooldownRemaining;
         _cooldownTotal = cooldownTotal;
@@ -84,6 +83,7 @@ public class PlayerInteractionUI : MonoBehaviour {
     public void Hide() {
         panel.SetActive(false);
         SetCooldownRowVisible(false);
+        keyHintWrapper.SetActive(false);
         //_showingCooldown = false;
 
         if (messageText != null)
