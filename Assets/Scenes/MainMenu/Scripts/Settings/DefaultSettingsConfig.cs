@@ -27,12 +27,17 @@ public class DefaultSettingsConfig : ScriptableObject {
     [Header("Debug Mode")]
     public bool showDebug = false;
 
+    public bool completedTutorial = false;
+
     // Converts this config into a GameSettings instance.
     public GameSettings ToGameSettings() => new GameSettings {
         playerName = playerName,
         isFirstPerson = isFirstPerson,
         qualityLevel = Mathf.Clamp(qualityLevel, 0, QualitySettings.names.Length - 1),
+        targetFrameRate = targetFrameRate,
+        vsyncEnabled = vsyncEnabled == 1,
         showNameTags = showNameTags,
-        showDebugOverlay = showDebug
+        showDebugOverlay = showDebug,
+        completedTutorial = completedTutorial
     };
 }

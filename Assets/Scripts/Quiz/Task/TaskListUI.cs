@@ -1,3 +1,4 @@
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -15,13 +16,26 @@ public class TaskListUI : MonoBehaviour {
     [SerializeField] GameObject taskEntryPrefab;
     [SerializeField] TMP_Text groupTitleText; // optional
 
+    private Action _onTasksChanged;
+
     void OnEnable() {
+        _onTasksChanged = () => Refresh();
+
         groupTitleText.gameObject.SetActive(false);
         SceneManager.sceneLoaded += OnSceneLoaded;
+
+        if (SceneManager.GetActiveScene().name == "Lobby") {
+            groupTitleText.gameObject.SetActive(false);
+            return;
+        }
+
+        groupTitleText.gameObject.SetActive(true);
+        if (TaskManager.Instance != null) TaskManager.Instance.OnTasksChanged += _onTasksChanged;
+        Refresh();
     }
 
     void OnDisable() {
-        if (TaskManager.Instance != null) TaskManager.Instance.OnTasksChanged -= Refresh;
+        if (TaskManager.Instance != null) TaskManager.Instance.OnTasksChanged -= _onTasksChanged;
         SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
@@ -32,7 +46,7 @@ public class TaskListUI : MonoBehaviour {
         }
 
         groupTitleText.gameObject.SetActive(true);
-        if (TaskManager.Instance != null) TaskManager.Instance.OnTasksChanged += Refresh;
+        if (TaskManager.Instance != null) TaskManager.Instance.OnTasksChanged += _onTasksChanged;
         Refresh();
     }
 
@@ -52,7 +66,7 @@ public class TaskListUI : MonoBehaviour {
             if (text != null) {
                 text.text = progress.completed
                     ? $"<s>{def.title}</s>"
-                    : $"{def.title}{(progress.taskType == TaskType.SpecificGate ? "" : $"({progress.currentCount}/{progress.requiredCount})" )}";
+                    : $"{def.title}{(progress.taskType == TaskType.SpecificGate ? "" : $" ({progress.currentCount}/{progress.requiredCount})" )}";
             }
 
             var button = entry.GetComponentInChildren<Button>();

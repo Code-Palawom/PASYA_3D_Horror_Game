@@ -12,6 +12,7 @@ public class GameSettings {
     public bool showNameTags = true;
     public bool vsyncEnabled = false;
     public int targetFrameRate = 60;
+    public bool completedTutorial = false;
 
     // ── key|value serialization ──────────────────────────────
     // One "key|value" pair per line. Order doesn't matter on load;
@@ -26,6 +27,7 @@ public class GameSettings {
         sb.Append("showNameTags|").Append(showNameTags ? 1 : 0).Append('\n');
         sb.Append("vsyncEnabled|").Append(vsyncEnabled ? 1 : 0).Append('\n');
         sb.Append("targetFrameRate|").Append(targetFrameRate).Append('\n');
+        sb.Append("completedTutorial|").Append(completedTutorial ? 1 : 0).Append('\n');
         return sb.ToString();
     }
 
@@ -71,6 +73,9 @@ public class GameSettings {
                     if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out settings.targetFrameRate))
                         if(settings.targetFrameRate < 30) settings.targetFrameRate = 60;
                     else settings.targetFrameRate = 60;
+                    break;
+                case "completedTutorial":
+                    settings.completedTutorial = value == "1";
                     break;
                 default:
                     // unknown key — ignore, keeps format forward-compatible

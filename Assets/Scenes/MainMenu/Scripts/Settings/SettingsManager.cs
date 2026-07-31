@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class SettingsManager : MonoBehaviour {
     public static SettingsManager Instance { get; private set; }
@@ -30,13 +31,15 @@ public class SettingsManager : MonoBehaviour {
     }
 
     // ── Save ────────────────────────────────────────────────
-    // ── Save ────────────────────────────────────────────────
     public void Save(Action<GameSettings> mutate) {
         mutate(Current);
 
         File.WriteAllText(FilePath, Current.ToKeyValueString());
         Apply(Current);
         OnSettingsSaved?.Invoke(Current);
+
+        if (SceneManager.GetActiveScene().name == "Tutorial") return;
+
         ActionbarToastNotification.Instance.ShowLocalToast("Settings Saved.", ToastType.Success);
         Debug.Log("[SettingsManager] Saved.");
     }

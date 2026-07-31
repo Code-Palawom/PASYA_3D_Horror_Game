@@ -1,10 +1,17 @@
 using Firebase.Firestore;
 using System;
+using System.Collections;
 using TMPro;
+using Unity.Netcode;
+using Unity.Netcode.Transports.UTP;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class SettingsUI : MonoBehaviour {
+    [SerializeField] private MainMenuUI mainMenuUI;
+    
     [Header("Name")]
     [SerializeField] private TMP_InputField nameField;
     [SerializeField] private TMP_Text nameChangeStatus;
@@ -36,6 +43,8 @@ public class SettingsUI : MonoBehaviour {
     [Header("Name Tag Toggle")]
     [SerializeField] private Toggle nameTagToggle;
 
+    [SerializeField] private Button playTutorial;
+
     [Header("Download Button")]
     [SerializeField] private Button downloadUpdate;
 
@@ -57,6 +66,8 @@ public class SettingsUI : MonoBehaviour {
     }
 
     void Start() {
+        playTutorial.onClick.AddListener(() => mainMenuUI.StartTutorial());
+
         // Quality carousel
         btnQualityPrev.onClick.AddListener(() => StepQuality(-1));
         btnQualityNext.onClick.AddListener(() => StepQuality(+1));

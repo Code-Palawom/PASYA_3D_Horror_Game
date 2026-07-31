@@ -1,0 +1,30 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a9e4a6104272624f822adf584fc522d, type: 3}
+  m_Name: Flashlight
+  m_EditorClassIdentifier: Assembly-CSharp::InventoryItem
+  itemID: flashlight
+  displayName: Flashlight
+  icon: {fileID: 21300000, guid: 676dd50be1981294fbcfb3c7e24228b0, type: 3}
+  worldModelPrefab: {fileID: 5977261616666181756, guid: 5da228595dc884c438046a92ef241f2c, type: 3}
+  stackable: 0
+  maxStack: 1
+  consumeOnUnlock: 0
+  pickupDifficulty: 0
+  pickupGateId: pickup_flashlight
+  pickupTags: []
+  worldColliderSize: {x: 0.3, y: 0.3, z: 0.3}
+  worldColliderCenter: {x: 0, y: 0, z: 0}
+  actionType: 1
+  actionIcon: {fileID: 21300000, guid: 13fbcda6680894f47a573e8cb40530ce, type: 3}
+  actionIconOn: {fileID: 21300000, guid: c583ef1832d2788438edf47ce3354bfb, type: 3}
+  actionIconOff: {fileID: 21300000, guid: 13fbcda6680894f47a573e8cb40530ce, type: 3}

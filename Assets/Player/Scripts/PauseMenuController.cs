@@ -8,6 +8,7 @@ public class PauseMenuController : MonoBehaviour {
     [Header("Panels")]
     [SerializeField] private GameObject pausePanel;
     [SerializeField] private SettingsPanelController settingsPanel;
+    [SerializeField] private GameObject skipTutorialPanel;
     [SerializeField] private InputAction action;
 
     [SerializeField] private Player player;
@@ -60,6 +61,13 @@ public class PauseMenuController : MonoBehaviour {
         pausePanel.SetActive(true);
     }
 
+    public void OnSkipTutorial() {
+        SettingsManager.Instance.Save(s => s.completedTutorial = true);
+        Time.timeScale = 1f;
+        NetworkSessionManager.Instance.LeaveSession();
+    }
+
+
     // ── Internal ─────────────────────────────────────────────
     void Pause() {
         isPaused = true;
@@ -67,7 +75,12 @@ public class PauseMenuController : MonoBehaviour {
         if (!IsMultiplayer())
             Time.timeScale = 0f;
 
-        pausePanel.SetActive(true);
+        if (SceneManager.GetActiveScene().name == "Tutorial") {
+            skipTutorialPanel.SetActive(true);
+        } else {
+            pausePanel.SetActive(true);
+        }
+
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
     }
@@ -80,6 +93,7 @@ public class PauseMenuController : MonoBehaviour {
 
         pausePanel.SetActive(false);
         settingsPanel.gameObject.SetActive(false);
+        skipTutorialPanel.SetActive(false);
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
         player.RefreshPOV();  // refresh camera POV after unpausing

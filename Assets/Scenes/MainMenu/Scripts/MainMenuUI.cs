@@ -203,6 +203,8 @@ public class MainMenuUI : MonoBehaviour {
     }
 
     void Start() {
+        if(ActionbarToastNotification.Instance != null) ActionbarToastNotification.Instance.ClearToast();
+
         // Main panel
         singlePlayerButton.onClick.AddListener(() => EnterWizard(GameMode.SinglePlayer));
         multiplayerButton.onClick.AddListener(ShowMultiplayerPanel);
@@ -270,6 +272,11 @@ public class MainMenuUI : MonoBehaviour {
     IEnumerator ShowMainPanelCourotine() {
         yield return new WaitForSeconds(0.1f);
         ShowMainPanel();
+
+        if (SettingsManager.Instance != null && !SettingsManager.Instance.Current.completedTutorial) {
+            yield return new WaitForSeconds(1f);
+            StartTutorial();
+        }
     }
 
     // ─────────────────────────────────────────────────────────
@@ -563,10 +570,6 @@ public class MainMenuUI : MonoBehaviour {
         foreach (var item in _levelItems)
             item.SetSelected(item.Value == sceneName);
     }
-
-    // ─────────────────────────────────────────────────────────
-    // START
-    // ─────────────────────────────────────────────────────────
 
     // ─────────────────────────────────────────────────────────
     // START — branches based on which entry point opened the wizard
@@ -1011,5 +1014,51 @@ public class MainMenuUI : MonoBehaviour {
         go.GetComponent<NetworkObject>().Spawn();
         ChatManager.Instance.SendSystemMessage(
             "Welcome ALPHA Tester(s). Game breaking bugs are to be expected, embrace yourselves :)");
+    }
+
+    public void StartTutorial() {
+        List<QuizSetMetaEntry> localMeta = QuizRepository.Instance.GetLocalSetMeta();
+
+        _pendingMode = GameMode.SinglePlayer;
+        _selectedLevelSceneName = "Tutorial";
+        _selectedQuizSetName = localMeta[0].name;
+        _selectedQuizSetId = localMeta[0].setId;
+
+        ActionbarToastNotification.Instance.ClearToast();
+
+        StartCoroutine(StartTutorialScene());
+    }
+
+    IEnumerator StartTutorialScene() {
+        GameModeManager.Instance.SetSinglePlayerMode(_selectedQuizSetName, _selectedLevelSceneName);
+
+        ConfigureTransport("127.0.0.1", gamePort);
+
+        LoadingScreenController.Instance.Show("Loading Tutorial...");
+        yield return new WaitForSeconds(1f);
+
+        NetworkManager.Singleton.OnServerStarted += OnTutorialServerStarted;
+        NetworkManager.Singleton.StartHost();
+    }
+
+    void OnTutorialServerStarted() {
+        NetworkManager.Singleton.OnServerStarted -= OnTutorialServerStarted;
+
+        SpawnGameSessionManager(
+            GameModeManager.Instance.SelectedQuizSetName,
+            GameModeManager.Instance.SelectedLevelSceneName
+        );
+
+        if (ChatManager.Instance != null) return;
+
+        var go = Instantiate(chatManagerPrefab);
+        go.GetComponent<NetworkObject>().Spawn();
+        ChatManager.Instance.SendSystemMessage($"Welcome {SettingsManager.Instance.Current.playerName}.");
+
+        // No LAN broadcast, no Lobby — straight to the chosen level
+        // Call this when the game ends, not on start:
+        QuizFetcher.Instance.IncrementPlayCount(_selectedQuizSetId);
+
+        NetworkManager.Singleton.SceneManager.LoadScene(GameModeManager.Instance.SelectedLevelSceneName, LoadSceneMode.Single);
     }
 }

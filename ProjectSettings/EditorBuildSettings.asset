@@ -17,6 +17,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Map2.unity
     guid: 93149396280407b4f88e72dc0ee513d5
+  - enabled: 1
+    path: Assets/Scenes/Tutorial.unity
+    guid: 23a1741226f92194f922dd3065fec223
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0
