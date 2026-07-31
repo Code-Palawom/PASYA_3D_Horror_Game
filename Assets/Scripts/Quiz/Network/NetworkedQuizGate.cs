@@ -15,8 +15,19 @@ using UnityEngine;
 //   other doors unlocked, etc) checked BEFORE the quiz even starts
 public class NetworkedQuizGate : NetworkBehaviour, IInteractable, IUnlockable {
     [Header("Quiz")]
+    [SerializeField] QuestionDifficulty difficulty = QuestionDifficulty.Easy;
     [SerializeField] bool oneTimeUnlock = true;
     [SerializeField] float wrongAnswerCooldown = 10f;
+
+    // Stable id for TaskDefinition (SpecificGate type) to reference this exact gate
+    [SerializeField] private string gateId;
+
+    // Inspector default for gates placed directly in the scene. Synced to clients via
+    // _skipQuiz below — see SetSkipQuiz() for the runtime (pre-spawn, e.g. dropped-item) path.
+    [SerializeField]  private bool skipQuiz = false;
+
+    // Tags for TaskDefinition (DifficultyOrTag type) to match against.
+    [SerializeField]  private List<string> tags = new();
 
     // Attempt() runs LOCALLY on whichever client calls it (WorldItem.OnInteract
     // etc. call it directly, it's not an RPC) — so the skip flag must be a
@@ -65,17 +76,6 @@ public class NetworkedQuizGate : NetworkBehaviour, IInteractable, IUnlockable {
                                           : 0;
 
     private QuestionRuntime _cachedQuestion;
-    private QuestionDifficulty difficulty = QuestionDifficulty.Easy;
-
-    // Inspector default for gates placed directly in the scene. Synced to clients via
-    // _skipQuiz below — see SetSkipQuiz() for the runtime (pre-spawn, e.g. dropped-item) path.
-    private bool skipQuiz = false;
-
-    // Stable id for TaskDefinition (SpecificGate type) to reference this exact gate
-    private string gateId;
-
-    // Tags for TaskDefinition (DifficultyOrTag type) to match against.
-    private List<string> tags = new();
 
     // ── IInteractable ─────────────────────────────────────────
     public string InteractPrompt => "Open Gate";

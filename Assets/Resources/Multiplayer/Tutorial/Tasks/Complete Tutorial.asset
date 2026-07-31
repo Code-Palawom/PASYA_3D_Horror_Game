@@ -10,10 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ad16bb61b4b664548a4f9692a28a0849, type: 3}
-  m_Name: CompleteTutorial
+  m_Name: Complete Tutorial
   m_EditorClassIdentifier: Assembly-CSharp::TaskSet
   groups:
   - groupName: Complete Tutorial
     tasks:
     - {fileID: 11400000, guid: 8f3d39a1095e6334193aa0cfc2548efc, type: 2}
+  - groupName: Complete Tutorial
+    tasks:
     - {fileID: 11400000, guid: f0f2ca15ebeb5664e8110661bb4e251a, type: 2}
