@@ -54,6 +54,7 @@ public class TutorialDialog : MonoBehaviour {
         bodyText.text = text;
         onContinue = onContinueCallback;
         this.clickToContinue = clickToContinue;
+        if (clickCatcher != null) clickCatcher.SetInteractable(clickToContinue);
 
         if (target != null) {
             Vector2 destination = CalculatePosition(target, position);
@@ -68,6 +69,7 @@ public class TutorialDialog : MonoBehaviour {
         if (moveTween.isAlive) moveTween.Stop();
         root.SetActive(false);
         onContinue = null;
+        if (clickCatcher != null) clickCatcher.SetInteractable(false);
     }
 
     Vector2 CalculatePosition(RectTransform target, DialogPosition position) {

@@ -18,4 +18,7 @@ MonoBehaviour:
     - {fileID: 11400000, guid: 8f3d39a1095e6334193aa0cfc2548efc, type: 2}
   - groupName: Complete Tutorial
     tasks:
+    - {fileID: 11400000, guid: ebe30d2a6340db446a9ec076b6b3577b, type: 2}
+  - groupName: Complete Tutorial
+    tasks:
     - {fileID: 11400000, guid: f0f2ca15ebeb5664e8110661bb4e251a, type: 2}

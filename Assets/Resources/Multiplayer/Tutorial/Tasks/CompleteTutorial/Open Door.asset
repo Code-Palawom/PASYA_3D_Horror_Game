@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8f5977b6f86ccc84cba2e86315a71d6b, type: 3}
-  m_Name: Pickup Key
+  m_Name: Open Door
   m_EditorClassIdentifier: Assembly-CSharp::TaskDefinition
-  taskId: pickup_key
-  title: Pick-up Key
-  description: Found under the stairs.
+  taskId: open_door
+  title: Open the door
+  description: 
   type: 0
-  targetGateId: pickup_key
+  targetGateId: open_door
   requiredCount: 1
   targetDifficulty: 0
   targetTag: 

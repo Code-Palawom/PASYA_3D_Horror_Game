@@ -33,9 +33,13 @@ public class TutorialSpotlight : MonoBehaviour {
             left.GetComponent<Image>(),
             right.GetComponent<Image>()
         };
+
+        SetPanelsRaycast(false); // off until the first Highlight() call
     }
 
     public void Highlight(RectTransform target) {
+        SetPanelsRaycast(true);
+
         Canvas.ForceUpdateCanvases();
 
         Vector3[] corners = new Vector3[4];
@@ -65,6 +69,7 @@ public class TutorialSpotlight : MonoBehaviour {
     public void HideHighlight() {
         if (pulseTween.isAlive) pulseTween.Stop();
         SetAlpha(0f);
+        SetPanelsRaycast(false);
     }
 
     // Pulses all 4 panels' alpha between minAlpha and maxAlpha, "times" full
@@ -90,5 +95,10 @@ public class TutorialSpotlight : MonoBehaviour {
             c.a = a;
             img.color = c;
         }
+    }
+
+    void SetPanelsRaycast(bool enabled) {
+        foreach (var img in panels)
+            img.raycastTarget = enabled;
     }
 }
