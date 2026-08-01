@@ -37,6 +37,7 @@ public class Player : NetworkBehaviour {
     [SerializeField] private Camera playerCamera;
     [SerializeField] private Canvas playerCanvas;
     [SerializeField] private AudioListener audioListener;
+    [SerializeField] private CharacterAppearanceController appearance;
 
     [Header("Distance Thresholds (hysteresis)")]
     [SerializeField] private float hideDistance = 0.5f;
@@ -112,8 +113,6 @@ public class Player : NetworkBehaviour {
         standHeight = controller.height;
         cameraFollowOriginalLocalPos = cameraFollow.localPosition;
 
-        renderers = GetComponentsInChildren<SkinnedMeshRenderer>();
-
         if (noiseEmitter == null) noiseEmitter = GetComponent<PlayerNoiseEmitter>();
         if (flashlightController == null) flashlightController = GetComponent<FlashlightController>();
     }
@@ -132,6 +131,8 @@ public class Player : NetworkBehaviour {
             playerCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
             playerCanvas.worldCamera = playerCamera;
             playerCanvas.gameObject.SetActive(true);
+
+            renderers = GetComponentsInChildren<SkinnedMeshRenderer>();
 
             var inventory = GetComponent<PlayerInventory>();
             if (inventoryUI != null && inventory != null) {
@@ -156,6 +157,7 @@ public class Player : NetworkBehaviour {
                 ? SettingsManager.Instance.Current.isFirstPerson
                 : true;
             SetCamera(isFirstPerson);
+            appearance.OnModelSwapped += HandleModelSwapped;
         } else {
             // Remote instances on this machine: disable camera, audio, and UI
             playerCamera.enabled = false;
@@ -179,6 +181,7 @@ public class Player : NetworkBehaviour {
             playerInput.POV.Disable();
             playerInput.Interactions.Disable();
             playerInput.Movements.Disable();
+            appearance.OnModelSwapped -= HandleModelSwapped;
         }
     }
 
@@ -289,6 +292,13 @@ public class Player : NetworkBehaviour {
         isVisible = visibility;
 
         ShadowCastingMode mode = visibility ? ShadowCastingMode.On : ShadowCastingMode.ShadowsOnly;
+        foreach (var r in renderers)
+            r.shadowCastingMode = mode;
+    }
+
+    private void HandleModelSwapped(GameObject newModel) {
+        renderers = newModel.GetComponentsInChildren<SkinnedMeshRenderer>();
+        ShadowCastingMode mode = isVisible ? ShadowCastingMode.On : ShadowCastingMode.ShadowsOnly;
         foreach (var r in renderers)
             r.shadowCastingMode = mode;
     }

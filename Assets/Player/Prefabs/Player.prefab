@@ -1812,12 +1812,9 @@ GameObject:
   - component: {fileID: 2201101265974496429}
   - component: {fileID: 2036994067828019122}
   - component: {fileID: 3602966004385802097}
-  - component: {fileID: 7430166678488832116}
   - component: {fileID: 362129682550908473}
   - component: {fileID: 2549950539288085876}
   - component: {fileID: 3494073384946297507}
-  - component: {fileID: 5947029876940504951}
-  - component: {fileID: 1174848888579541578}
   - component: {fileID: 8388435739348711737}
   - component: {fileID: 9039289814588520400}
   - component: {fileID: 4820407670113053168}
@@ -1832,6 +1829,11 @@ GameObject:
   - component: {fileID: 4634456522625622487}
   - component: {fileID: 1628217689234693325}
   - component: {fileID: 1223380177693693863}
+  - component: {fileID: 5181380736053436605}
+  - component: {fileID: 8066790901206138439}
+  - component: {fileID: 7430166678488832116}
+  - component: {fileID: 5947029876940504951}
+  - component: {fileID: 1174848888579541578}
   m_Layer: 3
   m_Name: Player
   m_TagString: Untagged
@@ -1857,6 +1859,7 @@ Transform:
   - {fileID: 6725929178277809948}
   - {fileID: 4675119197364449412}
   - {fileID: 6445996134095623081}
+  - {fileID: 25289402711396781}
   - {fileID: 1037571334629436295}
   - {fileID: 136397607384520319}
   - {fileID: 1658931173907540277}
@@ -1902,7 +1905,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 3683115389
+  GlobalObjectIdHash: 2432858981
   InScenePlacedSourceGlobalObjectIdHash: 3683115389
   DeferredDespawnTick: 0
   Ownership: 1
@@ -1950,6 +1953,7 @@ MonoBehaviour:
   playerCamera: {fileID: 8510386908001443229}
   playerCanvas: {fileID: 5121607388586486269}
   audioListener: {fileID: 8921939597549269087}
+  appearance: {fileID: 8066790901206138439}
   hideDistance: 0.5
   showDistance: 0.7
   inventoryUI: {fileID: 6560784741169748872}
@@ -2080,20 +2084,6 @@ MonoBehaviour:
   m_DefaultActionMap: Movements
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 0}
---- !u!114 &7430166678488832116
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 596334459946105256}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f45348297d34c8b4fadf5728138b95a3, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimation
-  animator: {fileID: 1174848888579541578}
-  motionBlendSpeed: 8
 --- !u!114 &362129682550908473
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2169,76 +2159,6 @@ MonoBehaviour:
   SwitchTransformSpaceWhenParented: 0
   Interpolate: 1
   SlerpPosition: 0
---- !u!114 &5947029876940504951
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 596334459946105256}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e8d0727d5ae3244e3b569694d3912374, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkAnimator
-  ShowTopMostFoldoutHeaderGroup: 1
-  NetworkAnimatorExpanded: 0
-  AuthorityMode: 1
-  m_Animator: {fileID: 1174848888579541578}
-  TransitionStateInfoList: []
-  AnimatorParameterEntries:
-    ParameterEntries:
-    - name: inputX
-      NameHash: -1344448242
-      Synchronize: 1
-      ParameterType: 1
-    - name: inputY
-      NameHash: -656774760
-      Synchronize: 1
-      ParameterType: 1
-    - name: inputMagnitude
-      NameHash: 46624491
-      Synchronize: 1
-      ParameterType: 1
-    - name: isGrounded
-      NameHash: 1360771445
-      Synchronize: 1
-      ParameterType: 4
-    - name: isJumping
-      NameHash: -357477766
-      Synchronize: 1
-      ParameterType: 4
-    - name: isFalling
-      NameHash: -1829127916
-      Synchronize: 1
-      ParameterType: 4
-    - name: isCrouching
-      NameHash: 1035320983
-      Synchronize: 1
-      ParameterType: 4
-  AnimatorParametersExpanded: 0
---- !u!95 &1174848888579541578
-Animator:
-  serializedVersion: 7
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 596334459946105256}
-  m_Enabled: 1
-  m_Avatar: {fileID: 9000000, guid: 502c5c2206ebb87418742a6bf3261536, type: 3}
-  m_Controller: {fileID: 9100000, guid: af93379fa5344fc4ba7c763ad280d7f0, type: 2}
-  m_CullingMode: 0
-  m_UpdateMode: 0
-  m_ApplyRootMotion: 1
-  m_LinearVelocityBlending: 0
-  m_StabilizeFeet: 0
-  m_AnimatePhysics: 0
-  m_WarningMessage: 
-  m_HasTransformHierarchy: 1
-  m_AllowConstantClipSamplingOptimization: 1
-  m_KeepAnimatorStateOnDisable: 0
-  m_WriteDefaultValuesOnDisable: 0
 --- !u!114 &8388435739348711737
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2533,6 +2453,119 @@ MonoBehaviour:
   heartsUI: {fileID: 6856289891540900414}
   maxHearts: 3
   currentHearts: 0
+--- !u!114 &5181380736053436605
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 596334459946105256}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4501e9e54fa175f4c9dcd03fb2f1ac34, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NetworkCharacterAppearance
+  ShowTopMostFoldoutHeaderGroup: 1
+  database: {fileID: 11400000, guid: e050a1d31e310564bb51c3bd1dcc7ae9, type: 2}
+  appearance: {fileID: 8066790901206138439}
+--- !u!114 &8066790901206138439
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 596334459946105256}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7c14b417225a0e9489d99f0f4aa09543, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CharacterAppearanceController
+  modelAnchor: {fileID: 25289402711396781}
+  animator: {fileID: 1174848888579541578}
+--- !u!114 &7430166678488832116
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 596334459946105256}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f45348297d34c8b4fadf5728138b95a3, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimation
+  animator: {fileID: 1174848888579541578}
+  motionBlendSpeed: 8
+--- !u!114 &5947029876940504951
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 596334459946105256}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8d0727d5ae3244e3b569694d3912374, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.Components.NetworkAnimator
+  ShowTopMostFoldoutHeaderGroup: 1
+  NetworkAnimatorExpanded: 0
+  AuthorityMode: 1
+  m_Animator: {fileID: 1174848888579541578}
+  TransitionStateInfoList: []
+  AnimatorParameterEntries:
+    ParameterEntries:
+    - name: inputX
+      NameHash: -1344448242
+      Synchronize: 1
+      ParameterType: 1
+    - name: inputY
+      NameHash: -656774760
+      Synchronize: 1
+      ParameterType: 1
+    - name: inputMagnitude
+      NameHash: 46624491
+      Synchronize: 1
+      ParameterType: 1
+    - name: isGrounded
+      NameHash: 1360771445
+      Synchronize: 1
+      ParameterType: 4
+    - name: isJumping
+      NameHash: -357477766
+      Synchronize: 1
+      ParameterType: 4
+    - name: isFalling
+      NameHash: -1829127916
+      Synchronize: 1
+      ParameterType: 4
+    - name: isCrouching
+      NameHash: 1035320983
+      Synchronize: 1
+      ParameterType: 4
+  AnimatorParametersExpanded: 0
+--- !u!95 &1174848888579541578
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 596334459946105256}
+  m_Enabled: 1
+  m_Avatar: {fileID: 9000000, guid: 502c5c2206ebb87418742a6bf3261536, type: 3}
+  m_Controller: {fileID: 9100000, guid: af93379fa5344fc4ba7c763ad280d7f0, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 1
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &629856724798606225
 GameObject:
   m_ObjectHideFlags: 0
@@ -4912,8 +4945,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1398212334812659468}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 328.2109, y: 1.6, z: 53.84344}
+  m_LocalRotation: {x: 0.12767383, y: 0.20613296, z: -0.027137911, w: 0.96977943}
+  m_LocalPosition: {x: 328.2109, y: 3.5, z: 53.84344}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -6234,7 +6267,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0.0000038146973}
-  m_SizeDelta: {x: 1000, y: 180.43997}
+  m_SizeDelta: {x: 1000, y: 180.43996}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5858657139805756527
 CanvasRenderer:
@@ -12653,6 +12686,37 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!1 &3671032036672732336
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 25289402711396781}
+  m_Layer: 3
+  m_Name: Character
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &25289402711396781
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3671032036672732336}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -1, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 190666774804602483}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &3725507767918902513
 GameObject:
   m_ObjectHideFlags: 0
@@ -12920,7 +12984,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0.7, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: -101.91864}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1693435918160399566
 MonoBehaviour:
@@ -13002,7 +13066,7 @@ RectTransform:
   m_AnchorMin: {x: 0.7, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: -132.35864}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1028356726510842510
 MonoBehaviour:
@@ -23949,7 +24013,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1037571334629436295
 Transform:
   m_ObjectHideFlags: 0

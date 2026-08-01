@@ -124,6 +124,8 @@ public class MainMenuUI : MonoBehaviour {
     // ── Placeholder Panels ──────────────────────────────────
     [Header("Character Panel")]
     [SerializeField] GameObject characterPanel;
+    [SerializeField] CharacterAppearanceController characterAppearance;
+    [SerializeField] private SkinDatabaseSO database;
     [SerializeField] Button characterBackButton;
 
     [Header("Settings Panel")]
@@ -241,7 +243,7 @@ public class MainMenuUI : MonoBehaviour {
 
         // Online join panel — public session discovery
         // Placeholder panels
-        characterBackButton.onClick.AddListener(ShowMainPanel);
+        characterBackButton.onClick.AddListener(() => HideCharacterPanel(false));
         settingsBackButton.onClick.AddListener(ShowMainPanel);
         aboutBackButton.onClick.AddListener(ShowMainPanel);
 
@@ -431,6 +433,21 @@ public class MainMenuUI : MonoBehaviour {
         characterPanel.SetActive(true);
 
         ActionbarToastNotification.Instance.ClearToast();
+    }
+
+    public void HideCharacterPanel(bool isSaved) {
+        if (!isSaved) {
+            string savedId = SkinSaveSystem.Load();
+            characterAppearance.ApplySkin(database.GetById(savedId) ?? (database.skins.Length > 0 ? database.skins[0] : null));
+        }
+
+        cam.Priority = 10;
+        characterCam.Priority = 0;
+
+        _pendingMode = GameMode.None;
+        HideAllContentPanels();
+        SetMultiplayerTabRowVisible(false);
+        mainPanel.SetActive(true);
     }
 
     void ShowSettingsPanel() {
