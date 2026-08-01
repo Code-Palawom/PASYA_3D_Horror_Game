@@ -1,12 +1,7 @@
 using Firebase.Firestore;
 using System;
-using System.Collections;
 using TMPro;
-using Unity.Netcode;
-using Unity.Netcode.Transports.UTP;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class SettingsUI : MonoBehaviour {
