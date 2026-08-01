@@ -4,6 +4,7 @@ using UnityEngine;
 public class CharacterSkinSO : ScriptableObject {
     public string skinId;
     public string displayName;
-    public GameObject modelPrefab;   // Mixamo character, Humanoid Avatar assigned, own SkinnedMeshRenderer + rig
+    public GameObject modelPrefab; // Humanoid Avatar assigned, own SkinnedMeshRenderer + rig
     public Sprite previewIcon;
+    public bool ownedByDefault; // free/starter skin, no unlock required
 }

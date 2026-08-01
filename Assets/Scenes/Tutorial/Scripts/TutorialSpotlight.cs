@@ -38,6 +38,8 @@ public class TutorialSpotlight : MonoBehaviour {
     }
 
     public void Highlight(RectTransform target) {
+        if(target == null) return;
+
         SetPanelsRaycast(true);
 
         Canvas.ForceUpdateCanvases();
@@ -91,6 +93,8 @@ public class TutorialSpotlight : MonoBehaviour {
 
     void SetAlpha(float a) {
         foreach (var img in panels) {
+            if(img == null) continue;
+
             var c = img.color;
             c.a = a;
             img.color = c;
@@ -98,7 +102,10 @@ public class TutorialSpotlight : MonoBehaviour {
     }
 
     void SetPanelsRaycast(bool enabled) {
-        foreach (var img in panels)
+        foreach (var img in panels) {
+            if(img == null) continue;
+
             img.raycastTarget = enabled;
+        }
     }
 }

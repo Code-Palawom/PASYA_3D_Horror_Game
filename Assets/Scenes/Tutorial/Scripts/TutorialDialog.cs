@@ -50,6 +50,8 @@ public class TutorialDialog : MonoBehaviour {
 
     // Shows the dialog with text, animating it into position relative to target.
     public void Show(string text, RectTransform target, DialogPosition position, bool clickToContinue, Action onContinueCallback = null) {
+        if (target == null) return;
+
         root.SetActive(true);
         bodyText.text = text;
         onContinue = onContinueCallback;

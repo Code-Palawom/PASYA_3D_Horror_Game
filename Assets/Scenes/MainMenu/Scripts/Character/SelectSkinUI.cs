@@ -1,5 +1,6 @@
-using System.Collections.Generic;
 using PrimeTween;
+using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -25,6 +26,8 @@ public class SkinSelectUI : MonoBehaviour {
     private RectTransform labelRect;
     private Vector2 labelRestPos;
 
+    private PlayerProfile Profile => AuthManager.Instance.CurrentProfile;
+
     private void Awake() {
         labelRect = characterLabel.rectTransform;
         labelRestPos = labelRect.anchoredPosition;
@@ -32,7 +35,11 @@ public class SkinSelectUI : MonoBehaviour {
 
     private void OnEnable() {
         string savedId = SkinSaveSystem.Load();
-        previewSkin = database.GetById(savedId) ?? (database.skins.Length > 0 ? database.skins[0] : null);
+        var savedSkin = database.GetById(savedId);
+        var profile = AuthManager.Instance.CurrentProfile;
+
+        // guard against a locally-cached skin the player no longer owns
+        previewSkin = (savedSkin != null && PlayerProfile.IsSkinOwned(savedSkin, profile)) ? savedSkin : database.skins[0]; // guaranteed ownedByDefault
         appearance.ApplySkin(previewSkin);
 
         characterLabel.text = previewSkin != null ? previewSkin.name : string.Empty;
@@ -49,19 +56,42 @@ public class SkinSelectUI : MonoBehaviour {
         RefreshHighlight();
     }
 
-    private void Start() {
+    private void OnDestroy() {
+        if (AuthManager.Instance != null)
+            AuthManager.Instance.OnPlayerStatsLoaded -= HandleProfileLoaded;
+    }
+
+    private void HandleProfileLoaded(PlayerProfile profile) {
+        if (profile == null) return; // signed out mid-session; ignore here
+
+        if (spawnedButtons.Count == 0) {
+            BuildButtons(profile);
+        } else {
+            // profile changed (e.g. a skin was just granted) — refresh lock states in place
+            foreach (var btn in spawnedButtons)
+                btn.SetOwned(profile.OwnsSkin(btn.Skin));
+        }
+    }
+
+    private void BuildButtons(PlayerProfile profile) {
         foreach (var skin in database.skins) {
             var btn = Instantiate(buttonPrefab, contentParent);
-            btn.Init(skin, OnSkinClicked);
+            btn.Init(skin, PlayerProfile.IsSkinOwned(skin, profile), OnSkinClicked);
             spawnedButtons.Add(btn);
         }
 
         RefreshHighlight();
+    }
+
+    private void Start() {
         confirmButton.onClick.AddListener(Confirm);
+        AuthManager.Instance.OnPlayerStatsLoaded += HandleProfileLoaded;
+
+        BuildButtons(AuthManager.Instance.CurrentProfile);
     }
 
     private void OnSkinClicked(CharacterSkinSO skin) {
-        if(previewSkin == skin) return; // no change
+        if (previewSkin == skin || !Profile.OwnsSkin(skin)) return; // ignore locked/no-op
         AnimateLabelChange(skin.name);
         previewSkin = skin;
         appearance.ApplySkin(skin); // live preview, not saved yet
@@ -96,7 +126,7 @@ public class SkinSelectUI : MonoBehaviour {
     }
 
     private void Confirm() {
-        if (previewSkin != null) {
+        if (previewSkin != null && Profile.OwnsSkin(previewSkin)) { // defense in depth
             SkinSaveSystem.Save(previewSkin.skinId);
             mainMenuUI.HideCharacterPanel(true);
         }

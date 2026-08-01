@@ -15,4 +15,5 @@ MonoBehaviour:
   skinId: megan
   displayName: Megan
   modelPrefab: {fileID: 919132149155446097, guid: 078392f958c01884191958a53aee5680, type: 3}
-  previewIcon: {fileID: 21300000, guid: 88eb456c10e380141bcb2c3779275db5, type: 3}
+  previewIcon: {fileID: 21300000, guid: 413f119728a3a20458f6d467906e9a14, type: 3}
+  ownedByDefault: 1

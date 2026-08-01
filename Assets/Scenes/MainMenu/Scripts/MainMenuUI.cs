@@ -189,6 +189,8 @@ public class MainMenuUI : MonoBehaviour {
     [SerializeField] GameObject aboutPanel;
     [SerializeField] Button aboutBackButton;
 
+    [SerializeField] GameObject TutorialPanel;
+
     [Header("Cameras")]
     [SerializeField] private CinemachineCamera cam;
     [SerializeField] private CinemachineCamera characterCam;
@@ -449,7 +451,9 @@ public class MainMenuUI : MonoBehaviour {
 
         if (SettingsManager.Instance != null && !SettingsManager.Instance.Current.completedTutorial) {
             yield return new WaitForSeconds(1f);
-            StartTutorial();
+
+            SetMultiplayerTabRowVisible(false);
+            SwitchToPanel(TutorialPanel);
         }
     }
 

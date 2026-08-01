@@ -15,4 +15,5 @@ MonoBehaviour:
   skinId: adam
   displayName: Adam
   modelPrefab: {fileID: 919132149155446097, guid: aa7dc1503edd27f46b4d41f5941ec399, type: 3}
-  previewIcon: {fileID: 21300000, guid: b76e8b78ae03cdf45ade2d3a360ffd03, type: 3}
+  previewIcon: {fileID: 21300000, guid: 005c4d7c4b257a743a9c9a8497dfa38c, type: 3}
+  ownedByDefault: 1
