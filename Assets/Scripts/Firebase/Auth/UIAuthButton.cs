@@ -26,12 +26,16 @@ public class UIAuthButton : MonoBehaviour {
     [Tooltip("Stats")]
     [SerializeField] private TMP_Text email;
     [SerializeField] private TMP_Text displayName;
-    [SerializeField] private TMP_Text role;
+    [SerializeField] private TMP_Text coins;
+    //[SerializeField] private TMP_Text role;
     [SerializeField] private TMP_Text xp;
     [SerializeField] private TMP_Text gamesPlayed;
     [SerializeField] private TMP_Text correctAnswers;
     [SerializeField] private TMP_Text incorrectAnswers;
     [SerializeField] private TMP_Text createdAt;
+
+    [Tooltip("For Character Customization")]
+    [SerializeField] private TMP_Text coins2;
 
     [Header("Multiplayer Button")]
     [SerializeField] private GameObject hostModeWrapper;
@@ -106,11 +110,14 @@ public class UIAuthButton : MonoBehaviour {
 
         email.text = AuthManager.Instance.CurrentUser?.Email ?? "N/A";
         displayName.text = profile.DisplayName;
-        role.text = profile.Role.ToString();
+        //role.text = profile.Role.ToString();
+        coins.text = profile.Coins.ToString();
         xp.text = profile.Xp.ToString();
         gamesPlayed.text = profile.GamesPlayed.ToString();
         correctAnswers.text = profile.CorrectAnswers.ToString();
         incorrectAnswers.text = profile.IncorrectAnswers.ToString();
+
+        coins2.text = $"Coins: {profile.Coins}";
 
         DateTime creationDate = profile.CreatedAt.ToDateTime();
         TimeSpan ageSpan = DateTime.UtcNow - creationDate;

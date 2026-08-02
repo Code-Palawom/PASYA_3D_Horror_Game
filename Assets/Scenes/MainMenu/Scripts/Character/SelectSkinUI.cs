@@ -1,18 +1,20 @@
 using PrimeTween;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class SkinSelectUI : MonoBehaviour {
+public class SelectSkinUI : MonoBehaviour {
     [SerializeField] private SkinDatabaseSO database;
     [SerializeField] private CharacterAppearanceController appearance;
     [SerializeField] private Transform contentParent;
     [SerializeField] private SkinButtonUI buttonPrefab;
-    [SerializeField] private Button confirmButton;
     [SerializeField] private TMP_Text characterLabel;
     [SerializeField] private MainMenuUI mainMenuUI;
+    [SerializeField] private SkinPurchasePopupUI purchasePopup;
 
     [Header("Label Animation")]
     [SerializeField] private float labelFadeDuration = 0.15f;
@@ -22,9 +24,11 @@ public class SkinSelectUI : MonoBehaviour {
 
     private readonly List<SkinButtonUI> spawnedButtons = new();
     private CharacterSkinSO previewSkin;
+    private CharacterSkinSO selectedSkin;
     private Sequence labelSequence;
     private RectTransform labelRect;
     private Vector2 labelRestPos;
+    private CancellationTokenSource syncCts;
 
     private PlayerProfile Profile => AuthManager.Instance.CurrentProfile;
 
@@ -36,10 +40,10 @@ public class SkinSelectUI : MonoBehaviour {
     private void OnEnable() {
         string savedId = SkinSaveSystem.Load();
         var savedSkin = database.GetById(savedId);
-        var profile = AuthManager.Instance.CurrentProfile;
+        var profile = AuthManager.Instance?.CurrentProfile;
 
-        // guard against a locally-cached skin the player no longer owns
-        previewSkin = (savedSkin != null && PlayerProfile.IsSkinOwned(savedSkin, profile)) ? savedSkin : database.skins[0]; // guaranteed ownedByDefault
+        previewSkin = (savedSkin != null && PlayerProfile.IsSkinOwned(savedSkin, profile)) ? savedSkin : database.skins[0];
+        selectedSkin = previewSkin; // whatever was saved is currently equipped
         appearance.ApplySkin(previewSkin);
 
         characterLabel.text = previewSkin != null ? previewSkin.name : string.Empty;
@@ -59,6 +63,9 @@ public class SkinSelectUI : MonoBehaviour {
     private void OnDestroy() {
         if (AuthManager.Instance != null)
             AuthManager.Instance.OnPlayerStatsLoaded -= HandleProfileLoaded;
+
+        syncCts?.Cancel();
+        syncCts?.Dispose();
     }
 
     private void HandleProfileLoaded(PlayerProfile profile) {
@@ -69,33 +76,81 @@ public class SkinSelectUI : MonoBehaviour {
         } else {
             // profile changed (e.g. a skin was just granted) — refresh lock states in place
             foreach (var btn in spawnedButtons)
-                btn.SetOwned(profile.OwnsSkin(btn.Skin));
+                btn.SetOwned(PlayerProfile.IsSkinOwned(btn.Skin, profile));
         }
     }
 
     private void BuildButtons(PlayerProfile profile) {
+        var nowUtc = DateTime.UtcNow;
+
         foreach (var skin in database.skins) {
+            bool owned = PlayerProfile.IsSkinOwned(skin, profile);
+            var availability = skin.GetAvailabilityStatus(nowUtc);
+
             var btn = Instantiate(buttonPrefab, contentParent);
-            btn.Init(skin, PlayerProfile.IsSkinOwned(skin, profile), OnSkinClicked);
+            btn.Init(skin, owned, availability, OnSkinPreview, OnSkinSelected, OnSkinPurchase);
             spawnedButtons.Add(btn);
         }
 
         RefreshHighlight();
     }
 
-    private void Start() {
-        confirmButton.onClick.AddListener(Confirm);
+    private async void Start() {
         AuthManager.Instance.OnPlayerStatsLoaded += HandleProfileLoaded;
 
-        BuildButtons(AuthManager.Instance.CurrentProfile);
+        BuildButtons(AuthManager.Instance.CurrentProfile); // limited-time skins show "..." until the sync below lands
+
+        syncCts = new CancellationTokenSource();
+        try {
+            // Keeps retrying for as long as the shop stays open — RefreshAvailability fires
+            // via the callback the moment it finally succeeds, however long that takes.
+            await TimeLimitedSkinSyncService.SyncPersistentAsync(database, RefreshAvailability, cancellationToken: syncCts.Token);
+        } catch (OperationCanceledException) {
+            // panel closed mid-retry — nothing to do, don't touch destroyed buttons
+        }
     }
 
-    private void OnSkinClicked(CharacterSkinSO skin) {
-        if (previewSkin == skin || !Profile.OwnsSkin(skin)) return; // ignore locked/no-op
+    private void RefreshAvailability() {
+        var nowUtc = DateTime.UtcNow;
+        foreach (var btn in spawnedButtons)
+            btn.SetAvailability(btn.Skin.GetAvailabilityStatus(nowUtc));
+    }
+
+    private void OnSkinPreview(CharacterSkinSO skin) {
+        if (previewSkin == skin) return; // ownership no longer gates preview
         AnimateLabelChange(skin.name);
         previewSkin = skin;
-        appearance.ApplySkin(skin); // live preview, not saved yet
+        appearance.ApplySkin(skin); // live preview, not saved yet — even for unowned skins
         RefreshHighlight();
+    }
+
+    private void OnSkinSelected(CharacterSkinSO skin) {
+        if (selectedSkin == skin || !Profile.OwnsSkin(skin)) return; // ownership still required to equip
+
+        selectedSkin = skin;
+        previewSkin = skin;
+        appearance.ApplySkin(skin);
+        SkinSaveSystem.Save(skin.skinId);
+
+        if (characterLabel.text != skin.name)
+            AnimateLabelChange(skin.name);
+
+        RefreshHighlight();
+    }
+
+    private void OnSkinPurchase(CharacterSkinSO skin) {
+        if (skin.GetAvailabilityStatus(DateTime.UtcNow) != SkinAvailabilityStatus.Available) return; // loading/expired — shouldn't be reachable via UI, but guard anyway
+        purchasePopup.Show(skin, () => HandlePurchaseSuccess(skin));
+    }
+
+    private void HandlePurchaseSuccess(CharacterSkinSO skin) {
+        // Reflect the new ownership in every button in place — mirrors HandleProfileLoaded's refresh path.
+        foreach (var btn in spawnedButtons)
+            if (btn.Skin == skin)
+                btn.SetOwned(true);
+
+        // Equip it immediately, same as a normal Select tap on an owned skin.
+        OnSkinSelected(skin);
     }
 
     private void AnimateLabelChange(string newText) {
@@ -121,16 +176,12 @@ public class SkinSelectUI : MonoBehaviour {
     }
 
     private void RefreshHighlight() {
-        for (int i = 0; i < spawnedButtons.Count; i++)
-            spawnedButtons[i].SetSelected(database.skins[i] == previewSkin);
-    }
-
-    private void Confirm() {
-        if (previewSkin != null && Profile.OwnsSkin(previewSkin)) { // defense in depth
-            SkinSaveSystem.Save(previewSkin.skinId);
-            mainMenuUI.HideCharacterPanel(true);
+        foreach (var btn in spawnedButtons) {
+            btn.SetPreviewed(btn.Skin == previewSkin);
+            btn.SetEquipped(btn.Skin == selectedSkin);
         }
     }
+
 
     private void OnDisable() {
         labelSequence.Stop();

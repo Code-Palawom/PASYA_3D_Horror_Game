@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Skins
   m_EditorClassIdentifier: Assembly-CSharp::SkinDatabaseSO
   skins:
-  - {fileID: 11400000, guid: bf43345cbec241d4e9f58ec2af507042, type: 2}
   - {fileID: 11400000, guid: 1c6dc891c4aba29479da792657391371, type: 2}
+  - {fileID: 11400000, guid: bf43345cbec241d4e9f58ec2af507042, type: 2}
   - {fileID: 11400000, guid: 2c9f040c6905517498b0b9145edc3ae7, type: 2}
+  - {fileID: 11400000, guid: 9e7fe8adc64d45f4aa3348325ceec693, type: 2}

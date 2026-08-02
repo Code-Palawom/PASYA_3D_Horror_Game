@@ -16,4 +16,7 @@ MonoBehaviour:
   displayName: Shannon
   modelPrefab: {fileID: 919132149155446097, guid: eca0f1f95c4abcf4783f0ffe6fb01b34, type: 3}
   previewIcon: {fileID: 21300000, guid: 403053d0f52ecca41ac10ebdb104b74f, type: 3}
+  paywallType: 1
   ownedByDefault: 0
+  currencyCost: 149
+  iapProductId: 
