@@ -1,10 +1,10 @@
+using PrimeTween;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using PrimeTween;
 using TMPro;
 using Unity.Cinemachine;
 using Unity.Netcode;
@@ -180,6 +180,7 @@ public class MainMenuUI : MonoBehaviour {
     [SerializeField] CharacterAppearanceController characterAppearance;
     [SerializeField] private SkinDatabaseSO database;
     [SerializeField] Button characterBackButton;
+    [SerializeField] ResetCharacterRotation characterRotator;
     [SerializeField] MMCharacterRandomAnimation characterAnimation;
 
     [Header("Settings Panel")]
@@ -754,6 +755,7 @@ public class MainMenuUI : MonoBehaviour {
         _pendingMode = GameMode.None;
         SetMultiplayerTabRowVisible(false);
         characterAnimation.SetAnimationState("idle");
+        characterRotator.ResetRotation();
         characterAnimation.SetIsCustomizing(false);
         SwitchToPanel(mainPanel);
     }
