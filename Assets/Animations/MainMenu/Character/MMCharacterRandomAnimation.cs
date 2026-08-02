@@ -7,6 +7,7 @@ public class MMCharacterRandomAnimation : MonoBehaviour {
     public float maxTime = 15f;
 
     private new MMCharacterAnimation animation;
+    public bool isCustomizing = false;
 
     void Start() {
         animation = GetComponent<MMCharacterAnimation>();
@@ -20,7 +21,15 @@ public class MMCharacterRandomAnimation : MonoBehaviour {
             yield return new WaitForSeconds(waitTime);
 
             Debug.Log("Triggered");
-            animation.SetAnimationState("lookingOver");
+            if(!isCustomizing) animation.SetAnimationState("lookingOver");
         }
+    }
+
+    public void SetAnimationState(string state) {
+        animation.SetAnimationState(state);
+    }
+
+    public void SetIsCustomizing(bool customizing) {
+        isCustomizing = customizing;
     }
 }

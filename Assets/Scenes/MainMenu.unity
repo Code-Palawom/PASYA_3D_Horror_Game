@@ -40287,7 +40287,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 643068784}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2b51467e04262014090f3f4e372ab891, type: 3}
   m_Name: 
@@ -40301,7 +40301,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 643068784}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4dc945425b29cbf428811c0e7eb9ac81, type: 3}
   m_Name: 
@@ -124326,8 +124326,6 @@ GameObject:
   - component: {fileID: 1590153719}
   - component: {fileID: 1590153718}
   - component: {fileID: 1590153724}
-  - component: {fileID: 1590153723}
-  - component: {fileID: 1590153722}
   - component: {fileID: 1590153725}
   m_Layer: 5
   m_Name: MenuUI
@@ -124426,33 +124424,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
---- !u!114 &1590153722
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1590153717}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2b51467e04262014090f3f4e372ab891, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MMCharacterRandomAnimation
-  minTime: 5
-  maxTime: 15
---- !u!114 &1590153723
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1590153717}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4dc945425b29cbf428811c0e7eb9ac81, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::MMCharacterAnimation
-  animator: {fileID: 643068789}
 --- !u!114 &1590153724
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -124516,6 +124487,7 @@ MonoBehaviour:
   characterAppearance: {fileID: 643068788}
   database: {fileID: 11400000, guid: e050a1d31e310564bb51c3bd1dcc7ae9, type: 2}
   characterBackButton: {fileID: 162697805}
+  characterAnimation: {fileID: 643068786}
   settingsPanel: {fileID: 2110871408}
   settingsBackButton: {fileID: 2021904991}
   aboutPanel: {fileID: 1152313242}
@@ -124663,8 +124635,14 @@ MonoBehaviour:
       moveDistance: 30
       duration: 0.3
       ease: 27
+    - item: {fileID: 1646808171}
+      overrideMotion: 1
+      moveFrom: 3
+      moveDistance: 30
+      duration: 0.3
+      ease: 27
     initialDelay: 0
-    staggerDelay: 0.2
+    staggerDelay: 0.1
     moveFrom: 0
     moveDistance: 200
     duration: 0.5

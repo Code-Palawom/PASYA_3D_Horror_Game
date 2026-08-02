@@ -180,6 +180,7 @@ public class MainMenuUI : MonoBehaviour {
     [SerializeField] CharacterAppearanceController characterAppearance;
     [SerializeField] private SkinDatabaseSO database;
     [SerializeField] Button characterBackButton;
+    [SerializeField] MMCharacterRandomAnimation characterAnimation;
 
     [Header("Settings Panel")]
     [SerializeField] SettingsUI settingsPanel;
@@ -272,6 +273,8 @@ public class MainMenuUI : MonoBehaviour {
     // Tracks known categories — "All" is always index 0
     private readonly List<string> _categories = new();
     private string _activeCategory = ""; // empty = All
+
+    private bool isFirstLaunch = true;
 
     private void Awake() {
         cam.Priority = 0;
@@ -687,10 +690,13 @@ public class MainMenuUI : MonoBehaviour {
             Vector2 offset = GetSlideOffset(item.moveFrom, item.moveDistance);
             Vector2 fromPos = item.restPos + offset;
             float delay = content.initialDelay + i * content.staggerDelay;
+            if(content.items.Count == 10 && !isFirstLaunch) delay = 0;
 
             item.moveTween = Tween.UIAnchoredPosition(item.rect, fromPos, item.restPos, item.duration, item.ease, startDelay: delay);
             item.fadeTween = Tween.Alpha(item.group, 0f, 1f, item.duration, Ease.Linear, startDelay: delay);
         }
+
+        if (isFirstLaunch) isFirstLaunch = false;
     }
 
     private void StopContentTweens(ContentGroupRuntime content) {
@@ -733,6 +739,7 @@ public class MainMenuUI : MonoBehaviour {
         characterCam.Priority = 10;
 
         SetMultiplayerTabRowVisible(false);
+        characterAnimation.SetIsCustomizing(true);
         SwitchToPanel(characterPanel);
 
         ActionbarToastNotification.Instance.ClearToast();
@@ -746,6 +753,8 @@ public class MainMenuUI : MonoBehaviour {
 
         _pendingMode = GameMode.None;
         SetMultiplayerTabRowVisible(false);
+        characterAnimation.SetAnimationState("idle");
+        characterAnimation.SetIsCustomizing(false);
         SwitchToPanel(mainPanel);
     }
 

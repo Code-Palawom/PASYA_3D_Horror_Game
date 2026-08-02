@@ -43052,8 +43052,8 @@ MonoBehaviour:
   left: {fileID: 1294660364}
   right: {fileID: 1413512578}
   padding: 10
-  minAlpha: 0.4
-  maxAlpha: 0.75
+  minAlpha: 0.75
+  maxAlpha: 0.9
   pulseSpeed: 2
   pulseEase: 4
 --- !u!1 &1508725790
