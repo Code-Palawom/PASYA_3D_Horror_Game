@@ -17,6 +17,18 @@ public class KeyboardAvoider : MonoBehaviour {
     public RectTransform inputContainerRect; // InputContainer GameObject's RectTransform (holds InputField + Button)
     [Range(0f, 1f)] public float textWidthRatio = 0.7f;
 
+    [Header("Text Rect Offset")]
+    public float textOffsetLeft = 0f;
+    public float textOffsetRight = 0f;
+    public float textOffsetTop = 0f;
+    public float textOffsetBottom = 0f;
+
+    [Header("Input Container Rect Offset")]
+    public float inputContainerOffsetLeft = 0f;
+    public float inputContainerOffsetRight = 0f;
+    public float inputContainerOffsetTop = 0f;
+    public float inputContainerOffsetBottom = 0f;
+
     [Header("Edge Offset (keyboard visible)")]
     public float edgeOffsetLeft = 0f;
     public float edgeOffsetRight = 0f;
@@ -26,6 +38,14 @@ public class KeyboardAvoider : MonoBehaviour {
     bool wasKeyboardVisible = false;
     RectTransform canvasRect;
     bool initialized = false;
+
+    private bool showOverlay;
+
+    // Cached each Update() for the debug overlay
+    bool debugKeyboardVisible;
+    float debugKeyboardHeightPx;
+    float debugKbHeightInCanvas;
+    float debugCanvasHeight;
 
     Vector2 defaultAnchorMin, defaultAnchorMax, defaultOffsetMin, defaultOffsetMax;
 
@@ -74,14 +94,26 @@ public class KeyboardAvoider : MonoBehaviour {
             keyboardVisible = fakeKeyboardVisible;
             keyboardHeightPx = fakeKeyboardVisible ? fakeKeyboardHeight : 0f;
         }
+#elif UNITY_ANDROID
+        // TouchScreenKeyboard.area.height is unreliable on Android (often 0 or full-screen
+        // depending on OEM keyboard/Android version). Use the decor view visible frame instead.
+        keyboardHeightPx = AndroidKeyboardHeight.GetHeightPx();
+        keyboardVisible = keyboardHeightPx > 0f;
 #else
         keyboardVisible = TouchScreenKeyboard.visible;
         keyboardHeightPx = TouchScreenKeyboard.area.height;
 #endif
-        if (keyboardVisible) {
-            float canvasHeight = canvasRect != null ? canvasRect.rect.height : Screen.height;
-            float kbHeightInCanvas = (keyboardHeightPx / Screen.height) * canvasHeight;
 
+        float canvasHeight = canvasRect != null ? canvasRect.rect.height : Screen.height;
+        float kbHeightInCanvas = (keyboardHeightPx / Screen.height) * canvasHeight;
+
+        // Cache for debug overlay
+        debugKeyboardVisible = keyboardVisible;
+        debugKeyboardHeightPx = keyboardHeightPx;
+        debugKbHeightInCanvas = kbHeightInCanvas;
+        debugCanvasHeight = canvasHeight;
+
+        if (keyboardVisible) {
             // Stretch target to fill remaining space, minus edge offsets, above the keyboard
             target.anchorMin = new Vector2(0f, 0f);
             target.anchorMax = new Vector2(1f, 1f);
@@ -109,14 +141,14 @@ public class KeyboardAvoider : MonoBehaviour {
             // Text: left portion (e.g. 70%)
             textRect.anchorMin = new Vector2(0f, 0f);
             textRect.anchorMax = new Vector2(textWidthRatio, 1f);
-            textRect.offsetMin = Vector2.zero;
-            textRect.offsetMax = Vector2.zero;
+            textRect.offsetMin = new Vector2(textOffsetLeft, textOffsetBottom);
+            textRect.offsetMax = new Vector2(-textOffsetRight, -textOffsetTop);
 
             // InputContainer: right portion (e.g. 30%)
             inputContainerRect.anchorMin = new Vector2(textWidthRatio, 0f);
             inputContainerRect.anchorMax = new Vector2(1f, 1f);
-            inputContainerRect.offsetMin = Vector2.zero;
-            inputContainerRect.offsetMax = Vector2.zero;
+            inputContainerRect.offsetMin = new Vector2(inputContainerOffsetLeft, inputContainerOffsetBottom);
+            inputContainerRect.offsetMax = new Vector2(-inputContainerOffsetRight, -inputContainerOffsetTop);
         } else {
             // Re-enabling VerticalLayoutGroup recomputes anchors/positions on its own
             verticalLayout.enabled = true;
@@ -125,4 +157,43 @@ public class KeyboardAvoider : MonoBehaviour {
 
         LayoutRebuilder.ForceRebuildLayoutImmediate(target);
     }
+
+    public void RefreshDebugMode() {
+        if (SettingsManager.Instance == null) {
+            Debug.LogWarning("[KeyboardAvoider] SettingsManager not ready yet.");
+            return;
+        }
+        showOverlay = SettingsManager.Instance.Current.showDebugOverlay;
+    }
+
+    private void OnGUI() {
+        if (!showOverlay) return;
+        GUI.Label(new Rect(10, 110, 420, 20), $"[KB] Visible : {debugKeyboardVisible}");
+        GUI.Label(new Rect(10, 130, 420, 20), $"[KB] Height px : {debugKeyboardHeightPx:F0}  (Screen.height={Screen.height})");
+        GUI.Label(new Rect(10, 150, 420, 20), $"[KB] Height in canvas : {debugKbHeightInCanvas:F1}  (canvasHeight={debugCanvasHeight:F0})");
+    }
 }
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+public static class AndroidKeyboardHeight {
+    public static float GetHeightPx() {
+        using var unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+        using var activity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
+        using var decorView = activity.Call<AndroidJavaObject>("getWindow")
+                                       .Call<AndroidJavaObject>("getDecorView");
+        using var rect = new AndroidJavaObject("android.graphics.Rect");
+        decorView.Call("getWindowVisibleDisplayFrame", rect);
+
+        int screenHeight = decorView.Call<int>("getHeight");
+        int visibleHeight = rect.Call<int>("height");
+        int diff = screenHeight - visibleHeight;
+
+        // Ignore small diffs (status/nav bar) — keyboard is usually well over 100px
+        return diff > 100 ? diff : 0f;
+    }
+}
+#elif UNITY_ANDROID
+public static class AndroidKeyboardHeight {
+    public static float GetHeightPx() => 0f;
+}
+#endif

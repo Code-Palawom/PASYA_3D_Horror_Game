@@ -3,6 +3,7 @@
 public class DebugSetting : MonoBehaviour {
     public FirstPersonCameraLook firstPersonCameraLook;
     public ThirdPersonCameraLook thirdPersonCameraLook;
+    public KeyboardAvoider keyboardAvoider;
 
     public int fontSize = 13;
     public Color textColor = new Color(1f, 1f, 1f, 0.9f);
@@ -29,6 +30,7 @@ public class DebugSetting : MonoBehaviour {
         showOverlay = SettingsManager.Instance.Current.showDebugOverlay;
         firstPersonCameraLook.RefreshDebugMode();
         thirdPersonCameraLook.RefreshDebugMode();
+        keyboardAvoider.RefreshDebugMode();
     }
 
     void Update() {
