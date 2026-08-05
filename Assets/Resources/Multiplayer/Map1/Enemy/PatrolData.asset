@@ -16,9 +16,9 @@ MonoBehaviour:
   patrolGroups:
   - groupId: patrol1
     points:
-    - position: {x: 323.5, y: 3.3, z: 69.78}
+    - position: {x: 323.5, y: 11.3, z: 69.78}
       rotation: {x: 0, y: 0, z: 0, w: 0}
-    - position: {x: 320.2578, y: 2.600168, z: 96.67741}
+    - position: {x: 320.2578, y: 10.600168, z: 96.67741}
       rotation: {x: 0, y: 0, z: 0, w: 0}
-    - position: {x: 359.0103, y: 2.485315, z: 104.3509}
+    - position: {x: 359.0103, y: 10.485315, z: 104.3509}
       rotation: {x: 0, y: 0, z: 0, w: 0}

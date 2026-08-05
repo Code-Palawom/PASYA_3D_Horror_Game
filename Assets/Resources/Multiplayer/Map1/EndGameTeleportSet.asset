@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::EndGameTeleportSetSO
   sceneName: Map1
   teleportPoints:
-  - position: {x: 310, y: 3, z: 55}
+  - position: {x: 310, y: 11, z: 55}
     rotation: {x: 0, y: 0, z: 0, w: 0}
-  - position: {x: 312, y: 3, z: 55}
+  - position: {x: 312, y: 11, z: 55}
     rotation: {x: 0, y: 0, z: 0, w: 0}
-  - position: {x: 310, y: 3, z: 53}
+  - position: {x: 310, y: 11, z: 53}
     rotation: {x: 0, y: 0, z: 0, w: 0}
-  - position: {x: 312, y: 3, z: 53}
+  - position: {x: 312, y: 11, z: 53}
     rotation: {x: 0, y: 0, z: 0, w: 0}

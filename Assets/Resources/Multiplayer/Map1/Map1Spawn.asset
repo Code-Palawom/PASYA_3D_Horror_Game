@@ -14,11 +14,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SceneSpawnData
   sceneName: Map1
   spawnPoints:
-  - position: {x: 330, y: 3, z: 64}
+  - position: {x: 330, y: 11, z: 64}
     rotation: {x: 0, y: 0, z: 0, w: 0}
-  - position: {x: 332, y: 3, z: 64}
+  - position: {x: 332, y: 11, z: 64}
     rotation: {x: 0, y: 0, z: 0, w: 0}
-  - position: {x: 334, y: 3, z: 64}
+  - position: {x: 334, y: 11, z: 64}
     rotation: {x: 0, y: 0, z: 0, w: 0}
-  - position: {x: 336, y: 3, z: 64}
+  - position: {x: 336, y: 11, z: 64}
     rotation: {x: 0, y: 0, z: 0, w: 0}
