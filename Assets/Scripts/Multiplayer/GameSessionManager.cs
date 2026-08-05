@@ -19,6 +19,13 @@ using UnityEngine.SceneManagement;
 public class GameSessionManager : NetworkBehaviour {
     public static GameSessionManager Instance { get; private set; }
 
+    // Single source of truth for score -> XP conversion. Used by
+    // PlayerStatsRecorder (Firestore write), PodiumScreenUI (local count-up),
+    // and PodiumPlayerCardUI (other players' "+XP" label) — change this one
+    // constant instead of the multiplier in three places.
+    public const float XpFromScoreMultiplier = 0.75f;
+    public static int CalculateXp(int score) => Mathf.RoundToInt(score * XpFromScoreMultiplier);
+
     public NetworkVariable<FixedString64Bytes> SessionId = new(
         "", NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
@@ -43,6 +50,7 @@ public class GameSessionManager : NetworkBehaviour {
         public int QuestionsCorrect;
         public int SideEffectsReceived;
         public bool Disconnected;        // true = left early
+        public string SkinId;            // cached from NetworkCharacterAppearance at spawn — survives disconnect
     }
 
     // Live players — keyed by clientId
@@ -184,6 +192,17 @@ public class GameSessionManager : NetworkBehaviour {
         stats.SideEffectsReceived++;
     }
 
+    // Called once by NetworkCharacterAppearance right after it sets its
+    // skinId NetworkVariable at spawn. Cached here (not read live off the
+    // NetworkVariable at results time) so it's still available for players
+    // who've since disconnected — their PlayerObject/NetworkVariable is
+    // gone by then, but _disconnectedPlayers keeps this copy.
+    public void RecordSkin(ulong clientId, string skinId) {
+        if (!IsServer) return;
+        if (!_stats.TryGetValue(clientId, out var stats)) return;
+        stats.SkinId = skinId;
+    }
+
     // ─────────────────────────────────────────────────────────
     // RPCs to report stats server-side from clients
     // ─────────────────────────────────────────────────────────
@@ -198,6 +217,11 @@ public class GameSessionManager : NetworkBehaviour {
     public void RecordSideEffectRpc(RpcParams rpcParams = default) {
         Debug.Log("[RPC][Server] ReocrdSideEffect");
         RecordSideEffect(rpcParams.Receive.SenderClientId);
+    }
+
+    [Rpc(SendTo.Server)]
+    public void RecordSkinRpc(FixedString32Bytes skinId, RpcParams rpcParams = default) {
+        RecordSkin(rpcParams.Receive.SenderClientId, skinId.ToString());
     }
 
     // ─────────────────────────────────────────────────────────
@@ -222,16 +246,17 @@ public class GameSessionManager : NetworkBehaviour {
         var questionsCorrect = all.Select(s => s.QuestionsCorrect).ToArray();
         var sideEffects = all.Select(s => s.SideEffectsReceived).ToArray();
         var disconnected = all.Select(s => s.Disconnected).ToArray();
+        var skinIds = all.Select(s => new FixedString32Bytes(s.SkinId ?? "")).ToArray();
 
         ReceiveResultsRpc(clientIds, playerNames, scores,
                           questionsAnswered, questionsCorrect,
-                          sideEffects, disconnected);
+                          sideEffects, disconnected, skinIds);
     }
 
     [Rpc(SendTo.Everyone)]
     void ReceiveResultsRpc(ulong[] clientIds, FixedString64Bytes[] playerNames, int[] scores,
                            int[] questionsAnswered, int[] questionsCorrect,
-                           int[] sideEffects, bool[] disconnected) {
+                           int[] sideEffects, bool[] disconnected, FixedString32Bytes[] skinIds) {
         Debug.Log("[RPC][Everyone] ReceiveResults");
         int count = clientIds.Length;
         var results = new PlayerSessionStats[count];
@@ -244,7 +269,8 @@ public class GameSessionManager : NetworkBehaviour {
                 QuestionsAnswered = questionsAnswered[i],
                 QuestionsCorrect = questionsCorrect[i],
                 SideEffectsReceived = sideEffects[i],
-                Disconnected = disconnected[i]
+                Disconnected = disconnected[i],
+                SkinId = skinIds[i].ToString()
             };
         }
 

@@ -35,6 +35,13 @@ public class NetworkCharacterAppearance : NetworkBehaviour {
         // Applies immediately for late joiners (skinId already holds the synced
         // spawn-payload value) and for the owner's own initial value above.
         ApplyById(skinId.Value.ToString());
+
+        // Let the server cache this player's skin id (used for the podium's
+        // per-player character icon — cached server-side because it needs
+        // to survive this component/PlayerObject being gone after disconnect).
+        // Owner-only: only the owner has WritePermission on skinId anyway,
+        // and this only needs to fire once, matching the "set once at spawn" design.
+        if (IsOwner && skinId.Value.Length > 0) GameSessionManager.Instance.RecordSkinRpc(skinId.Value);
     }
 
     public override void OnNetworkDespawn() {
