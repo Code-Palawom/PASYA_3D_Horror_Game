@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -95,16 +96,18 @@ public class SelectSkinUI : MonoBehaviour {
         RefreshHighlight();
     }
 
-    private async void Start() {
+    private void Start() {
         AuthManager.Instance.OnPlayerStatsLoaded += HandleProfileLoaded;
 
-        BuildButtons(AuthManager.Instance.CurrentProfile); // limited-time skins show "..." until the sync below lands
+        BuildButtons(AuthManager.Instance.CurrentProfile); // Currency skins show "..." until pricing sync below lands
 
         syncCts = new CancellationTokenSource();
+        RunSyncLoop(SkinPricingSyncService.SyncPersistentAsync(database, RefreshAvailability, cancellationToken: syncCts.Token));
+    }
+
+    private async void RunSyncLoop(Task syncTask) {
         try {
-            // Keeps retrying for as long as the shop stays open — RefreshAvailability fires
-            // via the callback the moment it finally succeeds, however long that takes.
-            await TimeLimitedSkinSyncService.SyncPersistentAsync(database, RefreshAvailability, cancellationToken: syncCts.Token);
+            await syncTask;
         } catch (OperationCanceledException) {
             // panel closed mid-retry — nothing to do, don't touch destroyed buttons
         }

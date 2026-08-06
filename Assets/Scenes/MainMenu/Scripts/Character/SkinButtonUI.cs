@@ -90,6 +90,7 @@ public class SkinButtonUI : MonoBehaviour {
         // loading its availability, or unowned with a closed/not-yet-open window.
         bool purchasableNow = availability == SkinAvailabilityStatus.Available;
         bool locked = !isOwned && !purchasableNow;
+        Debug.Log($"LOCKED {isOwned} {purchasableNow} {skin.name}");
         selectButton.interactable = !(isOwned && isEquipped) && !locked;
         selectButtonLabel.text = GetSelectButtonLabel();
     }
@@ -105,7 +106,7 @@ public class SkinButtonUI : MonoBehaviour {
             return "Time Limited";
 
         return skin.paywallType switch {
-            SkinPaywallType.Currency => $"{skin.currencyCost} Coins",
+            SkinPaywallType.Currency => skin.EffectiveCurrencyCost.ToString(),
             SkinPaywallType.IAP => string.IsNullOrEmpty(skin.iapProductId) ? "Buy" : "Buy", // actual store price string is filled in by the popup/store lookup, not known here
             _ => "Locked"
         };

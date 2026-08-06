@@ -8,7 +8,7 @@ public static class PurchaseManager {
         if (AuthManager.Instance == null || AuthManager.Instance.CurrentProfile == null)
             return SkinPurchaseResult.NotSignedIn;
 
-        return await AuthManager.Instance.PurchaseSkinWithCurrencyAsync(skin.skinId, skin.currencyCost);
+        return await AuthManager.Instance.PurchaseSkinWithCurrencyAsync(skin.skinId, skin.EffectiveCurrencyCost);
     }
 
     public static async Task<SkinPurchaseResult> PurchaseWithIAP(CharacterSkinSO skin) {

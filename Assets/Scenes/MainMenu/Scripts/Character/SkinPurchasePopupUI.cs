@@ -66,7 +66,7 @@ public class SkinPurchasePopupUI : MonoBehaviour {
     }
 
     private string GetPriceText(CharacterSkinSO skin) => skin.paywallType switch {
-        SkinPaywallType.Currency => $"{skin.currencyCost} Coins",
+        SkinPaywallType.Currency => $"{skin.EffectiveCurrencyCost} Coins", // TODO: swap in your actual currency name/icon
         SkinPaywallType.IAP => PurchaseManager.GetIAPPriceString(skin.iapProductId),
         _ => string.Empty
     };

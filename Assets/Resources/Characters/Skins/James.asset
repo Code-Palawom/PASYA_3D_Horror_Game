@@ -16,8 +16,6 @@ MonoBehaviour:
   displayName: James
   modelPrefab: {fileID: 919132149155446097, guid: 4a74e3e8280e21b408e1fafb006231fb, type: 3}
   previewIcon: {fileID: 21300000, guid: 005c4d7c4b257a743a9c9a8497dfa38c, type: 3}
-  paywallType: 0
+  paywallType: 1
   ownedByDefault: 0
-  currencyCost: 0
   iapProductId: 
-  isLimitedTime: 1
