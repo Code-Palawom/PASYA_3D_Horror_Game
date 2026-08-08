@@ -84,7 +84,7 @@ public class SkinPurchasePopupUI : MonoBehaviour {
 
         confirmButton.interactable = true;
 
-        if (result == SkinPurchaseResult.Success) {
+        if (result == SkinPurchaseResult.Success || result == SkinPurchaseResult.AlreadyOwned) {
             onPurchaseSuccess?.Invoke();
             ActionbarToastNotification.Instance.ShowLocalToast($"You purchased {pendingSkin.displayName}!", ToastType.Success);
             Hide();
