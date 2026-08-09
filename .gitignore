@@ -116,8 +116,6 @@ InitTestScene*.unity*
 /Assets/Scripts/Firebase/SecretStoreEncoder.cs.meta
 /Assets/Scripts/Firebase/SkinPricingService.cs
 /Assets/Scripts/Firebase/SkinPricingService.cs.meta
-/Assets/Scripts/Firebase/TimeLimitedSkinSyncService.cs
-/Assets/Scripts/Firebase/TimeLimitedSkinSyncService.cs.meta
 /Assets/Scripts/Misc/SaveEncryption.cs
 /Assets/Scripts/Misc/SaveEncryption.cs.meta
 /Assets/Scripts/Misc/TipsManager.cs
