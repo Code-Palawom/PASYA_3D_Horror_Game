@@ -435,6 +435,8 @@ MonoBehaviour:
   lockedOverlay: {fileID: 4243318412978084029}
   previewAlpha: 0.1
   equippedAlpha: 0.25
+  affordableColor: {r: 0, g: 0, b: 0, a: 1}
+  insufficientColor: {r: 0, g: 0, b: 0, a: 1}
 --- !u!1 &6407270028848141375
 GameObject:
   m_ObjectHideFlags: 0

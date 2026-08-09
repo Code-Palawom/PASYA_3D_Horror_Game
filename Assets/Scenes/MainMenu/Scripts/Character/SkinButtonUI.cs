@@ -16,6 +16,10 @@ public class SkinButtonUI : MonoBehaviour {
     [SerializeField] private float previewAlpha = 0.1f;
     [SerializeField] private float equippedAlpha = 0.3f;
 
+    [Header("Affordability")]
+    [SerializeField] private Color affordableColor = Color.white;
+    [SerializeField] private Color insufficientColor = new Color(1f, 0.4f, 0.4f);
+
     public CharacterSkinSO Skin => skin;
 
     private CharacterSkinSO skin;
@@ -26,6 +30,7 @@ public class SkinButtonUI : MonoBehaviour {
     private bool isOwned;
     private bool isPreviewed;
     private bool isEquipped;
+    private bool isAffordable = true; // irrelevant until this becomes an unowned Currency purchase
     private SkinAvailabilityStatus availability = SkinAvailabilityStatus.Available;
 
     public void Init(CharacterSkinSO skin, bool owned, SkinAvailabilityStatus availability, Action<CharacterSkinSO> onPreview, Action<CharacterSkinSO> onSelect, Action<CharacterSkinSO> onPurchase) {
@@ -55,13 +60,20 @@ public class SkinButtonUI : MonoBehaviour {
         UpdateSelectButtonState();
     }
 
+    // Called by SkinSelectUI whenever the player's Coins balance (or this skin's
+    // synced price) changes — e.g. after a purchase, a Coins grant, or a pricing sync.
+    public void SetAffordable(bool canAfford) {
+        isAffordable = canAfford;
+        UpdateSelectButtonState();
+    }
+
     private void HandleSelectButtonClicked() {
         if (isOwned) {
             onSelect(skin);
-        } else if (availability == SkinAvailabilityStatus.Available) {
-            onPurchase(skin); // locked skin, still purchasable — open the purchase popup
+        } else if (availability == SkinAvailabilityStatus.Available && isAffordable) {
+            onPurchase(skin); // locked skin, still purchasable, and the player can afford it
         }
-        // else: still loading or expired and not owned — button is non-interactable, this shouldn't fire
+        // else: still loading, expired, or not owned and not affordable — button is non-interactable, this shouldn't fire
     }
 
     public void SetOwned(bool owned) {
@@ -86,13 +98,17 @@ public class SkinButtonUI : MonoBehaviour {
 
     private void UpdateSelectButtonState() {
         // Interactable when: equipping/previewing an owned skin, or purchasing an
-        // unowned-but-currently-available one. Disabled when already equipped, still
-        // loading its availability, or unowned with a closed/not-yet-open window.
+        // unowned-but-currently-available AND affordable one. Disabled when already
+        // equipped, still loading availability, closed/not-yet-open window, or the
+        // player simply doesn't have enough Coins right now.
         bool purchasableNow = availability == SkinAvailabilityStatus.Available;
         bool locked = !isOwned && !purchasableNow;
-        Debug.Log($"LOCKED {isOwned} {purchasableNow} {skin.name}");
-        selectButton.interactable = !(isOwned && isEquipped) && !locked;
+        bool needsAffordabilityCheck = !isOwned && purchasableNow && skin.paywallType == SkinPaywallType.Currency;
+        bool cannotAfford = needsAffordabilityCheck && !isAffordable;
+
+        selectButton.interactable = !(isOwned && isEquipped) && !locked && !cannotAfford;
         selectButtonLabel.text = GetSelectButtonLabel();
+        selectButtonLabel.color = cannotAfford ? insufficientColor : affordableColor;
     }
 
     private string GetSelectButtonLabel() {
@@ -106,7 +122,7 @@ public class SkinButtonUI : MonoBehaviour {
             return "Time Limited";
 
         return skin.paywallType switch {
-            SkinPaywallType.Currency => skin.EffectiveCurrencyCost.ToString(),
+            SkinPaywallType.Currency => $"{skin.EffectiveCurrencyCost.ToString()} Coins",
             SkinPaywallType.IAP => string.IsNullOrEmpty(skin.iapProductId) ? "Buy" : "Buy", // actual store price string is filled in by the popup/store lookup, not known here
             _ => "Locked"
         };

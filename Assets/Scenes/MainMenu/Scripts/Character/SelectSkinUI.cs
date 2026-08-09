@@ -75,9 +75,11 @@ public class SelectSkinUI : MonoBehaviour {
         if (spawnedButtons.Count == 0) {
             BuildButtons(profile);
         } else {
-            // profile changed (e.g. a skin was just granted) — refresh lock states in place
-            foreach (var btn in spawnedButtons)
+            // profile changed (e.g. a skin was just granted, or Coins changed) — refresh in place
+            foreach (var btn in spawnedButtons) {
                 btn.SetOwned(PlayerProfile.IsSkinOwned(btn.Skin, profile));
+                btn.SetAffordable(IsAffordable(btn.Skin, profile));
+            }
         }
     }
 
@@ -90,10 +92,19 @@ public class SelectSkinUI : MonoBehaviour {
 
             var btn = Instantiate(buttonPrefab, contentParent);
             btn.Init(skin, owned, availability, OnSkinPreview, OnSkinSelected, OnSkinPurchase);
+            btn.SetAffordable(IsAffordable(skin, profile));
             spawnedButtons.Add(btn);
         }
 
         RefreshHighlight();
+    }
+
+    // Currency skins whose price hasn't synced yet default to "affordable" here — the button
+    // stays disabled anyway via SkinAvailabilityStatus.Loading, so this never lets a purchase
+    // through before a real price exists to check against.
+    private bool IsAffordable(CharacterSkinSO skin, PlayerProfile profile) {
+        if (skin.paywallType != SkinPaywallType.Currency) return true;
+        return profile != null && profile.Coins >= skin.EffectiveCurrencyCost;
     }
 
     private void Start() {
@@ -115,8 +126,12 @@ public class SelectSkinUI : MonoBehaviour {
 
     private void RefreshAvailability() {
         var nowUtc = DateTime.UtcNow;
-        foreach (var btn in spawnedButtons)
+        var profile = AuthManager.Instance?.CurrentProfile;
+
+        foreach (var btn in spawnedButtons) {
             btn.SetAvailability(btn.Skin.GetAvailabilityStatus(nowUtc));
+            btn.SetAffordable(IsAffordable(btn.Skin, profile));
+        }
     }
 
     private void OnSkinPreview(CharacterSkinSO skin) {
