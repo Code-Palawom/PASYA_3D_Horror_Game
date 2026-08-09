@@ -537,7 +537,7 @@ public class MainMenuUI : MonoBehaviour {
     // ─────────────────────────────────────────────────────────
 
     void SpawnQuizCard(QuizSetMetaEntry entry) {
-        if (_renderedQuizSetIds.Contains(entry.setId)) return;
+        if (_renderedQuizSetIds.Contains(entry.setId) || entry.setId == "Tutorial") return;
         _renderedQuizSetIds.Add(entry.setId);
 
         var item = Instantiate(quizItemPrefab, quizListContainer);

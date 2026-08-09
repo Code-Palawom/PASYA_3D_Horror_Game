@@ -13200,7 +13200,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -37.499985}
+  m_AnchoredPosition: {x: 0, y: -37.5}
   m_SizeDelta: {x: 0, y: 75}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!225 &300272740
@@ -45080,6 +45080,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::QuizRepository
   localSets:
+  - {fileID: 11400000, guid: 3068d677ba688014abe79f8ff35e61d9, type: 2}
   - {fileID: 11400000, guid: 4350a082ac3a7ab4aa8f7911eae12e8c, type: 2}
 --- !u!1 &742592928
 GameObject:
@@ -115904,6 +115905,7 @@ MonoBehaviour:
   ShowTopMostFoldoutHeaderGroup: 1
   canvasGroup: {fileID: 625151066}
   displayText: {fileID: 1846077105}
+  displayDuration: 3
   fadeDuration: 0.3
   infoColor: {r: 1, g: 1, b: 1, a: 1}
   successColor: {r: 0, g: 1, b: 0, a: 1}
@@ -132301,7 +132303,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -37.499985}
+  m_AnchoredPosition: {x: 0, y: -37.5}
   m_SizeDelta: {x: 0, y: 75}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!225 &1715882160
@@ -153027,7 +153029,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -37.499985}
+  m_AnchoredPosition: {x: 0, y: -37.5}
   m_SizeDelta: {x: 0, y: 75}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &2099913677

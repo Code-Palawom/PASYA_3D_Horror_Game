@@ -76955,7 +76955,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NetworkedQuizGate
   ShowTopMostFoldoutHeaderGroup: 1
-  difficulty: 1
+  difficulty: 0
   oneTimeUnlock: 1
   wrongAnswerCooldown: 10
   gateId: open_door

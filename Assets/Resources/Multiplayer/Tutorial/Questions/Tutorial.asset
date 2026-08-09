@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce523329f94506d45b6f89f6da7b4698, type: 3}
+  m_Name: Tutorial
+  m_EditorClassIdentifier: Assembly-CSharp::QuizSetData
+  setName: Tutorial
+  category: Tutorial
+  authorId: dev
+  authorName: Dev
+  questions:
+  - {fileID: 11400000, guid: 2d984904c44d1284bb4be7eb31fb1ea5, type: 2}
+  - {fileID: 11400000, guid: 05f145e38f4e6b84b8bc8881addd750f, type: 2}
+  - {fileID: 11400000, guid: f05897f57f5f61643a1099bbef7d49c0, type: 2}
