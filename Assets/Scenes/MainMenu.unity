@@ -100098,9 +100098,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TipsManager
   fallbackTips:
-  - Wubba Lubba Dub-Dub!
-  - Shum-shum-schlippety-dop!
-  - Grassssss... tastes bad!
+  - 'The faster you answer, the more coins and xp you''ll earn. '
+  - Walking is safer than sprinting, but hiding is better than walking.
+  - Do not let them see your face.
+  - The mind is a fragile vessel; sanity is merely a suggestion in the abyss.
+  - They are not looking for a friend.
 --- !u!114 &1157831970
 MonoBehaviour:
   m_ObjectHideFlags: 0
