@@ -97,20 +97,20 @@ public class EndGameScreenUI : MonoBehaviour {
     }
 
     IEnumerator CountUpLocalXp(EndGamePlayerCardUI card, int scoreGained) {
-        var profile = AuthManager.Instance?.CurrentProfile;
+        var profile = AuthManager.Instance.CurrentProfile;
         if (profile == null) yield break;
 
         long startXp = profile.Xp;
-        long endXp = startXp + GameSessionManager.CalculateXp(scoreGained);
+        long endXp = GameSessionManager.CalculateXp(scoreGained);
 
         // Reflect the new total locally right away so the rest of the app
         // (menus, HUD) isn't stale until the next Firestore read.
-        profile.Xp = endXp;
+        profile.Xp = startXp + endXp;
 
         float t = 0f;
         while (t < xpCountUpDuration) {
             t += Time.deltaTime;
-            long current = (long)Mathf.Lerp(startXp, endXp, t / xpCountUpDuration);
+            long current = (long)Mathf.Lerp(0, endXp, t / xpCountUpDuration);
             card.SetXpValue(current);
             yield return null;
         }
