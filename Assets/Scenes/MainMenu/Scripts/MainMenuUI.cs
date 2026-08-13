@@ -1254,7 +1254,7 @@ public class MainMenuUI : MonoBehaviour {
 
         var payload = new ConnectionPayload {
             version = Application.version,
-            playerName = AuthManager.Instance.CurrentProfile.DisplayName ?? "Player",
+            playerName = AuthManager.Instance.CurrentProfile?.DisplayName ?? SettingsManager.Instance.Current.playerName,
             role = (byte)localRole
         };
 
