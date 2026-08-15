@@ -1,7 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
-using System.Xml.Linq;
 
 [Serializable]
 public class GameSettings {
@@ -14,9 +14,13 @@ public class GameSettings {
     public int targetFrameRate = 60;
     public bool completedTutorial = false;
 
+    // elementId -> saved offset/scale for a CustomizableUIElement
+    public Dictionary<string, ButtonLayoutEntry> buttonLayouts = new Dictionary<string, ButtonLayoutEntry>();
+
     // ── key|value serialization ──────────────────────────────
     // One "key|value" pair per line. Order doesn't matter on load;
     // unknown keys are ignored, missing keys keep their default value.
+    // "layout" lines use a nested "id|x|y|scale" value (see FromKeyValueString).
 
     public string ToKeyValueString() {
         var sb = new StringBuilder();
@@ -28,6 +32,14 @@ public class GameSettings {
         sb.Append("vsyncEnabled|").Append(vsyncEnabled ? 1 : 0).Append('\n');
         sb.Append("targetFrameRate|").Append(targetFrameRate).Append('\n');
         sb.Append("completedTutorial|").Append(completedTutorial ? 1 : 0).Append('\n');
+
+        foreach (var kvp in buttonLayouts) {
+            sb.Append("layout|").Append(kvp.Key).Append('|')
+              .Append(kvp.Value.x.ToString(CultureInfo.InvariantCulture)).Append('|')
+              .Append(kvp.Value.y.ToString(CultureInfo.InvariantCulture)).Append('|')
+              .Append(kvp.Value.scale.ToString(CultureInfo.InvariantCulture)).Append('\n');
+        }
+
         return sb.ToString();
     }
 
@@ -71,11 +83,22 @@ public class GameSettings {
                     break;
                 case "targetFrameRate":
                     if (int.TryParse(value, NumberStyles.Integer, CultureInfo.InvariantCulture, out settings.targetFrameRate))
-                        if(settings.targetFrameRate < 30) settings.targetFrameRate = 60;
-                    else settings.targetFrameRate = 60;
+                        if (settings.targetFrameRate < 30) settings.targetFrameRate = 60;
+                        else settings.targetFrameRate = 60;
                     break;
                 case "completedTutorial":
                     settings.completedTutorial = value == "1";
+                    break;
+                case "layout":
+                    // value is "elementId|x|y|scale" — only the outer split (on the first '|')
+                    // happened above, so split the remainder ourselves.
+                    string[] p = value.Split('|');
+                    if (p.Length == 4 &&
+                        float.TryParse(p[1], NumberStyles.Float, CultureInfo.InvariantCulture, out float lx) &&
+                        float.TryParse(p[2], NumberStyles.Float, CultureInfo.InvariantCulture, out float ly) &&
+                        float.TryParse(p[3], NumberStyles.Float, CultureInfo.InvariantCulture, out float ls)) {
+                        settings.buttonLayouts[p[0]] = new ButtonLayoutEntry(lx, ly, ls);
+                    }
                     break;
                 default:
                     // unknown key — ignore, keeps format forward-compatible

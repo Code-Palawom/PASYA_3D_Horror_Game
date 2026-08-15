@@ -39,6 +39,8 @@ public class SettingsUI : MonoBehaviour {
     [SerializeField] private Toggle nameTagToggle;
 
     [SerializeField] private Button playTutorial;
+    [SerializeField] private Button customizeControls;
+    [SerializeField] private GameObject customizeControlsPanel;
 
     [Header("Download Button")]
     [SerializeField] private Button downloadUpdate;
@@ -61,6 +63,7 @@ public class SettingsUI : MonoBehaviour {
     }
 
     void Start() {
+        customizeControls.onClick.AddListener(() => customizeControlsPanel.SetActive(true));
         playTutorial.onClick.AddListener(() => mainMenuUI.StartTutorial());
 
         // Quality carousel
