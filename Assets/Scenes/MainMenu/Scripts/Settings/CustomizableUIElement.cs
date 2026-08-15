@@ -1,6 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.UIElements;
+using UnityEngine.UI;
 
 [RequireComponent(typeof(RectTransform))]
 public class CustomizableUIElement : MonoBehaviour, IPointerDownHandler, IBeginDragHandler, IDragHandler {
@@ -15,6 +15,12 @@ public class CustomizableUIElement : MonoBehaviour, IPointerDownHandler, IBeginD
     //public Vector2 positionRange = new Vector2(300f, 300f); // max +/- offset in x, y
     public float minScale = 0.75f;
     public float maxScale = 1.5f;
+
+    [Header("Selection Highlight")]
+    [Tooltip("Image whose alpha is adjusted on select/deselect. Auto-fetched from this GameObject if left empty.")]
+    public Image highlightImage;
+    [Range(0f, 1f)] public float selectedAlpha = 1f;
+    [Range(0f, 1f)] public float deselectedAlpha = 0.5f;
 
     [Header("Safe area")]
     [Tooltip("Extra inset applied on top of the device safe area, in canvas units.")]
@@ -43,10 +49,11 @@ public class CustomizableUIElement : MonoBehaviour, IPointerDownHandler, IBeginD
         if (parentCanvas != null) {
             _rootCanvas = parentCanvas.rootCanvas;
             _canvasRect = (RectTransform)_rootCanvas.transform;
-            Debug.Log("[CustomizableUIElement] " + name + " found parent Canvas: " + _rootCanvas.name, this);
         } else {
             Debug.LogWarning($"[CustomizableUIElement] {name} could not find a parent Canvas.", this);
         }
+
+        if (highlightImage == null) highlightImage = GetComponent<Image>();
     }
 
     void OnEnable() => UILayoutManager.Instance?.Register(this);
@@ -68,16 +75,14 @@ public class CustomizableUIElement : MonoBehaviour, IPointerDownHandler, IBeginD
     // ── Click-and-drag (edit mode) ─────────────────────────────────────────
 
     public void OnPointerDown(PointerEventData eventData) {
-        Debug.Log("DOWN " + name + " at " + eventData.position +" " +GetCurrentScale());
         if (UIEditModeController.Instance == null) return;
         UIEditModeController.Instance.SelectElement(this);
     }
 
     public void OnBeginDrag(PointerEventData eventData) {
-        Debug.Log("BEGIN DRAG " + name + " at " + eventData.position);
         if (UIEditModeController.Instance == null) return;
         if (_canvasRect == null) return;
-        Debug.Log("BEGIN DRAG " + name + " canvas rect: " + _canvasRect.rect);
+
         UIEditModeController.Instance.SelectElement(this);
         _dragStartOffset = GetCurrentOffset();
         RectTransformUtility.ScreenPointToLocalPointInRectangle(
@@ -85,17 +90,22 @@ public class CustomizableUIElement : MonoBehaviour, IPointerDownHandler, IBeginD
     }
 
     public void OnDrag(PointerEventData eventData) {
-        Debug.Log("DRAG " + name + " at " + eventData.position);
         if (UIEditModeController.Instance == null) return;
-        Debug.Log("Canvas" +_canvasRect.name);
         if (_canvasRect == null) return;
-        Debug.Log("DRAG " + name + " canvas rect: " + _canvasRect.rect);
+
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 _canvasRect, eventData.position, eventData.pressEventCamera, out Vector2 localPointerPos)) {
             Vector2 delta = localPointerPos - _dragStartLocalPointerPos;
             Vector2 candidateOffset = _dragStartOffset + delta;
             UILayoutManager.Instance.TryApply(elementId, candidateOffset, GetCurrentScale());
         }
+    }
+
+    public void SetHighlighted(bool highlighted) {
+        if (highlightImage == null) return;
+        Color c = highlightImage.color;
+        c.a = highlighted ? selectedAlpha : deselectedAlpha;
+        highlightImage.color = c;
     }
 
     // ── Safe area ────────────────────────────────────────────────────────

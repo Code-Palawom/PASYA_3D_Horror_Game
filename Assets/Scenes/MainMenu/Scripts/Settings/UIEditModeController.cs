@@ -44,6 +44,12 @@ public class UIEditModeController : MonoBehaviour {
         if (cancelButton != null) cancelButton.onClick.AddListener(CancelAndExit);
     }
 
+    void OnEnable() {
+        foreach (string id in UILayoutManager.Instance.GetRegisteredIds()) {
+            UILayoutManager.Instance.Get(id)?.SetHighlighted(false);
+        }
+    }
+
     void LateUpdate() {
         // Keep sliders in sync in case the element moved via drag rather than the sliders
         // (SetValueWithoutNotify so this doesn't re-trigger OnSliderChanged in a loop).
@@ -52,10 +58,11 @@ public class UIEditModeController : MonoBehaviour {
 
     //Called by CustomizableUIElement on pointer-down / begin-drag.
     public void SelectElement(CustomizableUIElement element) {
-        Debug.Log("ELEMENT SELECTED");
         _isSelectedDifferent = true;
 
+        if (_selected != null) _selected.SetHighlighted(false);
         _selected = element;
+        _selected.SetHighlighted(true);
 
         if (scaleSlider != null) {
             scaleSlider.minValue = element.minScale;
@@ -73,15 +80,31 @@ public class UIEditModeController : MonoBehaviour {
 
         Vector3[] corners = new Vector3[4];
         _selected.RectTransform.GetWorldCorners(corners);
-        Vector3 topCenterWorld = (corners[1] + corners[2]) * 0.5f; // top-left + top-right, midpoint
+        Vector3 topCenterWorld = (corners[1] + corners[2]) * 0.5f;
 
         Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(_selected.CanvasCamera, topCenterWorld);
         screenPoint += panelScreenOffset;
 
         if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
                 _panelParentRect, screenPoint, _panelParentCamera, out Vector2 localPoint)) {
-            panelRoot.anchoredPosition = localPoint;
+            panelRoot.anchoredPosition = ClampToParentBounds(localPoint);
         }
+    }
+
+    Vector2 ClampToParentBounds(Vector2 desiredLocalPos) {
+        Rect parentRect = _panelParentRect.rect;
+        Vector2 size = panelRoot.rect.size;
+        Vector2 pivot = panelRoot.pivot;
+
+        float minX = parentRect.xMin + size.x * pivot.x;
+        float maxX = parentRect.xMax - size.x * (1f - pivot.x);
+        float minY = parentRect.yMin + size.y * pivot.y;
+        float maxY = parentRect.yMax - size.y * (1f - pivot.y);
+
+        float x = minX <= maxX ? Mathf.Clamp(desiredLocalPos.x, minX, maxX) : (parentRect.xMin + parentRect.xMax) * 0.5f;
+        float y = minY <= maxY ? Mathf.Clamp(desiredLocalPos.y, minY, maxY) : (parentRect.yMin + parentRect.yMax) * 0.5f;
+
+        return new Vector2(x, y);
     }
 
     void OnSliderChanged() {
@@ -107,6 +130,7 @@ public class UIEditModeController : MonoBehaviour {
             foreach (var kvp in layouts) s.buttonLayouts[kvp.Key] = kvp.Value;
         });
 
+        OnDisableEditMode();
         gameObject.SetActive(false);
     }
 
@@ -123,6 +147,14 @@ public class UIEditModeController : MonoBehaviour {
                 UILayoutManager.Instance.TryApply(id, Vector2.zero, element.defaultScale);
         }
 
+        OnDisableEditMode();
         gameObject.SetActive(false);
+    }
+
+    void OnDisableEditMode() {
+        foreach (string id in UILayoutManager.Instance.GetRegisteredIds()) {
+            UILayoutManager.Instance.Get(id)?.SetHighlighted(true);
+        }
+        _selected = null;
     }
 }
