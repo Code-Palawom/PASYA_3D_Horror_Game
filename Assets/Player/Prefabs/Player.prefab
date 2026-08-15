@@ -4250,6 +4250,9 @@ MonoBehaviour:
   defaultScale: 1
   minScale: 0.75
   maxScale: 1.5
+  highlightImage: {fileID: 0}
+  selectedAlpha: 1
+  deselectedAlpha: 0.5
   safeAreaPadding: 8
   overlapPadding: 4
 --- !u!1 &1258510226835637969
@@ -6276,7 +6279,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &7372154254813517885
 RectTransform:
   m_ObjectHideFlags: 0
@@ -6566,6 +6569,9 @@ MonoBehaviour:
   defaultScale: 1
   minScale: 0.75
   maxScale: 1.5
+  highlightImage: {fileID: 0}
+  selectedAlpha: 1
+  deselectedAlpha: 0.5
   safeAreaPadding: 8
   overlapPadding: 4
 --- !u!1 &1959848389656728706
@@ -6668,7 +6674,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 436, y: -128.33}
-  m_SizeDelta: {x: 872, y: 0}
+  m_SizeDelta: {x: 872, y: 40.22}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1266656282487896572
 CanvasRenderer:
@@ -7678,10 +7684,10 @@ RectTransform:
   - {fileID: 5034996788865942990}
   m_Father: {fileID: 4497603928009757460}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 20}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 436, y: -10}
+  m_SizeDelta: {x: 872, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &1601614252994477832
 CanvasRenderer:
@@ -11590,6 +11596,9 @@ MonoBehaviour:
   defaultScale: 1
   minScale: 0.75
   maxScale: 1.5
+  highlightImage: {fileID: 0}
+  selectedAlpha: 1
+  deselectedAlpha: 0.5
   safeAreaPadding: 8
   overlapPadding: 4
 --- !u!1 &3197419886802321129
@@ -11807,6 +11816,9 @@ MonoBehaviour:
   defaultScale: 1
   minScale: 0.75
   maxScale: 1.5
+  highlightImage: {fileID: 0}
+  selectedAlpha: 1
+  deselectedAlpha: 0.5
   safeAreaPadding: 8
   overlapPadding: 4
 --- !u!1 &3224798632471151574
@@ -13347,7 +13359,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 500, y: -110.22}
-  m_SizeDelta: {x: 872, y: 0}
+  m_SizeDelta: {x: 872, y: 164.44}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1693435918160399566
 MonoBehaviour:
@@ -16109,6 +16121,9 @@ MonoBehaviour:
   defaultScale: 1
   minScale: 0.75
   maxScale: 1.5
+  highlightImage: {fileID: 0}
+  selectedAlpha: 1
+  deselectedAlpha: 0.5
   safeAreaPadding: 8
   overlapPadding: 4
 --- !u!1 &4396911000364648866
@@ -16985,10 +17000,10 @@ RectTransform:
   - {fileID: 5058833138994868498}
   m_Father: {fileID: 5406685565830463205}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 20}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 436, y: -10}
+  m_SizeDelta: {x: 872, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &3000943940324197909
 MonoBehaviour:
@@ -17114,6 +17129,9 @@ MonoBehaviour:
   defaultScale: 1
   minScale: 0.75
   maxScale: 1.5
+  highlightImage: {fileID: 0}
+  selectedAlpha: 1
+  deselectedAlpha: 0.5
   safeAreaPadding: 8
   overlapPadding: 4
 --- !u!1 &4732893150804265122
@@ -17375,6 +17393,9 @@ MonoBehaviour:
   defaultScale: 1
   minScale: 0.75
   maxScale: 1.5
+  highlightImage: {fileID: 0}
+  selectedAlpha: 1
+  deselectedAlpha: 0.5
   safeAreaPadding: 8
   overlapPadding: 4
 --- !u!1 &4746832841231728062
@@ -24344,6 +24365,9 @@ MonoBehaviour:
   defaultScale: 1
   minScale: 0.75
   maxScale: 1.5
+  highlightImage: {fileID: 0}
+  selectedAlpha: 1
+  deselectedAlpha: 0.5
   safeAreaPadding: 8
   overlapPadding: 4
 --- !u!1 &6674921630530153578
@@ -24832,6 +24856,9 @@ MonoBehaviour:
   defaultScale: 1
   minScale: 0.75
   maxScale: 1.5
+  highlightImage: {fileID: 0}
+  selectedAlpha: 1
+  deselectedAlpha: 0.5
   safeAreaPadding: 8
   overlapPadding: 4
 --- !u!1 &6818679465777125271
@@ -25379,7 +25406,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
   m_AnchoredPosition: {x: 436, y: -64.11}
-  m_SizeDelta: {x: 872, y: 0}
+  m_SizeDelta: {x: 872, y: 40.22}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2274454167552207023
 CanvasRenderer:
@@ -26947,6 +26974,9 @@ MonoBehaviour:
   defaultScale: 1
   minScale: 0.75
   maxScale: 1.5
+  highlightImage: {fileID: 0}
+  selectedAlpha: 1
+  deselectedAlpha: 0.5
   safeAreaPadding: 8
   overlapPadding: 4
 --- !u!1 &7434366935110509482
@@ -27870,6 +27900,9 @@ MonoBehaviour:
   defaultScale: 1
   minScale: 0.75
   maxScale: 1.5
+  highlightImage: {fileID: 0}
+  selectedAlpha: 1
+  deselectedAlpha: 0.5
   safeAreaPadding: 8
   overlapPadding: 4
 --- !u!1 &7810570343957174177
@@ -29989,6 +30022,9 @@ MonoBehaviour:
   defaultScale: 1
   minScale: 0.75
   maxScale: 1.5
+  highlightImage: {fileID: 0}
+  selectedAlpha: 1
+  deselectedAlpha: 0.5
   safeAreaPadding: 8
   overlapPadding: 4
 --- !u!1 &8324505954829280378
@@ -30096,6 +30132,9 @@ MonoBehaviour:
   defaultScale: 1
   minScale: 0.75
   maxScale: 1.5
+  highlightImage: {fileID: 0}
+  selectedAlpha: 1
+  deselectedAlpha: 0.5
   safeAreaPadding: 8
   overlapPadding: 4
 --- !u!1 &8346292573817645759
