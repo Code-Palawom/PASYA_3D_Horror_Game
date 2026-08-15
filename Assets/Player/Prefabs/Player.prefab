@@ -4155,6 +4155,7 @@ GameObject:
   - component: {fileID: 6935271833720616164}
   - component: {fileID: 4462153482489488090}
   - component: {fileID: 8173611038316376690}
+  - component: {fileID: 7508856526474182078}
   m_Layer: 5
   m_Name: Pause
   m_TagString: Untagged
@@ -4232,6 +4233,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Unity.InputSystem::UnityEngine.InputSystem.OnScreen.OnScreenButton
   m_ControlPath: <Keyboard>/escape
+--- !u!114 &7508856526474182078
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1246968512926044901}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2536388ce55d40f46b07016dfa087415, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CustomizableUIElement
+  elementId: pause
+  defaultAnchoredPosition: {x: 0, y: 0}
+  defaultScale: 1
+  minScale: 0.75
+  maxScale: 1.5
+  safeAreaPadding: 8
+  overlapPadding: 4
 --- !u!1 &1258510226835637969
 GameObject:
   m_ObjectHideFlags: 0
@@ -6402,6 +6422,7 @@ GameObject:
   - component: {fileID: 6777382989764548124}
   - component: {fileID: 6283022588280950836}
   - component: {fileID: 1694455373491619662}
+  - component: {fileID: 3428986190309945593}
   m_Layer: 5
   m_Name: Microphone
   m_TagString: Untagged
@@ -6528,6 +6549,25 @@ MonoBehaviour:
       m_Action: Action
       m_Flags: 0
     m_Flags: 0
+--- !u!114 &3428986190309945593
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1959318443394673671}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2536388ce55d40f46b07016dfa087415, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CustomizableUIElement
+  elementId: microphone
+  defaultAnchoredPosition: {x: 0, y: 0}
+  defaultScale: 1
+  minScale: 0.75
+  maxScale: 1.5
+  safeAreaPadding: 8
+  overlapPadding: 4
 --- !u!1 &1959848389656728706
 GameObject:
   m_ObjectHideFlags: 0
@@ -11392,6 +11432,7 @@ GameObject:
   - component: {fileID: 5899544374216045446}
   - component: {fileID: 3200298211054296179}
   - component: {fileID: 8638684880138639961}
+  - component: {fileID: 5085898246856339357}
   m_Layer: 5
   m_Name: Time
   m_TagString: Untagged
@@ -11532,6 +11573,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TimeController
   ShowTopMostFoldoutHeaderGroup: 1
   timeText: {fileID: 3200298211054296179}
+--- !u!114 &5085898246856339357
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3169957227122818947}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2536388ce55d40f46b07016dfa087415, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CustomizableUIElement
+  elementId: time
+  defaultAnchoredPosition: {x: 0, y: 0}
+  defaultScale: 1
+  minScale: 0.75
+  maxScale: 1.5
+  safeAreaPadding: 8
+  overlapPadding: 4
 --- !u!1 &3197419886802321129
 GameObject:
   m_ObjectHideFlags: 0
@@ -11664,6 +11724,7 @@ GameObject:
   - component: {fileID: 8483428311324765706}
   - component: {fileID: 1989959051432150624}
   - component: {fileID: 7399429436813479548}
+  - component: {fileID: 1848231892457900968}
   m_Layer: 0
   m_Name: JoysitckDeadZone
   m_TagString: Untagged
@@ -11729,6 +11790,25 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &1848231892457900968
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3203534369014249282}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2536388ce55d40f46b07016dfa087415, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CustomizableUIElement
+  elementId: joystick
+  defaultAnchoredPosition: {x: 0, y: 0}
+  defaultScale: 1
+  minScale: 0.75
+  maxScale: 1.5
+  safeAreaPadding: 8
+  overlapPadding: 4
 --- !u!1 &3224798632471151574
 GameObject:
   m_ObjectHideFlags: 0
@@ -15920,6 +16000,7 @@ GameObject:
   - component: {fileID: 1968659176247727023}
   - component: {fileID: 3416091381124673089}
   - component: {fileID: 6713601185326094593}
+  - component: {fileID: 8073124133668562690}
   m_Layer: 0
   m_Name: Crouch
   m_TagString: Untagged
@@ -16011,6 +16092,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GamePlayUIToggle
   icon: {fileID: 1968659176247727023}
   isHold: 1
+--- !u!114 &8073124133668562690
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4355301472380621332}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2536388ce55d40f46b07016dfa087415, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CustomizableUIElement
+  elementId: crouch
+  defaultAnchoredPosition: {x: 0, y: 0}
+  defaultScale: 1
+  minScale: 0.75
+  maxScale: 1.5
+  safeAreaPadding: 8
+  overlapPadding: 4
 --- !u!1 &4396911000364648866
 GameObject:
   m_ObjectHideFlags: 0
@@ -16927,6 +17027,7 @@ GameObject:
   - component: {fileID: 8106976812386390749}
   - component: {fileID: 1708610829526761363}
   - component: {fileID: 5732862014945185014}
+  - component: {fileID: 7115409462744216821}
   m_Layer: 5
   m_Name: TaskPanel
   m_TagString: Untagged
@@ -16996,6 +17097,25 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!114 &7115409462744216821
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4715501846638598784}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2536388ce55d40f46b07016dfa087415, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CustomizableUIElement
+  elementId: task_panel
+  defaultAnchoredPosition: {x: 0, y: 0}
+  defaultScale: 1
+  minScale: 0.75
+  maxScale: 1.5
+  safeAreaPadding: 8
+  overlapPadding: 4
 --- !u!1 &4732893150804265122
 GameObject:
   m_ObjectHideFlags: 0
@@ -17146,6 +17266,7 @@ GameObject:
   - component: {fileID: 9157017287148135566}
   - component: {fileID: 7086461606114933725}
   - component: {fileID: 4870370166057164580}
+  - component: {fileID: 2236731379292911509}
   m_Layer: 0
   m_Name: Jump
   m_TagString: Untagged
@@ -17237,6 +17358,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GamePlayUIToggle
   icon: {fileID: 9157017287148135566}
   isHold: 1
+--- !u!114 &2236731379292911509
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4739581927018558069}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2536388ce55d40f46b07016dfa087415, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CustomizableUIElement
+  elementId: jump
+  defaultAnchoredPosition: {x: 0, y: 0}
+  defaultScale: 1
+  minScale: 0.75
+  maxScale: 1.5
+  safeAreaPadding: 8
+  overlapPadding: 4
 --- !u!1 &4746832841231728062
 GameObject:
   m_ObjectHideFlags: 0
@@ -24095,6 +24235,7 @@ GameObject:
   - component: {fileID: 10811648131535083}
   - component: {fileID: 1415966176769191361}
   - component: {fileID: 4532719191553831070}
+  - component: {fileID: 5388044213142780136}
   m_Layer: 5
   m_Name: Backpack
   m_TagString: Untagged
@@ -24186,6 +24327,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GamePlayUIToggle
   icon: {fileID: 10811648131535083}
   isHold: 0
+--- !u!114 &5388044213142780136
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6647173655798853719}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2536388ce55d40f46b07016dfa087415, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CustomizableUIElement
+  elementId: backpack
+  defaultAnchoredPosition: {x: 0, y: 0}
+  defaultScale: 1
+  minScale: 0.75
+  maxScale: 1.5
+  safeAreaPadding: 8
+  overlapPadding: 4
 --- !u!1 &6674921630530153578
 GameObject:
   m_ObjectHideFlags: 0
@@ -24534,6 +24694,7 @@ GameObject:
   - component: {fileID: 456824895042136662}
   - component: {fileID: 5468368660568678151}
   - component: {fileID: 8453112727711566123}
+  - component: {fileID: 4579196791656060068}
   m_Layer: 0
   m_Name: PromptPanel
   m_TagString: Untagged
@@ -24654,6 +24815,25 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
+--- !u!114 &4579196791656060068
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6810203694540651940}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2536388ce55d40f46b07016dfa087415, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CustomizableUIElement
+  elementId: prompt_panel
+  defaultAnchoredPosition: {x: 0, y: 0}
+  defaultScale: 1
+  minScale: 0.75
+  maxScale: 1.5
+  safeAreaPadding: 8
+  overlapPadding: 4
 --- !u!1 &6818679465777125271
 GameObject:
   m_ObjectHideFlags: 0
@@ -26657,6 +26837,7 @@ GameObject:
   - component: {fileID: 2700245241600102417}
   - component: {fileID: 5964375725343781884}
   - component: {fileID: 958166564623856477}
+  - component: {fileID: 9098488733038544511}
   m_Layer: 5
   m_Name: Chat
   m_TagString: Untagged
@@ -26749,6 +26930,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GamePlayUIToggle
   icon: {fileID: 2700245241600102417}
   isHold: 0
+--- !u!114 &9098488733038544511
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7428600805830632274}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2536388ce55d40f46b07016dfa087415, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CustomizableUIElement
+  elementId: chat
+  defaultAnchoredPosition: {x: 0, y: 0}
+  defaultScale: 1
+  minScale: 0.75
+  maxScale: 1.5
+  safeAreaPadding: 8
+  overlapPadding: 4
 --- !u!1 &7434366935110509482
 GameObject:
   m_ObjectHideFlags: 0
@@ -27529,6 +27729,7 @@ GameObject:
   - component: {fileID: 4547578390564693961}
   - component: {fileID: 5932571349287954461}
   - component: {fileID: 1749289013360190072}
+  - component: {fileID: 1905691221211905761}
   m_Layer: 5
   m_Name: ItemAction
   m_TagString: Untagged
@@ -27652,6 +27853,25 @@ MonoBehaviour:
   buttonRoot: {fileID: 7789111882841079026}
   iconImage: {fileID: 4547578390564693961}
   button: {fileID: 5932571349287954461}
+--- !u!114 &1905691221211905761
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7789111882841079026}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2536388ce55d40f46b07016dfa087415, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CustomizableUIElement
+  elementId: item_action
+  defaultAnchoredPosition: {x: 0, y: 0}
+  defaultScale: 1
+  minScale: 0.75
+  maxScale: 1.5
+  safeAreaPadding: 8
+  overlapPadding: 4
 --- !u!1 &7810570343957174177
 GameObject:
   m_ObjectHideFlags: 0
@@ -29660,6 +29880,7 @@ GameObject:
   - component: {fileID: 7186203619850276212}
   - component: {fileID: 4400519678043209419}
   - component: {fileID: 594347083921111929}
+  - component: {fileID: 4228426921805873013}
   m_Layer: 0
   m_Name: Run
   m_TagString: Untagged
@@ -29751,6 +29972,25 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GamePlayUIFeedback
   icon: {fileID: 7186203619850276212}
   isHold: 0
+--- !u!114 &4228426921805873013
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8312702049084202793}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2536388ce55d40f46b07016dfa087415, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CustomizableUIElement
+  elementId: run
+  defaultAnchoredPosition: {x: 0, y: 0}
+  defaultScale: 1
+  minScale: 0.75
+  maxScale: 1.5
+  safeAreaPadding: 8
+  overlapPadding: 4
 --- !u!1 &8324505954829280378
 GameObject:
   m_ObjectHideFlags: 0
@@ -29762,6 +30002,7 @@ GameObject:
   - component: {fileID: 5913019287279740095}
   - component: {fileID: 6856289891540900414}
   - component: {fileID: 3377536679467827343}
+  - component: {fileID: 118143792162210913}
   m_Layer: 5
   m_Name: PlayerHealth
   m_TagString: Untagged
@@ -29838,6 +30079,25 @@ MonoBehaviour:
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
   m_ReverseArrangement: 0
+--- !u!114 &118143792162210913
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8324505954829280378}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2536388ce55d40f46b07016dfa087415, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CustomizableUIElement
+  elementId: health
+  defaultAnchoredPosition: {x: 0, y: 0}
+  defaultScale: 1
+  minScale: 0.75
+  maxScale: 1.5
+  safeAreaPadding: 8
+  overlapPadding: 4
 --- !u!1 &8346292573817645759
 GameObject:
   m_ObjectHideFlags: 0
