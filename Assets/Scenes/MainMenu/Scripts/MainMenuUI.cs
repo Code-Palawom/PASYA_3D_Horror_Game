@@ -154,6 +154,14 @@ public class MainMenuUI : MonoBehaviour {
     [SerializeField] Button levelNextButton;
     [SerializeField] Button levelBackButton;
 
+    // ── Subject Select Panel (new wizard step, between Level and Quiz) ────
+    [Header("Subject Select Panel")]
+    [SerializeField] GameObject subjectSelectPanel;
+    [SerializeField] Transform subjectListContainer;
+    [SerializeField] SubjectSelectItemUI subjectItemPrefab;
+    [SerializeField] Button subjectNextButton;
+    [SerializeField] Button subjectBackButton;
+
     // ── Quiz Select Panel (shared by Host + Single Player) ─
     [Header("Quiz Select Panel")]
     [SerializeField] GameObject quizSelectPanel;
@@ -162,11 +170,6 @@ public class MainMenuUI : MonoBehaviour {
     [SerializeField] Button startButton;
     [SerializeField] TMP_Text startButtonLabel;
     [SerializeField] Button quizBackButton;
-
-    // ── Category Filter Dropdown ───────────────────────────────
-    [Header("Category Filter")]
-    [Tooltip("TMP_Dropdown for filtering quiz sets by category.")]
-    [SerializeField] TMP_Dropdown categoryDropdown;
 
     // ── Quiz Select Status Bar ─────────────────────────────────
     [Header("Quiz Status Bar")]
@@ -256,11 +259,14 @@ public class MainMenuUI : MonoBehaviour {
     // ─────────────────────────────────────────────────────────
     private GameMode _pendingMode = GameMode.None;
     private string _selectedLevelSceneName;
+    private string _selectedSubject;
     private string _selectedQuizSetName;
     private string _selectedQuizSetId;
     private DiscoveredHost _selectedHost;
 
     private readonly List<LevelSelectItemUI> _levelItems = new();
+    private readonly List<SubjectSelectItemUI> _subjectItems = new();
+    private readonly List<QuizSetMetaEntry> _allQuizMeta = new(); // full meta, for subject grouping/gating
     private readonly List<QuizSetItemUI> _quizItems = new();
     // Unified session list — holds both LAN and online items for the merged join panel
     private readonly List<LobbyListItemUI> _allSessionItems = new();
@@ -270,10 +276,6 @@ public class MainMenuUI : MonoBehaviour {
     private CancellationTokenSource _joinCodeDebounce;
     private ConnectionMode _activeConnectionMode = ConnectionMode.LAN;
     private readonly HashSet<string> _renderedQuizSetIds = new();
-
-    // Tracks known categories — "All" is always index 0
-    private readonly List<string> _categories = new();
-    private string _activeCategory = ""; // empty = All
 
     private bool isFirstLaunch = true;
 
@@ -369,7 +371,6 @@ public class MainMenuUI : MonoBehaviour {
 
         var allMeta = new List<QuizSetMetaEntry>(QuizRepository.Instance.GetAllMeta());
         allMeta.AddRange(cached);
-        InitDropdown(allMeta);
 
         foreach (var entry in cached)
             if (entry.hasLocalData)
@@ -397,15 +398,15 @@ public class MainMenuUI : MonoBehaviour {
         multiplayerBackButton.onClick.AddListener(ShowMainPanel);
 
         // Level select
-        levelNextButton.onClick.AddListener(ShowQuizSelectPanel);
+        levelNextButton.onClick.AddListener(ShowSubjectSelectPanel);
         levelBackButton.onClick.AddListener(OnLevelBackClicked);
 
-        // Quiz select
-        quizBackButton.onClick.AddListener(ShowLevelSelectPanel);
-        startButton.onClick.AddListener(OnStartClicked);
+        subjectBackButton.onClick.AddListener(ShowLevelSelectPanel);
+        subjectNextButton.onClick.AddListener(ShowQuizSelectPanel);
 
-        // Category dropdown
-        categoryDropdown.onValueChanged.AddListener(OnCategoryFilterChanged);
+        // Quiz select
+        quizBackButton.onClick.AddListener(ShowSubjectSelectPanel);
+        startButton.onClick.AddListener(OnStartClicked);
 
         // Join panel (LAN)
         refreshButton.onClick.AddListener(OnRefreshHostsClicked);
@@ -430,7 +431,6 @@ public class MainMenuUI : MonoBehaviour {
 
         // Populate local SO sets immediately (no Firebase needed)
         List<QuizSetMetaEntry> localMeta = QuizRepository.Instance.GetLocalSetMeta();
-        InitDropdown(localMeta);
         foreach (var entry in localMeta)
             SpawnQuizCard(entry);
 
@@ -443,6 +443,10 @@ public class MainMenuUI : MonoBehaviour {
             if (user == null) {
                 ActionbarToastNotification.Instance.ShowLocalToast("Logged out.", ToastType.Info);
             }
+        };
+
+        AuthManager.Instance.OnPlayerStatsLoaded += (profile) => {
+            if (_currentPanel == quizSelectPanel) ApplySubjectFilterAndGating();
         };
 
         TipsManager.Instance.LoadCacheImmediately();
@@ -459,63 +463,6 @@ public class MainMenuUI : MonoBehaviour {
             SetMultiplayerTabRowVisible(false);
             SwitchToPanel(TutorialPanel);
         }
-    }
-
-    // ─────────────────────────────────────────────────────────
-    // CATEGORY DROPDOWN
-    // ─────────────────────────────────────────────────────────
-
-    // Builds dropdown from known categories. Always "All" at index 0.
-    void InitDropdown(List<QuizSetMetaEntry> entries) {
-        _categories.Clear();
-
-        var cats = entries
-            .Where(e => !string.IsNullOrWhiteSpace(e.category))
-            .Select(e => e.category)
-            .Distinct()
-            .OrderBy(c => c)
-            .ToList();
-
-        _categories.AddRange(cats);
-        RebuildDropdownOptions();
-    }
-
-    // Adds a category to the dropdown if not already present.
-    // Called when a new set arrives via OnSetReady.
-    void TryAddCategory(string category) {
-        if (string.IsNullOrWhiteSpace(category)) return;
-        if (_categories.Contains(category)) return;
-
-        _categories.Add(category);
-        _categories.Sort();
-        RebuildDropdownOptions();
-    }
-
-    void RebuildDropdownOptions() {
-        // Preserve current selection if possible
-        string previousActive = _activeCategory;
-
-        categoryDropdown.ClearOptions();
-        var options = new List<string> { "All" };
-        options.AddRange(_categories);
-        categoryDropdown.AddOptions(options);
-
-        // Restore selection — find "All" (0) or the previously selected category
-        int idx = string.IsNullOrEmpty(previousActive)
-            ? 0
-            : options.IndexOf(previousActive);
-        categoryDropdown.SetValueWithoutNotify(idx < 0 ? 0 : idx);
-    }
-
-    void OnCategoryFilterChanged(int index) {
-        // index 0 = "All" → empty filter string
-        _activeCategory = index == 0 ? "" : _categories[index - 1];
-        ApplyFilterToAllCards();
-    }
-
-    void ApplyFilterToAllCards() {
-        foreach (var item in _quizItems)
-            item.ApplyFilter(_activeCategory);
     }
 
     // ─────────────────────────────────────────────────────────
@@ -540,16 +487,57 @@ public class MainMenuUI : MonoBehaviour {
         if (_renderedQuizSetIds.Contains(entry.setId) || entry.setId == "Tutorial") return;
         _renderedQuizSetIds.Add(entry.setId);
 
+        _allQuizMeta.Add(entry); // NEW
+
         var item = Instantiate(quizItemPrefab, quizListContainer);
         item.Setup(entry, OnQuizSelected);
 
-        // Respect active filter immediately
-        item.ApplyFilter(_activeCategory);
-
         _quizItems.Add(item);
+        RefreshSubjectListIfVisible(); // NEW — keep subject panel live if a card streams in while it's open
+    }
 
-        // Add category to dropdown if new
-        TryAddCategory(entry.category);
+    void ShowSubjectSelectPanel() {
+        bool isHostFlow = _pendingMode == GameMode.Host;
+        subjectNextButton.interactable = false;
+        SetMultiplayerTabRowVisible(isHostFlow);
+
+        SwitchToPanel(subjectSelectPanel);
+        PopulateSubjectList();
+    }
+
+    void PopulateSubjectList() {
+        foreach (var item in _subjectItems) Destroy(item.gameObject);
+        _subjectItems.Clear();
+
+        var completed = AuthManager.Instance.CurrentProfile?.CompletedQuizSetIds ?? new List<string>();
+
+        var subjects = _allQuizMeta
+            .Where(e => !string.IsNullOrWhiteSpace(e.subject))
+            .Select(e => e.subject)
+            .Distinct()
+            .OrderBy(s => s)
+            .ToList();
+
+        foreach (var subject in subjects) {
+            var setsInSubject = _allQuizMeta.Where(e => e.subject == subject).ToList();
+            int completedCount = setsInSubject.Count(e => completed.Contains(e.setId));
+
+            var item = Instantiate(subjectItemPrefab, subjectListContainer);
+            item.Setup(subject, completedCount, setsInSubject.Count, OnSubjectSelected);
+            _subjectItems.Add(item);
+        }
+    }
+
+    void RefreshSubjectListIfVisible() {
+        if (_currentPanel == subjectSelectPanel) PopulateSubjectList();
+    }
+
+    void OnSubjectSelected(string subject) {
+        _selectedSubject = subject;
+        foreach (var item in _subjectItems) item.SetSelected(item.Subject == subject);
+
+        subjectNextButton.interactable = true;
+        //ShowQuizSelectPanel();
     }
 
     // Fires per verified set as each background download completes.
@@ -859,12 +847,48 @@ public class MainMenuUI : MonoBehaviour {
     void OnLevelBackClicked() => ShowMainPanel();
 
     void ShowQuizSelectPanel() {
-        SetMultiplayerTabRowVisible(false);   // Host/Join tabs disappear here, per design
+        SetMultiplayerTabRowVisible(false);
 
         SwitchToPanel(quizSelectPanel);
         startButtonLabel.text = _pendingMode == GameMode.Host ? "Create Lobby" : "Start Game";
-        startButton.interactable = !string.IsNullOrEmpty(_selectedQuizSetName);
+        startButton.interactable = false; // nothing selected yet after entering this panel
         statusText.text = "";
+
+        ApplySubjectFilterAndGating();
+    }
+
+    void ApplySubjectFilterAndGating() {
+        var completed = AuthManager.Instance.CurrentProfile?.CompletedQuizSetIds ?? new List<string>();
+
+        // Show only cards matching the selected subject.
+        foreach (var item in _quizItems)
+            item.gameObject.SetActive(item.MatchesSubject(_selectedSubject));
+
+        // Gate in order within the subject.
+        var subjectItems = _quizItems
+            .Where(i => i.MatchesSubject(_selectedSubject))
+            .OrderBy(i => i.Order)
+            .ToList();
+
+        bool isFirstLocked = true;
+        for (int i = 0; i < subjectItems.Count; i++) {
+            if (i == 0) {
+                subjectItems[i].SetLocked(false);
+                continue;
+            }
+
+            var prev = subjectItems[i - 1];
+            bool locked = !completed.Contains(prev.SetId);
+
+            if(isFirstLocked && locked) {
+                isFirstLocked = false;
+                subjectItems[i].SetLocked(true, prev.SetName);
+            } else {
+                subjectItems[i].SetLocked(locked);
+            }
+
+            //subjectItems[i].SetLocked(locked, prev.SetName);
+        }
     }
 
     // ─────────────────────────────────────────────────────────
@@ -908,7 +932,7 @@ public class MainMenuUI : MonoBehaviour {
     }
 
     async void StartAsHost() {
-        GameModeManager.Instance.SetHostMode(_selectedQuizSetName, _selectedLevelSceneName);
+        GameModeManager.Instance.SetHostMode(_selectedQuizSetId, _selectedQuizSetName, _selectedLevelSceneName);
         GameModeManager.Instance.SetConnectionMode(_activeConnectionMode);
 
         bool isPublic = _activeConnectionMode == ConnectionMode.Relay && publicSessionToggle != null && publicSessionToggle.isOn;
@@ -923,7 +947,7 @@ public class MainMenuUI : MonoBehaviour {
                 string joinCode = await RelayManager.Instance.CreateRelayAsync(maxPlayers: ConnectionApprovalHandler.MaxPlayers);
                 GameModeManager.Instance.SetRelayJoinCode(joinCode);
 
-                int questionCount = QuizRepository.Instance.GetSetByName(_selectedQuizSetName).questions.Count;
+                int questionCount = QuizRepository.Instance.GetSetById(_selectedQuizSetId).questions.Count;
 
                 await LobbyManager.Instance.CreateLobbyAsync(
                     hostName: AuthManager.Instance.CurrentProfile.DisplayName ?? SettingsManager.Instance.Current.playerName,
@@ -961,6 +985,7 @@ public class MainMenuUI : MonoBehaviour {
         NetworkManager.Singleton.OnServerStarted -= OnHostServerStarted;
 
         SpawnGameSessionManager(
+            GameModeManager.Instance.SelectedQuizSetId,
             GameModeManager.Instance.SelectedQuizSetName,
             GameModeManager.Instance.SelectedLevelSceneName
         );
@@ -969,7 +994,7 @@ public class MainMenuUI : MonoBehaviour {
         // Call this when the game ends, not on start:
         QuizFetcher.Instance.IncrementPlayCount(_selectedQuizSetId);
 
-        int questionCount = QuizRepository.Instance.GetSetByName(GameModeManager.Instance.SelectedQuizSetName)?.questions.Count ?? 0;
+        int questionCount = QuizRepository.Instance.GetSetById(GameModeManager.Instance.SelectedQuizSetId)?.questions.Count ?? 0;
 
         // LAN only: broadcast via UDP so clients can discover this host.
         // Skipped in Relay mode — clients connect via join code instead.
@@ -988,7 +1013,7 @@ public class MainMenuUI : MonoBehaviour {
     }
 
     IEnumerator StartAsSinglePlayer() {
-        GameModeManager.Instance.SetSinglePlayerMode(_selectedQuizSetName, _selectedLevelSceneName);
+        GameModeManager.Instance.SetSinglePlayerMode(_selectedQuizSetId, _selectedQuizSetName, _selectedLevelSceneName);
 
         statusText.text = "";
         startButton.interactable = false;
@@ -1005,6 +1030,7 @@ public class MainMenuUI : MonoBehaviour {
         NetworkManager.Singleton.OnServerStarted -= OnSinglePlayerServerStarted;
 
         SpawnGameSessionManager(
+            GameModeManager.Instance.SelectedQuizSetId,
             GameModeManager.Instance.SelectedQuizSetName,
             GameModeManager.Instance.SelectedLevelSceneName
         );
@@ -1316,9 +1342,9 @@ public class MainMenuUI : MonoBehaviour {
         transport.SetConnectionData(address, port);
     }
 
-    void SpawnGameSessionManager(string quizSetName, string levelSceneName) {
+    void SpawnGameSessionManager(string quizSetId, string quizSetName, string levelSceneName) {
         if (GameSessionManager.Instance != null) {
-            GameSessionManager.Instance.SetSelectedQuizSet(quizSetName);
+            GameSessionManager.Instance.SetSelectedQuizSet(quizSetId, quizSetName);
             GameSessionManager.Instance.SetSelectedLevel(levelSceneName);
             return;
         }
@@ -1327,7 +1353,7 @@ public class MainMenuUI : MonoBehaviour {
         go.GetComponent<NetworkObject>().Spawn();
 
         var session = go.GetComponent<GameSessionManager>();
-        session.SetSelectedQuizSet(quizSetName);
+        session.SetSelectedQuizSet(quizSetId, quizSetName);
         session.SetSelectedLevel(levelSceneName);
     }
 
@@ -1354,7 +1380,7 @@ public class MainMenuUI : MonoBehaviour {
     }
 
     IEnumerator StartTutorialScene() {
-        GameModeManager.Instance.SetSinglePlayerMode(_selectedQuizSetName, _selectedLevelSceneName);
+        GameModeManager.Instance.SetSinglePlayerMode(_selectedQuizSetId, _selectedQuizSetName, _selectedLevelSceneName);
 
         ConfigureTransport("127.0.0.1", gamePort);
 
@@ -1369,6 +1395,7 @@ public class MainMenuUI : MonoBehaviour {
         NetworkManager.Singleton.OnServerStarted -= OnTutorialServerStarted;
 
         SpawnGameSessionManager(
+            GameModeManager.Instance.SelectedQuizSetId,
             GameModeManager.Instance.SelectedQuizSetName,
             GameModeManager.Instance.SelectedLevelSceneName
         );

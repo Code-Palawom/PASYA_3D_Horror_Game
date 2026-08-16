@@ -6,6 +6,8 @@ public class QuizSetData : ScriptableObject {
     [Header("Set Info")]
     public string setName;
     public string category;
+    public string subject;
+    public int order;    // optional — manual sequence within a subject, 0 = first/unlocked
 
     [Header("Author")]
     public string authorId;
@@ -16,6 +18,7 @@ public class QuizSetData : ScriptableObject {
 
     public QuizSetRuntime ToRuntime() {
         var runtime = new QuizSetRuntime {
+            setId = name,   // local sets use the asset name as their setId
             name = setName,
             source = QuizSetRuntime.SourceType.Local
             // category, questionCount, playCount left at defaults (0/"")
@@ -33,7 +36,8 @@ public class QuizSetData : ScriptableObject {
         return new QuizSetMetaEntry {
             setId = name,    // use asset name as setId for local sets
             name = setName,
-            category = category,
+            subject = subject,
+            order = order,
             questionCount = questions?.Count ?? 0,
             playCount = 0,
             lastUpdated = 0,

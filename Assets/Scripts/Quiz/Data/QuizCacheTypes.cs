@@ -11,7 +11,8 @@ using System.Collections.Generic;
 public class QuizSetMetaEntry {
     public string setId;
     public string name;
-    public string category;
+    public string subject;   // new — separate grouping from category, drives the wizard step
+    public int order;        // new — manual sequence within a subject, 0 = first/unlocked
     public int questionCount;
     public int playCount;
     public long lastUpdated;

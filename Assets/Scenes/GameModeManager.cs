@@ -17,7 +17,7 @@ public class GameModeManager : MonoBehaviour {
 
     // Populated by RelayManager.CreateRelayAsync() — read by Lobby UI to display to the host.
     public string RelayJoinCode { get; private set; } = "";
-
+    public string SelectedQuizSetId { get; private set; } = "";
     public string SelectedQuizSetName { get; private set; } = "";
     public string SelectedLevelSceneName { get; private set; } = "";
     public string JoinAddress { get; private set; } = "127.0.0.1";
@@ -38,14 +38,16 @@ public class GameModeManager : MonoBehaviour {
             Debug.LogWarning("[GameModeManager] SettingsManager not ready in Start — using default name.");
     }
 
-    public void SetHostMode(string quizSetName, string levelSceneName) {
+    public void SetHostMode(string quizSetId, string quizSetName, string levelSceneName) {
         Mode = GameMode.Host;
+        SelectedQuizSetId = quizSetId;
         SelectedQuizSetName = quizSetName;
         SelectedLevelSceneName = levelSceneName;
     }
 
-    public void SetSinglePlayerMode(string quizSetName, string levelSceneName) {
+    public void SetSinglePlayerMode(string quizSetId, string quizSetName, string levelSceneName) {
         Mode = GameMode.SinglePlayer;
+        SelectedQuizSetId = quizSetId;
         SelectedQuizSetName = quizSetName;
         SelectedLevelSceneName = levelSceneName;
     }

@@ -29,6 +29,9 @@ public class GameSessionManager : NetworkBehaviour {
     public NetworkVariable<FixedString64Bytes> SessionId = new(
         "", NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
+    public NetworkVariable<FixedString64Bytes> SelectedQuizSetId = new(
+    "", NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
     public NetworkVariable<FixedString128Bytes> SelectedQuizSetName = new(
         "", NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
@@ -336,8 +339,11 @@ public class GameSessionManager : NetworkBehaviour {
     }
 
     // ─────────────────────────────────────────────────────────
-    public void SetSelectedQuizSet(string setName) {
-        if (IsServer) SelectedQuizSetName.Value = setName;
+    public void SetSelectedQuizSet(string setId, string setName) {
+        if (IsServer) {
+            SelectedQuizSetId.Value = setId;
+            SelectedQuizSetName.Value = setName;
+        }
     }
 
     public void SetSelectedLevel(string sceneName) {
