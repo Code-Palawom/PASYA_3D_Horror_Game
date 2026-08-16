@@ -343,11 +343,15 @@ public class MainMenuUI : MonoBehaviour {
     void OnEnable() {
         QuizFetcher.Instance.OnSetReady += HandleSetReady;
         QuizFetcher.Instance.OnFetchStatus += HandleFetchStatus;
+        QuizFetcher.Instance.OnMetaUpdated += HandleMetaUpdated;
+        QuizFetcher.Instance.OnSetRemoved += HandleSetRemoved;
     }
 
     void OnDisable() {
         QuizFetcher.Instance.OnSetReady -= HandleSetReady;
         QuizFetcher.Instance.OnFetchStatus -= HandleFetchStatus;
+        QuizFetcher.Instance.OnMetaUpdated -= HandleMetaUpdated;
+        QuizFetcher.Instance.OnSetRemoved -= HandleSetRemoved;
 
         if (FirebaseManager.Instance != null)
             FirebaseManager.Instance.OnFirebaseReady -= OnFirebaseReady;
@@ -544,6 +548,43 @@ public class MainMenuUI : MonoBehaviour {
     // Adds card live; hides it immediately if it doesn't match the active filter.
     void HandleSetReady(QuizSetMetaEntry entry) {
         SpawnQuizCard(entry);
+    }
+
+    // Meta-only change (name/subject/order/questionCount) on a set we already
+    // have fully downloaded — no re-download happened, so this is the only
+    // place the card's displayed info gets refreshed.
+    void HandleMetaUpdated(QuizSetMetaEntry entry) {
+        if (entry.setId == "Tutorial") return;
+        
+        int metaIndex = _allQuizMeta.FindIndex(e => e.setId == entry.setId);
+        if (metaIndex >= 0) _allQuizMeta[metaIndex] = entry;
+        
+        var item = _quizItems.FirstOrDefault(i => i.SetId == entry.setId);
+        if (item != null) item.Setup(entry, OnQuizSelected);
+        
+        RefreshSubjectListIfVisible();
+        if (_currentPanel == quizSelectPanel) ApplySubjectFilterAndGating();
+    }
+
+    // Set got deleted or flipped to unverified server-side — drop its card.
+    void HandleSetRemoved(string setId) {
+        _renderedQuizSetIds.Remove(setId);
+        _allQuizMeta.RemoveAll(e => e.setId == setId);
+        
+        var item = _quizItems.FirstOrDefault(i => i.SetId == setId);
+        if (item != null) {
+            _quizItems.Remove(item);
+            Destroy(item.gameObject);
+        }
+        
+        if (_selectedQuizSetId == setId) {
+            _selectedQuizSetId = null;
+            _selectedQuizSetName = null;
+            startButton.interactable = false;
+        }
+        
+        RefreshSubjectListIfVisible();
+        if (_currentPanel == quizSelectPanel) ApplySubjectFilterAndGating();
     }
 
     void OnQuizSelected(string setName, string setId) {
