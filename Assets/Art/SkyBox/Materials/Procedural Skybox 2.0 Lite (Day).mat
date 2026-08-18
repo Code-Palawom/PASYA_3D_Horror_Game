@@ -67,7 +67,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _AtmosphereThickness: 0.59694564
+    - _AtmosphereThickness: 0.57477266
     - _BumpScale: 1
     - _CloudAnisotropy: 0.541
     - _CloudBaseHeight: 0.25
@@ -85,11 +85,11 @@ Material:
     - _DstBlend: 0
     - _EnableClouds: 1
     - _EnableMoon: 0
-    - _EnableStars: 0.19389135
+    - _EnableStars: 0.14954534
     - _GlossMapScale: 1
     - _Glossiness: 0.5
     - _GlossyReflections: 1
-    - _HorizonFogDensity: 0.2790837
+    - _HorizonFogDensity: 0.2724318
     - _HorizonHeight: 0
     - _HorizonSharpness: 0.5
     - _Metallic: 0
@@ -98,8 +98,8 @@ Material:
     - _OcclusionStrength: 1
     - _Overcast: 0
     - _Parallax: 0.02
-    - _SkyExposure: 0.8448869
-    - _SkySaturation: 0.90305436
+    - _SkyExposure: 0.8803637
+    - _SkySaturation: 0.92522734
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
@@ -116,13 +116,13 @@ Material:
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:
-    - _CloudTint: {r: 0.92244345, g: 0.932138, b: 0.96122175, a: 1}
+    - _CloudTint: {r: 0.94018185, g: 0.94765913, b: 0.9700909, a: 1}
     - _CloudWindDirection: {r: 1, g: 0, b: 0, a: 0}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _GroundColor: {r: 0.8119254, g: 0.8080476, b: 0.8080476, a: 1}
-    - _HorizonColor: {r: 0.59039825, g: 0.7193756, b: 0.81580323, a: 1}
-    - _HorizonFogColor: {r: 0.8254978, g: 0.8119254, b: 0.8119254, a: 1}
-    - _ZenithColor: {r: 0.42917648, g: 0.6548869, b: 0.8035589, a: 1}
+    - _GroundColor: {r: 0.854941, g: 0.8519501, b: 0.8519501, a: 1}
+    - _HorizonColor: {r: 0.6223274, g: 0.7584001, b: 0.8579319, a: 1}
+    - _HorizonFogColor: {r: 0.8654092, g: 0.854941, b: 0.854941, a: 1}
+    - _ZenithColor: {r: 0.45223638, g: 0.6903637, b: 0.84391373, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
