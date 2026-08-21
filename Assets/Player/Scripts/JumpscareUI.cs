@@ -48,7 +48,7 @@ public class JumpscareUI : MonoBehaviour {
         // Server-authoritative teleport of the whole player object — see the
         // comment on RequestTeleportRpc if you already have a dedicated
         // teleport path (e.g. the one respawn uses) to route through instead.
-        player.TeleportClientRpc(entry.playerPosition, targetRot);
+        player.TeleportJumpscareClientRpc(entry.playerPosition, targetRot, true);
 
         jumpscareCam.Priority = 99;
 
@@ -64,7 +64,7 @@ public class JumpscareUI : MonoBehaviour {
     }
 
     public void ShowRespawnLocationRpc(Vector3 respawnPosition, Quaternion respawnRotation) {
-        player.TeleportClientRpc(respawnPosition, respawnRotation);
+        player.TeleportJumpscareClientRpc(respawnPosition, respawnRotation, false);
 
         if (panTilt != null)
             panTilt.TiltAxis.Value = 0f;

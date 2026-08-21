@@ -521,6 +521,19 @@ public class Player : NetworkBehaviour {
     }
 
     [ClientRpc]
+    public void TeleportJumpscareClientRpc(Vector3 position, Quaternion rotation, bool resetAnimation) {
+        var cc = GetComponent<CharacterController>();
+        if (cc != null) cc.enabled = false;
+        transform.SetPositionAndRotation(position, rotation);
+        if (cc != null && !isJumpscared) cc.enabled = true;
+
+        if (resetAnimation)
+            playerAnimation.ForceBlendToZero();
+        else
+            playerAnimation.CancelForceBlend();
+    }
+
+    [ClientRpc]
     public void ShowLoadingScreenClientRpc() {
         LoadingScreenController.Instance.Show("Loading...");
     }
