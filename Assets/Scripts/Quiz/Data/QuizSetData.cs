@@ -5,7 +5,6 @@ using UnityEngine;
 public class QuizSetData : ScriptableObject {
     [Header("Set Info")]
     public string setName;
-    public string category;
     public string subject;
     public int order;    // optional — manual sequence within a subject, 0 = first/unlocked
 

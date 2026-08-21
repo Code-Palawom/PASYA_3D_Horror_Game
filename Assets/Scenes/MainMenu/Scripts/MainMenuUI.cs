@@ -356,6 +356,7 @@ public class MainMenuUI : MonoBehaviour {
         QuizFetcher.Instance.OnFetchStatus += HandleFetchStatus;
         QuizFetcher.Instance.OnMetaUpdated += HandleMetaUpdated;
         QuizFetcher.Instance.OnSetRemoved += HandleSetRemoved;
+        QuizFetcher.Instance.OnLocalPlayCountSynced += HandleLocalPlayCountSynced;
     }
 
     void OnDisable() {
@@ -363,6 +364,7 @@ public class MainMenuUI : MonoBehaviour {
         QuizFetcher.Instance.OnFetchStatus -= HandleFetchStatus;
         QuizFetcher.Instance.OnMetaUpdated -= HandleMetaUpdated;
         QuizFetcher.Instance.OnSetRemoved -= HandleSetRemoved;
+        QuizFetcher.Instance.OnLocalPlayCountSynced -= HandleLocalPlayCountSynced;
 
         if (FirebaseManager.Instance != null)
             FirebaseManager.Instance.OnFirebaseReady -= OnFirebaseReady;
@@ -606,6 +608,19 @@ public class MainMenuUI : MonoBehaviour {
             startButton.interactable = false;
         }
         
+        RefreshSubjectListIfVisible();
+        if (_currentPanel == quizSelectPanel) ApplySubjectFilterAndGating();
+    }
+
+    void HandleLocalPlayCountSynced(string setId, int count) {
+        var entry = _allQuizMeta.FirstOrDefault(e => e.setId == setId);
+        if (entry == null) return; // not in the menu's current list yet
+
+        entry.playCount = count;
+
+        var item = _quizItems.FirstOrDefault(i => i.SetId == setId);
+        if (item != null) item.Setup(entry, OnQuizSelected);
+
         RefreshSubjectListIfVisible();
         if (_currentPanel == quizSelectPanel) ApplySubjectFilterAndGating();
     }
