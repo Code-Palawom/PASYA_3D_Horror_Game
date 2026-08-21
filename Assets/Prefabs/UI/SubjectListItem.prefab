@@ -276,6 +276,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SubjectSelectItemUI
   subjectLabel: {fileID: 4598743488321532591}
   progressLabel: {fileID: 2129673861469942482}
+  totalPlayCountLabel: {fileID: 6565406768703884659}
   button: {fileID: 1508994698760963872}
   background: {fileID: 1124569668342380819}
   normalColor: {r: 0, g: 0, b: 0, a: 0.78431374}

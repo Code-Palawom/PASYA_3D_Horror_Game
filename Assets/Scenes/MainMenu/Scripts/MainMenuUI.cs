@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using TMPro;
@@ -171,6 +172,13 @@ public class MainMenuUI : MonoBehaviour {
     [SerializeField] TMP_Text startButtonLabel;
     [SerializeField] Button quizBackButton;
 
+    // ── Filters
+    [Header("Subject Select Panel")]
+    [SerializeField] TMP_InputField subjectFilterInput;
+
+    [Header("Quiz Select Panel")]
+    [SerializeField] TMP_InputField quizFilterInput;
+
     // ── Quiz Select Status Bar ─────────────────────────────────
     [Header("Quiz Status Bar")]
     [SerializeField] TMP_Text statusText;
@@ -268,6 +276,9 @@ public class MainMenuUI : MonoBehaviour {
     private readonly List<SubjectSelectItemUI> _subjectItems = new();
     private readonly List<QuizSetMetaEntry> _allQuizMeta = new(); // full meta, for subject grouping/gating
     private readonly List<QuizSetItemUI> _quizItems = new();
+    private string _subjectNameFilter = "";
+    private string _quizNameFilter = "";
+
     // Unified session list — holds both LAN and online items for the merged join panel
     private readonly List<LobbyListItemUI> _allSessionItems = new();
     private readonly List<DiscoveredHost> _discoveredHosts = new();
@@ -412,6 +423,10 @@ public class MainMenuUI : MonoBehaviour {
         quizBackButton.onClick.AddListener(ShowSubjectSelectPanel);
         startButton.onClick.AddListener(OnStartClicked);
 
+        // Filters
+        subjectFilterInput.onValueChanged.AddListener(OnSubjectFilterChanged);
+        quizFilterInput.onValueChanged.AddListener(OnQuizFilterChanged);
+
         // Join panel (LAN)
         refreshButton.onClick.AddListener(OnRefreshHostsClicked);
         joinButton.onClick.AddListener(OnJoinClicked);
@@ -505,8 +520,12 @@ public class MainMenuUI : MonoBehaviour {
         subjectNextButton.interactable = false;
         SetMultiplayerTabRowVisible(isHostFlow);
 
+        _subjectNameFilter = "";
+        if (subjectFilterInput != null) subjectFilterInput.SetTextWithoutNotify("");
+
         SwitchToPanel(subjectSelectPanel);
         PopulateSubjectList();
+        ApplySubjectNameFilter(); // no-op with empty filter, but keeps state consistent
     }
 
     void PopulateSubjectList() {
@@ -525,15 +544,19 @@ public class MainMenuUI : MonoBehaviour {
         foreach (var subject in subjects) {
             var setsInSubject = _allQuizMeta.Where(e => e.subject == subject).ToList();
             int completedCount = setsInSubject.Count(e => completed.Contains(e.setId));
+            int totalPlayCount = setsInSubject.Sum(e => e.playCount);
 
             var item = Instantiate(subjectItemPrefab, subjectListContainer);
-            item.Setup(subject, completedCount, setsInSubject.Count, OnSubjectSelected);
+            item.Setup(subject, completedCount, setsInSubject.Count, totalPlayCount, OnSubjectSelected);
             _subjectItems.Add(item);
         }
     }
 
     void RefreshSubjectListIfVisible() {
-        if (_currentPanel == subjectSelectPanel) PopulateSubjectList();
+        if (_currentPanel == subjectSelectPanel) {
+            PopulateSubjectList();
+            ApplySubjectNameFilter();
+        }
     }
 
     void OnSubjectSelected(string subject) {
@@ -890,6 +913,9 @@ public class MainMenuUI : MonoBehaviour {
     void ShowQuizSelectPanel() {
         SetMultiplayerTabRowVisible(false);
 
+        _quizNameFilter = "";
+        if (quizFilterInput != null) quizFilterInput.SetTextWithoutNotify("");
+
         SwitchToPanel(quizSelectPanel);
         startButtonLabel.text = _pendingMode == GameMode.Host ? "Create Lobby" : "Start Game";
         startButton.interactable = false; // nothing selected yet after entering this panel
@@ -901,9 +927,9 @@ public class MainMenuUI : MonoBehaviour {
     void ApplySubjectFilterAndGating() {
         var completed = AuthManager.Instance.CurrentProfile?.CompletedQuizSetIds ?? new List<string>();
 
-        // Show only cards matching the selected subject.
+        // Show only cards matching the selected subject AND the name filter.
         foreach (var item in _quizItems)
-            item.gameObject.SetActive(item.MatchesSubject(_selectedSubject));
+            item.gameObject.SetActive(item.MatchesSubject(_selectedSubject) && MatchesNameFilter(item.SetName, _quizNameFilter));
 
         // Gate in order within the subject.
         var subjectItems = _quizItems
@@ -931,6 +957,25 @@ public class MainMenuUI : MonoBehaviour {
             //subjectItems[i].SetLocked(locked, prev.SetName);
         }
     }
+
+    void OnSubjectFilterChanged(string value) {
+        _subjectNameFilter = value.Trim();
+        ApplySubjectNameFilter();
+    }
+
+    void ApplySubjectNameFilter() {
+        foreach (var item in _subjectItems)
+            item.gameObject.SetActive(MatchesNameFilter(item.Subject, _subjectNameFilter));
+    }
+
+    void OnQuizFilterChanged(string value) {
+        _quizNameFilter = value.Trim();
+        ApplySubjectFilterAndGating();
+    }
+
+    static bool MatchesNameFilter(string name, string filter) =>
+        string.IsNullOrEmpty(filter) ||
+        (!string.IsNullOrEmpty(name) && name.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0);
 
     // ─────────────────────────────────────────────────────────
     // LEVEL LIST

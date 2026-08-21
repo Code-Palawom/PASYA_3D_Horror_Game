@@ -1,11 +1,13 @@
 using System;
 using TMPro;
+using Unity.Android.Gradle.Manifest;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class SubjectSelectItemUI : MonoBehaviour {
     [SerializeField] TMP_Text subjectLabel;
     [SerializeField] TMP_Text progressLabel; // e.g. "2 / 5 completed" — optional
+    [SerializeField] TMP_Text totalPlayCountLabel;
     [SerializeField] Button button;
     [SerializeField] Image background;
     [SerializeField] Color normalColor = Color.white;
@@ -13,10 +15,11 @@ public class SubjectSelectItemUI : MonoBehaviour {
 
     public string Subject { get; private set; }
 
-    public void Setup(string subject, int completedCount, int totalCount, Action<string> onSelected) {
+    public void Setup(string subject, int completedCount, int totalCount, int totalPlayCount, Action<string> onSelected) {
         Subject = subject;
-        subjectLabel?.SetText(subject);
-        progressLabel?.SetText($"{completedCount} / {totalCount} completed");
+        subjectLabel.SetText(subject);
+        progressLabel.SetText($"{completedCount} / {totalCount} completed");
+        totalPlayCountLabel.SetText($"{totalPlayCount}");
 
         SetSelected(false);
 
@@ -27,5 +30,12 @@ public class SubjectSelectItemUI : MonoBehaviour {
     public void SetSelected(bool selected) {
         if (background != null)
             background.color = selected ? selectedColor : normalColor;
+    }
+
+    // Shows or hides this card based on the active category filter.
+    // Pass null or empty string to show all.
+    public void ApplyFilter(string filterSubject) {
+        bool show = string.IsNullOrEmpty(filterSubject) || Subject == filterSubject;
+        gameObject.SetActive(show);
     }
 }
