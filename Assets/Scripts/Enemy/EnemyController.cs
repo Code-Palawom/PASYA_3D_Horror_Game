@@ -18,6 +18,16 @@ public class EnemyController : NetworkBehaviour {
     [Header("Debug")]
     [SerializeField] private bool debugLogs = true;
 
+    [Header("Animation")]
+    [SerializeField] private Animator animator;
+    private static readonly int SpeedHash = Animator.StringToHash("Speed");
+    private static readonly int AttackHash = Animator.StringToHash("Attack");
+
+    private NetworkVariable<float> networkSpeed =
+        new NetworkVariable<float>(0f,
+            NetworkVariableReadPermission.Everyone,
+            NetworkVariableWritePermission.Server);
+
     // Assigned at spawn time via SetPatrolPoints — prefabs can't reference
     // scene Transforms directly, so patrol data comes in as plain Vector3s
     // (see PatrolGroupData / ScenePatrolData).
@@ -70,6 +80,8 @@ public class EnemyController : NetworkBehaviour {
     }
 
     public override void OnNetworkSpawn() {
+        networkSpeed.OnValueChanged += OnSpeedChanged;
+
         if (!IsServer) { enabled = false; return; }
 
         if (NoiseManager.Singleton != null)
@@ -83,6 +95,8 @@ public class EnemyController : NetworkBehaviour {
     }
 
     public override void OnNetworkDespawn() {
+        networkSpeed.OnValueChanged -= OnSpeedChanged;
+
         if (IsServer && NoiseManager.Singleton != null)
             NoiseManager.Singleton.UnregisterEnemy(this);
 
@@ -109,6 +123,15 @@ public class EnemyController : NetworkBehaviour {
             case EnemyState.Search: TickSearch(); break;
             case EnemyState.Attack: TickAttack(); break;
         }
+
+        // Quantized to 0.1 to avoid spamming NetworkVariable deltas from
+        // minor frame-to-frame velocity jitter (steering, avoidance, etc)
+        // while the enemy is holding roughly the same speed.
+        networkSpeed.Value = Mathf.Round(agent.velocity.magnitude * 10f) / 10f;
+    }
+
+    private void OnSpeedChanged(float previous, float current) {
+        if (animator) animator.SetFloat(SpeedHash, current);
     }
 
     private void SetState(EnemyState state) {
@@ -125,6 +148,7 @@ public class EnemyController : NetworkBehaviour {
         if (state == EnemyState.Hunt) OnEnterHuntClientRpc();
         if (state == EnemyState.Search) BeginSearch();
         if (state == EnemyState.Attack) {
+            OnEnterAttackClientRpc();
             attackElapsed = 0f;
             hasHitThisAttack = false;
             // Freeze the agent for the attack — otherwise it keeps steering
@@ -147,6 +171,11 @@ public class EnemyController : NetworkBehaviour {
 
     [ClientRpc]
     private void OnEnterHuntClientRpc() { /* jumpscare stinger, heartbeat sfx, etc */ }
+
+    [ClientRpc]
+    private void OnEnterAttackClientRpc() {
+        if (animator) animator.SetTrigger(AttackHash);
+    }
 
     // Sends the hunted-vision toggle to exactly one client — the target
     // player's own OwnerClientId — via ClientRpcParams.Send.TargetClientIds.
