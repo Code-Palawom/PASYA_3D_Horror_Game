@@ -8,50 +8,29 @@ public class TimeManager : NetworkBehaviour {
     public static TimeManager Instance { get; private set; }
 
     [SerializeField] private Light globalLight;
-    [SerializeField] private Material skyboxMat;
 
     [Header("Day")]
-    [SerializeField] private Color day = new Color(0.53f, 0.81f, 0.98f);
-    [SerializeField] private Color dayHorizon = new Color(0.73f, 0.89f, 1f);
     [SerializeField] private float dayIntensity = 1f;
     [SerializeField] private Color dayLightColor = Color.white;
 
     [Header("Night")]
-    [SerializeField] private Color night = new Color(0.08f, 0.0f, 0.0f);
-    [SerializeField] private Color nightHorizon = new Color(0.28f, 0.02f, 0.02f);
     [SerializeField] private float nightIntensity = 0.05f;
     [Tooltip("Cool blue moonlight tint applied to globalLight at night.")]
     [SerializeField] private Color moonLightColor = new Color(0.65f, 0.08f, 0.08f);
 
-    [Header("Sun / Moon (shader disc)")]
-    [SerializeField] private float sunSize = 0.05f;
-    [SerializeField] private float sunHaze = 0.1f;
-    [SerializeField] private Texture2D moonTexture;
-    [SerializeField] private float moonSize = 0.25f;
-    [Tooltip("Night amount (t) at which the shader swaps the sun disc for the moon.")]
-    [SerializeField, Range(0f, 1f)] private float nightThreshold = 0.5f;
-
-    [Header("Clouds (day/night tint only — shape stays static in Inspector)")]
-    [SerializeField] private Color cloudTintDay = Color.white;
-    [SerializeField] private Color cloudTintNight = new Color(0.35f, 0.08f, 0.08f);
-
-    [Header("Sky Exposure / Ground / Horizon Fog")]
-    [Tooltip("The actual fix for a skybox that stays bright at night — a multiplier on top of the zenith/horizon colors.")]
-    [SerializeField] private float skyExposureDay = 1f;
-    [SerializeField] private float skyExposureNight = 0.2f;
-    [SerializeField] private float skySaturationDay = 1f;
-    [SerializeField] private float skySaturationNight = 0.5f;
-    [SerializeField] private Color groundColorDay = Color.white;
-    [SerializeField] private Color groundColorNight = new Color(0.03f, 0.01f, 0.01f);
-    [SerializeField] private Color horizonFogColorDay = Color.white;
-    [SerializeField] private Color horizonFogColorNight = new Color(0.1f, 0.03f, 0.03f);
-    [SerializeField] private float horizonFogDensityDay = 0.25f;
-    [SerializeField] private float horizonFogDensityNight = 0.4f;
-
-    [Header("Stars")]
-    [Tooltip("Intensity ramps with night depth instead of hard on/off — dimmer at dusk, fuller at true midnight.")]
-    [SerializeField] private float starIntensityMin = 0.1f;
-    [SerializeField] private float starIntensityMax = 0.4f;
+    [Header("Skybox (4-texture blend)")]
+    [Tooltip("Skybox material's shader must expose _Texture1, _Texture2 and _Blend (a standard two-texture blended skybox shader). Assign that material in the Lighting settings so RenderSettings.skybox already points to it.")]
+    [SerializeField] private Texture2D skyboxNight;
+    [SerializeField] private Texture2D skyboxSunrise;
+    [SerializeField] private Texture2D skyboxDay;
+    [SerializeField] private Texture2D skyboxSunset;
+    [Tooltip("In-game hour each skybox phase begins.")]
+    [SerializeField] private int skyboxSunriseHour = 6;
+    [SerializeField] private int skyboxDayHour = 8;
+    [SerializeField] private int skyboxDuskHour = 18;
+    [SerializeField] private int skyboxNightHour = 22;
+    [Tooltip("How many in-game minutes the texture blend takes once a new phase starts. Pure function of time, so it's always correct instantly for late joiners / admin time-skips — no coroutines.")]
+    [SerializeField] private float skyboxTransitionInGameMinutes = 120f;
 
     [Header("Ambient (Environment Lighting — Gradient)")]
     [Tooltip("Sets RenderSettings.ambientMode = Trilight so ambient light no longer just inherits skybox brightness.")]
@@ -146,15 +125,6 @@ public class TimeManager : NetworkBehaviour {
         netHours.OnValueChanged += OnHoursChanged;
         netMinutes.OnValueChanged += OnMinutesChanged;
         netDays.OnValueChanged += (_, _) => UpdateClockUI();
-
-        // One-time shader setup — these don't change with time of day.
-        if (skyboxMat != null) {
-            skyboxMat.SetFloat("_SunSize", sunSize);
-            skyboxMat.SetFloat("_SunHaze", sunHaze);
-            skyboxMat.SetFloat("_MoonSize", moonSize);
-            if (moonTexture != null) skyboxMat.SetTexture("_MoonTex", moonTexture);
-            RenderSettings.skybox = skyboxMat;
-        }
 
         // Ambient light: switch off skybox-driven ambient so it stops just
         // inheriting the skybox's brightness, and drive it from our own
@@ -305,25 +275,8 @@ public class TimeManager : NetworkBehaviour {
         globalLight.shadowStrength = Mathf.Lerp(dayShadowStrength, nightShadowStrength, t);
         globalLight.bounceIntensity = Mathf.Lerp(dayIndirectMultiplier, nightIndirectMultiplier, t);
 
-        if (skyboxMat != null) {
-            skyboxMat.SetColor("_ZenithColor", Color.Lerp(day, night, t));
-            skyboxMat.SetColor("_HorizonColor", Color.Lerp(dayHorizon, nightHorizon, t));
-            skyboxMat.SetFloat("_AtmosphereThickness", Mathf.Lerp(0.5f, 1f, t));
-            skyboxMat.SetFloat("_EnableStars", t);
-            skyboxMat.SetFloat("_EnableMoon", t > nightThreshold ? 1f : 0f);
-            skyboxMat.SetColor("_CloudTint", Color.Lerp(cloudTintDay, cloudTintNight, t));
-
-            skyboxMat.SetFloat("_SkyExposure", Mathf.Lerp(skyExposureDay, skyExposureNight, t));
-            skyboxMat.SetFloat("_SkySaturation", Mathf.Lerp(skySaturationDay, skySaturationNight, t));
-            skyboxMat.SetColor("_GroundColor", Color.Lerp(groundColorDay, groundColorNight, t));
-            skyboxMat.SetColor("_HorizonFogColor", Color.Lerp(horizonFogColorDay, horizonFogColorNight, t));
-            skyboxMat.SetFloat("_HorizonFogDensity", Mathf.Lerp(horizonFogDensityDay, horizonFogDensityNight, t));
-
-            // Stars ramp in past the same threshold used to swap the moon disc,
-            // instead of a hard on/off — dim right after dusk, fuller at true midnight.
-            float starRamp = Mathf.InverseLerp(nightThreshold, 1f, t);
-            skyboxMat.SetFloat("_StarIntensity", Mathf.Lerp(starIntensityMin, starIntensityMax, starRamp));
-        }
+        ApplySkyboxBlend(hour, minute);
+        PushCelestialGlobals(hour);
 
         // Ambient (Environment Lighting) — independent of skybox brightness now.
         RenderSettings.ambientSkyColor = Color.Lerp(ambientSkyDay, ambientSkyNight, t);
@@ -341,11 +294,8 @@ public class TimeManager : NetworkBehaviour {
         if (colorAdjustments != null) colorAdjustments.postExposure.value = Mathf.Lerp(dayPostExposure, nightPostExposure, t);
         if (vignette != null) vignette.intensity.value = Mathf.Lerp(dayVignetteIntensity, nightVignetteIntensity, t);
         if (bloom != null) bloom.threshold.value = Mathf.Lerp(dayBloomThreshold, nightBloomThreshold, t);
-        PushLightGlobals();
 
-        bool shouldBeNight = nightStartHour <= nightEndHour
-            ? hour >= nightStartHour && hour < nightEndHour          // e.g. 8 -> 18, same-day window
-            : hour >= nightStartHour || hour < nightEndHour;         // e.g. 22 -> 6, wraps past midnight
+        bool shouldBeNight = IsNightHour(hour);
 
         if (shouldBeNight == isNight) return;
 
@@ -360,14 +310,69 @@ public class TimeManager : NetworkBehaviour {
         }
     }
 
-    // The shader was written against Built-in RP globals (_WorldSpaceLightPos0,
-    // _LightColor0), which URP does not populate automatically. Push them
-    // manually every time the light changes so the shader's sun/moon disc
-    // and lighting stay in sync with the actual networked time.
-    private void PushLightGlobals() {
-        Vector3 dir = globalLight.transform.forward;
-        Shader.SetGlobalVector("_WorldSpaceLightPos0", new Vector4(-dir.x, -dir.y, -dir.z, 0f));
-        Shader.SetGlobalColor("_LightColor0", globalLight.color * globalLight.intensity);
+    // Pure function of the current hour/minute — always correct instantly for
+    // late joiners and admin time-skips, no coroutines needed. Determines
+    // which phase we're in (night/sunrise/day/sunset), then blends from the
+    // previous phase's texture into the current one over the first
+    // `skyboxTransitionInGameMinutes` minutes of the phase, holding steady
+    // after that until the next boundary.
+    private void ApplySkyboxBlend(int hour, int minute) {
+        if (RenderSettings.skybox == null) return;
+
+        int totalMinutes = hour * 60 + minute;
+
+        int sunriseMin = skyboxSunriseHour * 60;
+        int dayMin = skyboxDayHour * 60;
+        int duskMin = skyboxDuskHour * 60;
+        int nightMin = skyboxNightHour * 60;
+
+        Texture2D fromTex, toTex;
+        int phaseStart;
+
+        if (totalMinutes >= sunriseMin && totalMinutes < dayMin) {
+            fromTex = skyboxNight; toTex = skyboxSunrise; phaseStart = sunriseMin;
+        } else if (totalMinutes >= dayMin && totalMinutes < duskMin) {
+            fromTex = skyboxSunrise; toTex = skyboxDay; phaseStart = dayMin;
+        } else if (totalMinutes >= duskMin && totalMinutes < nightMin) {
+            fromTex = skyboxDay; toTex = skyboxSunset; phaseStart = duskMin;
+        } else {
+            // Night phase — wraps past midnight, so phaseStart may be "later"
+            // in raw minutes than totalMinutes; elapsed is corrected below.
+            fromTex = skyboxSunset; toTex = skyboxNight; phaseStart = nightMin;
+        }
+
+        float elapsed = totalMinutes - phaseStart;
+        if (elapsed < 0f) elapsed += 1440f;
+
+        float blend = skyboxTransitionInGameMinutes > 0f
+            ? Mathf.Clamp01(elapsed / skyboxTransitionInGameMinutes)
+            : 1f;
+
+        RenderSettings.skybox.SetTexture("_Texture1", fromTex);
+        RenderSettings.skybox.SetTexture("_Texture2", toTex);
+        RenderSettings.skybox.SetFloat("_Blend", blend);
+    }
+
+    // Same night window used for the DOF/chromatic-aberration toggle below —
+    // shared here so the moon disc snaps on/off at the exact same hour.
+    private bool IsNightHour(int hour) {
+        return nightStartHour <= nightEndHour
+            ? hour >= nightStartHour && hour < nightEndHour          // e.g. 8 -> 18, same-day window
+            : hour >= nightStartHour || hour < nightEndHour;         // e.g. 22 -> 6, wraps past midnight
+    }
+
+    // Drives the skybox shader's sun/moon disc from the same directional light
+    // that's already being rotated for real lighting — no separate sun/moon
+    // transform needed. _MoonAmount is a hard snap (1 = moon, 0 = sun) at
+    // nightStartHour/nightEndHour, not the continuous day/night t — the disc
+    // swap is instant, everything else (light color, ambient, fog) keeps
+    // fading smoothly on its own curve.
+    private void PushCelestialGlobals(int hour) {
+        if (RenderSettings.skybox == null) return;
+
+        Vector3 towardLight = -globalLight.transform.forward;
+        RenderSettings.skybox.SetVector("_CelestialDir", new Vector4(towardLight.x, towardLight.y, towardLight.z, 0f));
+        RenderSettings.skybox.SetFloat("_MoonAmount", IsNightHour(hour) ? 1f : 0f);
     }
 
     // ---- 12-hour formatting: "12:30AM", "9:00PM" ----
