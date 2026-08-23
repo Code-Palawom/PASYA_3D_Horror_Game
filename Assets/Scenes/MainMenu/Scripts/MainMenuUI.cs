@@ -954,6 +954,8 @@ public class MainMenuUI : MonoBehaviour {
 
         bool isFirstLocked = true;
         for (int i = 0; i < subjectItems.Count; i++) {
+            subjectItems[i].transform.SetSiblingIndex(i);
+
             if (i == 0) {
                 subjectItems[i].SetLocked(false);
                 continue;
@@ -962,7 +964,7 @@ public class MainMenuUI : MonoBehaviour {
             var prev = subjectItems[i - 1];
             bool locked = !completed.Contains(prev.SetId);
 
-            if(isFirstLocked && locked) {
+            if (isFirstLocked && locked) {
                 isFirstLocked = false;
                 subjectItems[i].SetLocked(true, prev.SetName);
             } else {
