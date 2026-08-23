@@ -89,20 +89,22 @@ public class TimeManager : NetworkBehaviour {
     private float SecondsPerGameMinute => (dayLengthInRealMinutes * 60f) / 1440f;
 
     // ---- Server-authoritative time state ----
-    private readonly NetworkVariable<int> netMinutes = new NetworkVariable<int>(
-        0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+    // Fully collapsed hour+minute+day into ONE NetworkVariable that just
+    // counts total elapsed game-minutes since start and never wraps.
+    // Previously this was netHours/netMinutes/netDays (three separate
+    // NetworkVariables), then netTotalMinutes/netDays (two). Even with two,
+    // a client could theoretically apply the snapshot deltas out of
+    // declaration order and read a stale netDays for one callback (harmless
+    // here since Days doesn't drive visuals, but still a real race). With a
+    // single value there is nothing left to be out of sync with — Hours,
+    // Minutes, and Days are all just derived math on the one synced number.
+    private readonly NetworkVariable<long> netTotalGameMinutes = new NetworkVariable<long>(
+        8 * 60, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
-    private readonly NetworkVariable<int> netHours = new NetworkVariable<int>(
-        8, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
-
-    // Days start at 1 (Day 1), stored internally as 0-indexed and exposed via DisplayDay
-    private readonly NetworkVariable<int> netDays = new NetworkVariable<int>(
-        0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
-
-    public int Minutes => netMinutes.Value;
-    public int Hours => netHours.Value;
-    public int Days => netDays.Value;
-    public int DisplayDay => netDays.Value + 1; // "Day 1" on day zero
+    public int Minutes => (int)(netTotalGameMinutes.Value % 60);
+    public int Hours => (int)((netTotalGameMinutes.Value / 60) % 24);
+    public int Days => (int)(netTotalGameMinutes.Value / 1440);
+    public int DisplayDay => Days + 1; // "Day 1" on day zero
 
     private float tempSecond;
     private float absDayLengthInRealMinutes;
@@ -122,9 +124,7 @@ public class TimeManager : NetworkBehaviour {
 
         absDayLengthInRealMinutes = dayLengthInRealMinutes;
 
-        netHours.OnValueChanged += OnHoursChanged;
-        netMinutes.OnValueChanged += OnMinutesChanged;
-        netDays.OnValueChanged += (_, _) => UpdateClockUI();
+        netTotalGameMinutes.OnValueChanged += OnTotalGameMinutesChanged;
 
         // Ambient light: switch off skybox-driven ambient so it stops just
         // inheriting the skybox's brightness, and drive it from our own
@@ -146,15 +146,14 @@ public class TimeManager : NetworkBehaviour {
         }
 
         // Snap instantly to correct visuals — no tween for late joiners / host start
-        ApplyVisualsForTime(netHours.Value, netMinutes.Value);
+        ApplyVisualsForTime(Hours, Minutes);
         UpdateClockUI();
 
         OnAnyTimeManagerReady?.Invoke(this);
     }
 
     public override void OnNetworkDespawn() {
-        netHours.OnValueChanged -= OnHoursChanged;
-        netMinutes.OnValueChanged -= OnMinutesChanged;
+        netTotalGameMinutes.OnValueChanged -= OnTotalGameMinutesChanged;
 
         if (Instance == this) Instance = null;
     }
@@ -171,22 +170,10 @@ public class TimeManager : NetworkBehaviour {
 
     // ---- Server-only progression ----
     private void AdvanceMinute() {
-        int newMinutes = netMinutes.Value + 1;
-        int newHours = netHours.Value;
-        int newDays = netDays.Value;
-
-        if (newMinutes >= 60) {
-            newMinutes = 0;
-            newHours++;
-        }
-        if (newHours >= 24) {
-            newHours = 0;
-            newDays++;
-        }
-
-        netMinutes.Value = newMinutes;
-        if (newHours != netHours.Value) netHours.Value = newHours;
-        if (newDays != netDays.Value) netDays.Value = newDays;
+        // One value, one write — day/hour rollover is just arithmetic on
+        // read (see Hours/Minutes/Days above), so there's no multi-variable
+        // ordering to get right here anymore.
+        netTotalGameMinutes.Value++;
     }
 
     // ---- Admin-only entry points ----
@@ -200,8 +187,9 @@ public class TimeManager : NetworkBehaviour {
         hour = Mathf.Clamp(hour, 0, 23);
         minute = Mathf.Clamp(minute, 0, 59);
 
-        netHours.Value = hour;
-        netMinutes.Value = minute;
+        // Keep the current day, just replace the hour/minute-of-day part.
+        long dayStart = (long)Days * 1440;
+        netTotalGameMinutes.Value = dayStart + hour * 60 + minute;
 
         SnapAllClientsRpc(hour, minute);
     }
@@ -210,19 +198,12 @@ public class TimeManager : NetworkBehaviour {
     public void AdminSkipHours(int hoursToSkip) {
         if (!IsServer) return;
 
-        int total = netHours.Value * 60 + netMinutes.Value + hoursToSkip * 60;
-        int dayDelta = Mathf.FloorToInt(total / 1440f);
-        int rem = total - dayDelta * 1440;
-        if (rem < 0) rem += 1440; // guard against negative skips
+        long newTotal = netTotalGameMinutes.Value + (long)hoursToSkip * 60;
+        if (newTotal < 0) newTotal = 0; // guard against negative skips going below start
 
-        int newHour = rem / 60;
-        int newMinute = rem % 60;
+        netTotalGameMinutes.Value = newTotal;
 
-        netDays.Value += dayDelta;
-        netHours.Value = newHour;
-        netMinutes.Value = newMinute;
-
-        SnapAllClientsRpc(newHour, newMinute);
+        SnapAllClientsRpc((int)((newTotal / 60) % 24), (int)(newTotal % 60));
     }
 
     public void AdminSetTimeSpeed(float timeSpeed) {
@@ -238,14 +219,11 @@ public class TimeManager : NetworkBehaviour {
     }
 
     // ---- Runs on every client (incl. host) whenever synced state changes ----
-    private void OnMinutesChanged(int oldValue, int newValue) {
-        ApplyVisualsForTime(netHours.Value, netMinutes.Value);
-        UpdateClockUI();
-    }
-
-    private void OnHoursChanged(int oldValue, int newValue) {
-        // Visuals are already refreshed by OnMinutesChanged (hour rollover
-        // always coincides with a minute change); this just covers the UI.
+    // Single callback now covers hour/minute AND day — there's only one
+    // NetworkVariable to react to, so visuals and the "Day N" text always
+    // update together from the same value, same frame.
+    private void OnTotalGameMinutesChanged(long oldValue, long newValue) {
+        ApplyVisualsForTime(Hours, Minutes);
         UpdateClockUI();
     }
 
@@ -377,8 +355,8 @@ public class TimeManager : NetworkBehaviour {
 
     // ---- 12-hour formatting: "12:30AM", "9:00PM" ----
     public string GetFormattedTime() {
-        int h = netHours.Value;
-        int m = netMinutes.Value;
+        int h = Hours;
+        int m = Minutes;
 
         string period = h >= 12 ? "PM" : "AM";
         int displayHour = h % 12;
