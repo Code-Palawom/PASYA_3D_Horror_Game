@@ -467,7 +467,7 @@ public class MainMenuUI : MonoBehaviour {
         };
 
         AuthManager.Instance.OnPlayerStatsLoaded += (profile) => {
-            if (_currentPanel == quizSelectPanel) ApplySubjectFilterAndGating();
+            if (_currentPanel != null && quizSelectPanel != null && _currentPanel == quizSelectPanel) ApplySubjectFilterAndGating();
         };
 
         TipsManager.Instance.LoadCacheImmediately();

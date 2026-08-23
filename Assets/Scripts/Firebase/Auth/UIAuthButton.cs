@@ -3,6 +3,7 @@ using Org.BouncyCastle.Cms;
 using System;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 // Minimal UI hookup for the Sign In button.
@@ -20,10 +21,9 @@ public class UIAuthButton : MonoBehaviour {
     [Tooltip("Optional: a separate label showing the signed-in user's name/email.")]
     [SerializeField] private TMP_Text userInfoLabel;
 
-    [Tooltip("Panels to show/hide based on auth state.")]
-    [SerializeField] private GameObject signedInPanel;
-
     [Tooltip("Stats")]
+    [SerializeField] private GameObject guestWrapper;
+    [SerializeField] private GameObject emailWrapper;
     [SerializeField] private TMP_Text email;
     [SerializeField] private TMP_Text displayName;
     [SerializeField] private TMP_Text coins;
@@ -51,8 +51,6 @@ public class UIAuthButton : MonoBehaviour {
         signInBtn.onClick.AddListener(OnAuthButtonClicked);
         logoutBtn.onClick.AddListener(OnAuthButtonClicked);
 
-        signedInPanel.SetActive(false);
-
         AuthManager.Instance.OnPlayerStatsLoaded += OnPlayerStatsLoaded;
 
         // Reflect whatever state auth is already in (e.g. cached session)
@@ -76,7 +74,7 @@ public class UIAuthButton : MonoBehaviour {
     // ── Auth state change ─────────────────────────────────────────────────
 
     private void OnPlayerStatsLoaded(PlayerProfile user) {
-        bool signedIn = user != null;
+        bool signedIn = AuthManager.Instance.IsSignedIn;
 
         // Update button label
         if (buttonLabel != null) {
@@ -92,12 +90,8 @@ public class UIAuthButton : MonoBehaviour {
                 ? user.DisplayName
                 : string.Empty;
 
-        // Toggle panels
-        signedInPanel.SetActive(signedIn);
-        if (signedIn) {
-            if (AuthManager.Instance.CurrentProfile != null) UpdateUserStatsUI(AuthManager.Instance.CurrentProfile);
-            AuthManager.Instance.OnPlayerStatsLoaded += UpdateUserStatsUI;
-        }
+        if (AuthManager.Instance.CurrentProfile != null) UpdateUserStatsUI(AuthManager.Instance.CurrentProfile);
+        AuthManager.Instance.OnPlayerStatsLoaded += UpdateUserStatsUI;
 
         hostModeWrapper.SetActive(signedIn);
 
@@ -106,9 +100,12 @@ public class UIAuthButton : MonoBehaviour {
     }
 
     private void UpdateUserStatsUI(PlayerProfile profile) {
-        if (profile == null) return;
+        if (profile == null || emailWrapper == null || guestWrapper == null) return;
 
-        email.text = AuthManager.Instance.CurrentUser?.Email ?? "N/A";
+        emailWrapper.SetActive(AuthManager.Instance.IsSignedIn);
+        guestWrapper.SetActive(!AuthManager.Instance.IsSignedIn);
+
+        if (AuthManager.Instance.IsSignedIn) email.text = AuthManager.Instance.CurrentUser?.Email ?? "N/A";
         displayName.text = profile.DisplayName;
         //role.text = profile.Role.ToString();
         coins.text = profile.Coins.ToString();

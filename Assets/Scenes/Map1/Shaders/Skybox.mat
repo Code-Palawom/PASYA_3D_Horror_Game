@@ -28,30 +28,30 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Texture1:
-        m_Texture: {fileID: 2800000, guid: 9f95adb42b0bfd5458869c7ee8c18ad8, type: 3}
+        m_Texture: {fileID: 2800000, guid: 4cf70d74e220ced44acdd26047322090, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Texture2:
-        m_Texture: {fileID: 2800000, guid: a62ae27d16f2c1a4c8e6e3ce02b9b9f4, type: 3}
+        m_Texture: {fileID: 2800000, guid: 812b41f7472dd8049b99b86573056d64, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Blend: 0.06666667
+    - _Blend: 0.98888886
     - _CelestialIntensity: 1.5
     - _Exposure1: 1
     - _Exposure2: 1
     - _ImageType: 0
     - _Layout: 0
     - _MirrorOnBack: 0
-    - _MoonAmount: 1
+    - _MoonAmount: 0
     - _MoonSize: 0.05
     - _Rotation1: 0
     - _Rotation2: 0
     - _SunHaze: 0.075
     - _SunSize: 0.045
     m_Colors:
-    - _CelestialDir: {r: 0.99965733, g: 0.026176948, b: 0.000000033760443, a: 0}
+    - _CelestialDir: {r: 0.796002, g: 0.60529405, b: 0.000000044703484, a: 0}
     - _SunColor: {r: 1, g: 0.95, b: 0.8, a: 1}
     - _Tint1: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
     - _Tint2: {r: 0.5, g: 0.5, b: 0.5, a: 0.5}
