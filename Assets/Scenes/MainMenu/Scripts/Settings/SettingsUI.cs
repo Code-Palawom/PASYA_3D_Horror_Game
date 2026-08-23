@@ -345,6 +345,10 @@ public class SettingsUI : MonoBehaviour {
             default:
                 nameChangeStatus.text = "Something went wrong. Try again.";
                 break;
+
+            case NameChangeResult.Offline:
+                nameChangeStatus.text = "You're offline. Try again when you have an internet connection.";
+                break;
         }
     }
 

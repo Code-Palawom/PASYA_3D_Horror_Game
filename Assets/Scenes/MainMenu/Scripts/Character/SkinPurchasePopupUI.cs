@@ -91,6 +91,8 @@ public class SkinPurchasePopupUI : MonoBehaviour {
         } else if (result == SkinPurchaseResult.OfferExpired) {
             ActionbarToastNotification.Instance.ShowLocalToast("This offer has ended.", ToastType.Error);
             priceLabel.text = "Expired";
+        } else if (result == SkinPurchaseResult.Offline) {
+            ActionbarToastNotification.Instance.ShowLocalToast("No internet connection.", ToastType.Error);
         } else {
             ActionbarToastNotification.Instance.ShowLocalToast("Skin purchase failed", ToastType.Error);
             Debug.LogWarning($"Skin purchase failed: {result}");

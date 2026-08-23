@@ -15,6 +15,15 @@ public static class PurchaseManager {
         if (string.IsNullOrEmpty(skin.iapProductId))
             return SkinPurchaseResult.Error;
 
+        // Most IAP store SDKs (Unity IAP included) surface their own failure
+        // reason for connectivity issues once a purchase is actually attempted
+        // (e.g. a network-related PurchaseFailureReason), so prefer mapping
+        // that to SkinPurchaseResult.Offline over this check once wired up.
+        // Kept here as a fail-fast placeholder so this stub behaves consistently
+        // with PurchaseWithCurrency in the meantime.
+        if (AuthManager.IsOffline())
+            return SkinPurchaseResult.Offline;
+
         // TODO: wire to your actual store implementation (Unity IAP / native plugin).
         // Once the store confirms a successful, verified purchase, call:
         //     await AuthManager.Instance.GrantSkinAsync(skin.iapProductId... /* or skin.skinId */);
