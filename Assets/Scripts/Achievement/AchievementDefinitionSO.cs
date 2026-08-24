@@ -28,7 +28,7 @@ public enum AchievementStat {
 }
 
 [CreateAssetMenu(fileName = "Achievement", menuName = "Pasya/Achievement")]
-public class AchievementDefinitionSO : ScriptableObject {
+public class AchievementDefinitionSO : ScriptableObject, IAchievementDefinition {
     [Tooltip("Stable id stored in PlayerProfile.UnlockedAchievementIds. " +
              "Never rename after players can have already unlocked it.")]
     public string achievementId;
@@ -67,4 +67,26 @@ public class AchievementDefinitionSO : ScriptableObject {
     public int rewardXp;
     [Tooltip("Optional skinId to grant on unlock — must match a CharacterSkinSO.skinId.")]
     public string rewardSkinId;
+
+    // Explicit interface implementation — maps the Inspector-facing fields
+    // above onto IAchievementDefinition so AchievementManager can evaluate
+    // this alongside RemoteAchievementDefinition without either one caring
+    // where the other came from. Kept explicit (not public properties) so
+    // existing code (and AchievementDefinitionSOEditor) keeps using the
+    // lowercase fields directly with zero changes.
+    string IAchievementDefinition.AchievementId => achievementId;
+    string IAchievementDefinition.DisplayName => displayName;
+    string IAchievementDefinition.Description => description;
+    Sprite IAchievementDefinition.Icon => icon;
+    bool IAchievementDefinition.Hidden => hidden;
+    AchievementTriggerType IAchievementDefinition.TriggerType => triggerType;
+    AchievementStat IAchievementDefinition.Stat => stat;
+    long IAchievementDefinition.Threshold => threshold;
+    string IAchievementDefinition.EventKey => eventKey;
+    string IAchievementDefinition.Subject => subject;
+    float IAchievementDefinition.RequiredCompletionPercent => requiredCompletionPercent;
+    string IAchievementDefinition.RequiredSetId => requiredSetId;
+    int IAchievementDefinition.RewardCoins => rewardCoins;
+    int IAchievementDefinition.RewardXp => rewardXp;
+    string IAchievementDefinition.RewardSkinId => rewardSkinId;
 }

@@ -21,6 +21,9 @@ MonoBehaviour:
   stat: 6
   threshold: 1
   eventKey: 
+  subject: 
+  requiredCompletionPercent: 100
+  requiredSetId: 
   rewardCoins: 50
   rewardXp: 250
   rewardSkinId: 

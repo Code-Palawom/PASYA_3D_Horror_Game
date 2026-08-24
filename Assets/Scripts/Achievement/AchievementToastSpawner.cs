@@ -30,9 +30,9 @@ public class AchievementToastSpawner : MonoBehaviour {
         if (AchievementManager.Instance != null) AchievementManager.Instance.OnAchievementUnlocked -= HandleUnlocked;
     }
 
-    private void HandleUnlocked(AchievementDefinitionSO def) {
+    private void HandleUnlocked(IAchievementDefinition def) {
         if (toastPrefab == null || container == null) {
-            Debug.LogWarning("[AchievementToastSpawner] toastPrefab or container not assigned — skipping toast for '" + def.achievementId + "'.");
+            Debug.LogWarning("[AchievementToastSpawner] toastPrefab or container not assigned — skipping toast for '" + def.AchievementId + "'.");
             return;
         }
 

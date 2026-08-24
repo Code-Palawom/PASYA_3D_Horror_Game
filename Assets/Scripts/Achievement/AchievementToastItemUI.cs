@@ -36,10 +36,14 @@ public class AchievementToastItemUI : MonoBehaviour {
 
     // Call once, right after Instantiate. skinDatabase is optional — pass it
     // if you want reward text to show the skin's actual display name instead
-    // of a generic "New Skin" fallback.
-    public void Show(AchievementDefinitionSO def, SkinDatabaseSO skinDatabase = null) {
-        if (iconImage != null) iconImage.sprite = def.icon != null ? def.icon : fallbackIcon;
-        if (nameText != null) nameText.text = def.displayName;
+    // of a generic "New Skin" fallback. Accepts IAchievementDefinition (not
+    // AchievementDefinitionSO directly) so this same prefab renders both local
+    // ScriptableObject achievements and ones synced from Firestore via
+    // RemoteAchievementDefinition — the latter never has an Icon, so it always
+    // falls back to fallbackIcon.
+    public void Show(IAchievementDefinition def, SkinDatabaseSO skinDatabase = null) {
+        if (iconImage != null) iconImage.sprite = def.Icon != null ? def.Icon : fallbackIcon;
+        if (nameText != null) nameText.text = def.DisplayName;
 
         if (rewardText != null) {
             string reward = BuildRewardText(def, skinDatabase);
@@ -63,13 +67,13 @@ public class AchievementToastItemUI : MonoBehaviour {
 
     private void OnDestroy() => _sequence.Stop();
 
-    private static string BuildRewardText(AchievementDefinitionSO def, SkinDatabaseSO skinDatabase) {
+    private static string BuildRewardText(IAchievementDefinition def, SkinDatabaseSO skinDatabase) {
         var parts = new List<string>();
-        if (def.rewardCoins > 0) parts.Add($"+{def.rewardCoins} Coins");
-        if (def.rewardXp > 0) parts.Add($"+{def.rewardXp} XP");
+        if (def.RewardCoins > 0) parts.Add($"+{def.RewardCoins} Coins");
+        if (def.RewardXp > 0) parts.Add($"+{def.RewardXp} XP");
 
-        if (!string.IsNullOrEmpty(def.rewardSkinId)) {
-            var skin = skinDatabase != null ? skinDatabase.GetById(def.rewardSkinId) : null;
+        if (!string.IsNullOrEmpty(def.RewardSkinId)) {
+            var skin = skinDatabase != null ? skinDatabase.GetById(def.RewardSkinId) : null;
             parts.Add(skin != null ? $"New Skin: {skin.name}" : "New Skin");
         }
 

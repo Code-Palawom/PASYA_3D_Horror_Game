@@ -106,6 +106,8 @@ InitTestScene*.unity*
 /Assets/Scenes/MainMenu/Scripts/Character/SkinSaveSystem.cs.meta
 /Assets/Scripts/Firebase/AchievementManager.cs
 /Assets/Scripts/Firebase/AchievementManager.cs.meta
+/Assets/Scripts/Firebase/RemoteAchievementSyncService.cs
+/Assets/Scripts/Firebase/RemoteAchievementSyncService.cs.meta
 /Assets/Scripts/Firebase/Auth/AuthManager.cs
 /Assets/Scripts/Firebase/Auth/AuthManager.cs.meta
 /Assets/Scripts/Firebase/Auth/DesktopGoogleAuth.cs
