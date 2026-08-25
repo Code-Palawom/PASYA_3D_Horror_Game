@@ -202,6 +202,10 @@ public class MainMenuUI : MonoBehaviour {
     [SerializeField] GameObject aboutPanel;
     [SerializeField] Button aboutBackButton;
 
+    [SerializeField] Button achievementsButton;
+    [SerializeField] GameObject achievementsPanel;
+    [SerializeField] Button achievementsBackButton;
+
     [SerializeField] GameObject TutorialPanel;
 
     [Header("Cameras")]
@@ -409,6 +413,8 @@ public class MainMenuUI : MonoBehaviour {
         aboutButton.onClick.AddListener(ShowAboutPanel);
         exitButton.onClick.AddListener(OnExitClicked);
 
+        achievementsButton.onClick.AddListener(ShowAchievementsPanel);
+
         // Multiplayer panel
         hostButton.onClick.AddListener(() => EnterWizard(GameMode.Host));
         multiplayerJoinButton.onClick.AddListener(OnMultiplayerJoinClicked);
@@ -444,6 +450,8 @@ public class MainMenuUI : MonoBehaviour {
         characterBackButton.onClick.AddListener(() => HideCharacterPanel(false));
         settingsBackButton.onClick.AddListener(ShowMainPanel);
         aboutBackButton.onClick.AddListener(ShowMainPanel);
+        achievementsBackButton.onClick.AddListener(ShowSettingsPanel);
+
 
         characterAppearance.ApplySkin(database.GetById(SkinSaveSystem.Load()) ?? (database.skins.Length > 0 ? database.skins[0] : null));
 
@@ -840,7 +848,12 @@ public class MainMenuUI : MonoBehaviour {
     void ShowAboutPanel() {
         SetMultiplayerTabRowVisible(false);
         SwitchToPanel(aboutPanel);
+        ActionbarToastNotification.Instance.ClearToast();
+    }
 
+    void ShowAchievementsPanel() {
+        SetMultiplayerTabRowVisible(false);
+        SwitchToPanel(achievementsPanel);
         ActionbarToastNotification.Instance.ClearToast();
     }
 
