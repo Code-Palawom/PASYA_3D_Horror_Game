@@ -45,13 +45,15 @@ public class AchievementToastItemUI : MonoBehaviour {
 
     // Call once, right after Instantiate. skinDatabase is optional — pass it
     // if you want reward text to show the skin's actual display name instead
-    // of a generic "New Skin" fallback. Accepts IAchievementDefinition (not
+    // of a generic "New Skin" fallback. iconDatabase is optional too — pass
+    // it to resolve a remote achievement's IconId to a bundled sprite;
+    // without it (or if IconId doesn't match anything), remote achievements
+    // fall back to fallbackIcon. Accepts IAchievementDefinition (not
     // AchievementDefinitionSO directly) so this same prefab renders both local
     // ScriptableObject achievements and ones synced from Firestore via
-    // RemoteAchievementDefinition — the latter never has an Icon, so it always
-    // falls back to fallbackIcon.
-    public void Show(IAchievementDefinition def, SkinDatabaseSO skinDatabase = null) {
-        if (iconImage != null) iconImage.sprite = def.Icon != null ? def.Icon : fallbackIcon;
+    // RemoteAchievementDefinition.
+    public void Show(IAchievementDefinition def, SkinDatabaseSO skinDatabase = null, AchievementIconDatabaseSO iconDatabase = null) {
+        if (iconImage != null) iconImage.sprite = ResolveIcon(def, iconDatabase);
         if (nameText != null) nameText.text = def.DisplayName;
 
         if (rewardText != null) {
@@ -84,6 +86,12 @@ public class AchievementToastItemUI : MonoBehaviour {
     }
 
     private void OnDestroy() => _sequence.Stop();
+
+    private Sprite ResolveIcon(IAchievementDefinition def, AchievementIconDatabaseSO iconDatabase) {
+        if (def.Icon != null) return def.Icon;
+        Sprite resolved = iconDatabase != null ? iconDatabase.GetById(def.IconId) : null;
+        return resolved != null ? resolved : fallbackIcon;
+    }
 
     private static string BuildRewardText(IAchievementDefinition def, SkinDatabaseSO skinDatabase) {
         var parts = new List<string>();

@@ -33216,6 +33216,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AchievementListUI
   contentParent: {fileID: 73844001}
   rowPrefab: {fileID: 45738134696192157, guid: 103bd9d74c2edbb46a46e40c64be0a45, type: 3}
+  iconDatabase: {fileID: 11400000, guid: 454f699b0e3b8d143906dcf82a819c1f, type: 2}
 --- !u!1 &513667203
 GameObject:
   m_ObjectHideFlags: 0
@@ -141936,6 +141937,7 @@ MonoBehaviour:
   toastPrefab: {fileID: 7592374626165178907, guid: a8aca377271545042842e4bf954afe2b, type: 3}
   container: {fileID: 1369825127}
   skinDatabase: {fileID: 11400000, guid: e050a1d31e310564bb51c3bd1dcc7ae9, type: 2}
+  iconDatabase: {fileID: 11400000, guid: 454f699b0e3b8d143906dcf82a819c1f, type: 2}
 --- !u!1 &1758619701
 GameObject:
   m_ObjectHideFlags: 0

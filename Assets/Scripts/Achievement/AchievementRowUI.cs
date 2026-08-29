@@ -19,16 +19,22 @@ public class AchievementRowUI : MonoBehaviour {
     [SerializeField] private CanvasGroup lockedDimGroup; // optional — dims the whole row while locked
     [SerializeField] private float lockedAlpha = 0.5f;
 
-    public void Show(IAchievementDefinition def, AchievementManager.AchievementProgress progress) {
+    public void Show(IAchievementDefinition def, AchievementManager.AchievementProgress progress, AchievementIconDatabaseSO iconDatabase = null) {
         // Hidden achievements show a "???" placeholder for everything —
         // name, description, AND progress — until unlocked. Showing "3/5"
         // on a secret achievement would leak its existence/target early.
         bool showHiddenPlaceholder = def.Hidden && !progress.IsUnlocked;
 
         if (iconImage != null) {
-            Sprite sprite = showHiddenPlaceholder
-                ? (hiddenIcon != null ? hiddenIcon : fallbackIcon)
-                : (def.Icon != null ? def.Icon : fallbackIcon);
+            Sprite sprite;
+            if (showHiddenPlaceholder) {
+                sprite = hiddenIcon != null ? hiddenIcon : fallbackIcon;
+            } else if (def.Icon != null) {
+                sprite = def.Icon;
+            } else {
+                Sprite resolved = iconDatabase != null ? iconDatabase.GetById(def.IconId) : null;
+                sprite = resolved != null ? resolved : fallbackIcon;
+            }
             iconImage.sprite = sprite;
         }
 

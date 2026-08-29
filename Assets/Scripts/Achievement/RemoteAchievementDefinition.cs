@@ -8,14 +8,17 @@ using UnityEngine;
 // AchievementManager.ReportEvent(eventKey) at a specific moment, so it stays
 // a local AchievementDefinitionSO only.
 //
-// No icon support: Firestore can't ship new sprites into an already-built
-// client, so remote achievements always fall back to whatever
-// AchievementToastItemUI.fallbackIcon is set to. If a specific icon matters,
-// define that one as a local AchievementDefinitionSO instead.
+// No direct Sprite support: Firestore can't ship new sprites into an
+// already-built client. Instead, "IconId" is a free-text key (set in the
+// admin dashboard) resolved locally against AchievementIconDatabaseSO — so
+// new remote achievements can reuse any sprite already bundled in the build.
+// If IconId is blank/unset or doesn't match an entry in that database,
+// callers fall back to AchievementToastItemUI/AchievementRowUI's fallbackIcon.
 public class RemoteAchievementDefinition : IAchievementDefinition {
     public string AchievementId { get; set; }
     public string DisplayName { get; set; }
     public string Description { get; set; }
+    public string IconId { get; set; }
     public bool Hidden { get; set; }
 
     // Defaults to Normal if the Firestore doc doesn't set it — see
@@ -37,7 +40,8 @@ public class RemoteAchievementDefinition : IAchievementDefinition {
     public int RewardXp { get; set; }
     public string RewardSkinId { get; set; }
 
-    // Not used remotely — CustomEvent stays local-only (see class comment).
+    // No direct sprite reference remotely — see IconId + class comment.
     public Sprite Icon => null;
+    // Not used remotely — CustomEvent stays local-only (see class comment).
     public string EventKey => null;
 }

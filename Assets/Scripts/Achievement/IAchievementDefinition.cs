@@ -10,6 +10,11 @@ public interface IAchievementDefinition {
     string DisplayName { get; }
     string Description { get; }
     Sprite Icon { get; }
+
+    // Free-text lookup key resolved against AchievementIconDatabaseSO —
+    // only meaningful when Icon is null (i.e. for RemoteAchievementDefinition.
+    string IconId { get; }
+
     bool Hidden { get; }
 
     // Presentational only (e.g. picks unlock sound/VFX) — not used in evaluation.

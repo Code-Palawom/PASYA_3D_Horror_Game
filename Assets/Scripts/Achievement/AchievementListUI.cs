@@ -16,6 +16,9 @@ public class AchievementListUI : MonoBehaviour {
     [SerializeField] private Transform contentParent;
     [SerializeField] private AchievementRowUI rowPrefab;
 
+    [Tooltip("Optional — pass your AchievementIconDatabaseSO to resolve remote achievements' IconId to a bundled sprite instead of falling back to fallbackIcon.")]
+    [SerializeField] private AchievementIconDatabaseSO iconDatabase;
+
     private readonly List<AchievementRowUI> _spawnedRows = new();
 
     void Start() {
@@ -81,7 +84,7 @@ public class AchievementListUI : MonoBehaviour {
                 _spawnedRows[i].ShowLegacy(legacyId);
             } else {
                 var progress = manager.GetProgress(def, profile);
-                _spawnedRows[i].Show(def, progress);
+                _spawnedRows[i].Show(def, progress, iconDatabase);
             }
         }
 

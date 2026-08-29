@@ -89,6 +89,8 @@ public class AchievementDefinitionSO : ScriptableObject, IAchievementDefinition 
     string IAchievementDefinition.DisplayName => displayName;
     string IAchievementDefinition.Description => description;
     Sprite IAchievementDefinition.Icon => icon;
+    // Not used locally — the direct Icon sprite reference above covers it.
+    string IAchievementDefinition.IconId => null;
     bool IAchievementDefinition.Hidden => hidden;
     AchievementTier IAchievementDefinition.Tier => tier;
     AchievementTriggerType IAchievementDefinition.TriggerType => triggerType;

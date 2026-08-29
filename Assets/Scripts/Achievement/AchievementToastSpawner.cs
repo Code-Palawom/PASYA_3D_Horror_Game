@@ -21,6 +21,9 @@ public class AchievementToastSpawner : MonoBehaviour {
     [Tooltip("Optional — pass your SkinDatabaseSO to show the skin's actual display name in reward text instead of a generic \"New Skin\".")]
     [SerializeField] private SkinDatabaseSO skinDatabase;
 
+    [Tooltip("Optional — pass your AchievementIconDatabaseSO to resolve remote achievements' IconId to a bundled sprite instead of falling back to fallbackIcon.")]
+    [SerializeField] private AchievementIconDatabaseSO iconDatabase;
+
     void Start() {
         if (AchievementManager.Instance != null) AchievementManager.Instance.OnAchievementUnlocked += HandleUnlocked;
         else Debug.LogWarning("[AchievementToastSpawner] AchievementManager.Instance not ready in Start — check script execution order / GameObject setup.");
@@ -37,6 +40,6 @@ public class AchievementToastSpawner : MonoBehaviour {
         }
 
         var toast = Instantiate(toastPrefab, container);
-        toast.Show(def, skinDatabase);
+        toast.Show(def, skinDatabase, iconDatabase);
     }
 }
