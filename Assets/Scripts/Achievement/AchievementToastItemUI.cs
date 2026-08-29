@@ -11,6 +11,7 @@ using UnityEngine.UI;
 // itself after its display duration, the layout group reflows the rest
 // automatically. No manual positioning needed here beyond the slide offset.
 [RequireComponent(typeof(CanvasGroup))]
+[RequireComponent(typeof(AudioSource))]
 public class AchievementToastItemUI : MonoBehaviour {
     [Header("Refs")]
     [SerializeField] private Image iconImage;
@@ -20,6 +21,7 @@ public class AchievementToastItemUI : MonoBehaviour {
     [SerializeField] private TMP_Text rewardText; // "+50 Coins   +100 XP   New Skin: Foo" — hidden if no reward
     [SerializeField] private CanvasGroup canvasGroup;
     [SerializeField] private RectTransform rect;
+    [SerializeField] private AudioSource audioSource; // 2D UI sound; set AudioSource.spatialBlend = 0 in the prefab
 
     [Header("Animation")]
     [SerializeField] private float slideDistance = 60f; // pixels; slides in from this offset on the X axis
@@ -27,11 +29,18 @@ public class AchievementToastItemUI : MonoBehaviour {
     [SerializeField] private Ease animEase = Ease.OutQuad;
     [SerializeField] private float displayDuration = 4f; // time fully visible before animating out
 
+    [Header("Audio")]
+    [SerializeField] private AudioClip normalUnlockClip; // played for regular achievements
+    [SerializeField] private AudioClip epicUnlockClip;   // played when def.IsEpic is true
+    [Range(0f, 1f)]
+    [SerializeField] private float unlockVolume = 1f;
+
     private Sequence _sequence;
 
     private void Reset() {
         canvasGroup = GetComponent<CanvasGroup>();
         rect = GetComponent<RectTransform>();
+        audioSource = GetComponent<AudioSource>();
     }
 
     // Call once, right after Instantiate. skinDatabase is optional — pass it
@@ -51,6 +60,8 @@ public class AchievementToastItemUI : MonoBehaviour {
             rewardText.gameObject.SetActive(!string.IsNullOrEmpty(reward));
         }
 
+        PlayUnlockSound(def);
+
         canvasGroup.alpha = 0f;
         Vector2 restPos = rect.anchoredPosition;
         Vector2 offscreenPos = restPos + Vector2.right * slideDistance;
@@ -63,6 +74,13 @@ public class AchievementToastItemUI : MonoBehaviour {
             .Chain(Tween.Alpha(canvasGroup, endValue: 0f, duration: animDuration, ease: animEase))
             .Group(Tween.UIAnchoredPosition(rect, endValue: offscreenPos, duration: animDuration, ease: animEase))
             .ChainCallback(() => Destroy(gameObject));
+    }
+
+    private void PlayUnlockSound(IAchievementDefinition def) {
+        if (audioSource == null) return;
+
+        AudioClip clip = def.Tier == AchievementTier.Epic ? epicUnlockClip : normalUnlockClip;
+        if (clip != null) audioSource.PlayOneShot(clip, unlockVolume);
     }
 
     private void OnDestroy() => _sequence.Stop();

@@ -1,3 +1,4 @@
+using Firebase.Firestore;
 using PrimeTween;
 using System;
 using System.Collections;
@@ -205,6 +206,10 @@ public class MainMenuUI : MonoBehaviour {
     [SerializeField] Button achievementsButton;
     [SerializeField] GameObject achievementsPanel;
     [SerializeField] Button achievementsBackButton;
+
+    [SerializeField] Button completedQuizButton;
+    [SerializeField] GameObject completedQuizPanel;
+    [SerializeField] Button completedQuizBackButton;
 
     [SerializeField] GameObject TutorialPanel;
 
@@ -414,6 +419,7 @@ public class MainMenuUI : MonoBehaviour {
         exitButton.onClick.AddListener(OnExitClicked);
 
         achievementsButton.onClick.AddListener(ShowAchievementsPanel);
+        completedQuizButton.onClick.AddListener(ShowCompletedQuizPanel);
 
         // Multiplayer panel
         hostButton.onClick.AddListener(() => EnterWizard(GameMode.Host));
@@ -451,6 +457,7 @@ public class MainMenuUI : MonoBehaviour {
         settingsBackButton.onClick.AddListener(ShowMainPanel);
         aboutBackButton.onClick.AddListener(ShowMainPanel);
         achievementsBackButton.onClick.AddListener(ShowSettingsPanel);
+        completedQuizBackButton.onClick.AddListener(ShowSettingsPanel);
 
 
         characterAppearance.ApplySkin(database.GetById(SkinSaveSystem.Load()) ?? (database.skins.Length > 0 ? database.skins[0] : null));
@@ -542,7 +549,7 @@ public class MainMenuUI : MonoBehaviour {
         foreach (var item in _subjectItems) Destroy(item.gameObject);
         _subjectItems.Clear();
 
-        var completed = AuthManager.Instance.CurrentProfile?.CompletedQuizSetIds ?? new List<string>();
+        var completed = AuthManager.Instance.CurrentProfile?.CompletedQuizSets ?? new Dictionary<string, Timestamp>();
 
         var subjects = _allQuizMeta
             .Where(e => !string.IsNullOrWhiteSpace(e.subject))
@@ -553,7 +560,7 @@ public class MainMenuUI : MonoBehaviour {
 
         foreach (var subject in subjects) {
             var setsInSubject = _allQuizMeta.Where(e => e.subject == subject).ToList();
-            int completedCount = setsInSubject.Count(e => completed.Contains(e.setId));
+            int completedCount = setsInSubject.Count(e => completed.ContainsKey(e.setId));
             int totalPlayCount = setsInSubject.Sum(e => e.playCount);
 
             var item = Instantiate(subjectItemPrefab, subjectListContainer);
@@ -857,6 +864,12 @@ public class MainMenuUI : MonoBehaviour {
         ActionbarToastNotification.Instance.ClearToast();
     }
 
+    void ShowCompletedQuizPanel() {
+        SetMultiplayerTabRowVisible(false);
+        SwitchToPanel(completedQuizPanel);
+        ActionbarToastNotification.Instance.ClearToast();
+    }
+
     void OnExitClicked() {
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
@@ -953,7 +966,7 @@ public class MainMenuUI : MonoBehaviour {
     }
 
     void ApplySubjectFilterAndGating() {
-        var completed = AuthManager.Instance.CurrentProfile?.CompletedQuizSetIds ?? new List<string>();
+        var completed = AuthManager.Instance.CurrentProfile?.CompletedQuizSets ?? new Dictionary<string, Timestamp>();
 
         // Show only cards matching the selected subject AND the name filter.
         foreach (var item in _quizItems)
@@ -975,7 +988,7 @@ public class MainMenuUI : MonoBehaviour {
             }
 
             var prev = subjectItems[i - 1];
-            bool locked = !completed.Contains(prev.SetId);
+            bool locked = !completed.ContainsKey(prev.SetId);
 
             if (isFirstLocked && locked) {
                 isFirstLocked = false;

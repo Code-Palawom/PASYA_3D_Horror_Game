@@ -27,9 +27,17 @@ public enum AchievementStat {
     CompletedQuizSetsCount
 }
 
+// Designer-set rarity/importance. Purely presentational right now (e.g. which
+// unlock sound/VFX plays in AchievementToastItemUI) — doesn't affect
+// evaluation logic in AchievementManager. Add new cases here as needed.
+public enum AchievementTier {
+    Normal,
+    Epic
+}
+
 [CreateAssetMenu(fileName = "Achievement", menuName = "Pasya/Achievement")]
 public class AchievementDefinitionSO : ScriptableObject, IAchievementDefinition {
-    [Tooltip("Stable id stored in PlayerProfile.UnlockedAchievementIds. " +
+    [Tooltip("Stable id stored in PlayerProfile.UnlockedAchievements. " +
              "Never rename after players can have already unlocked it.")]
     public string achievementId;
 
@@ -39,6 +47,9 @@ public class AchievementDefinitionSO : ScriptableObject, IAchievementDefinition 
 
     [Tooltip("If true, UI should show a '???' placeholder (name/icon/description) until unlocked.")]
     public bool hidden;
+
+    [Tooltip("Purely presentational (e.g. picks the unlock sound/VFX) — does not affect evaluation.")]
+    public AchievementTier tier = AchievementTier.Normal;
 
     public AchievementTriggerType triggerType = AchievementTriggerType.StatThreshold;
 
@@ -79,6 +90,7 @@ public class AchievementDefinitionSO : ScriptableObject, IAchievementDefinition 
     string IAchievementDefinition.Description => description;
     Sprite IAchievementDefinition.Icon => icon;
     bool IAchievementDefinition.Hidden => hidden;
+    AchievementTier IAchievementDefinition.Tier => tier;
     AchievementTriggerType IAchievementDefinition.TriggerType => triggerType;
     AchievementStat IAchievementDefinition.Stat => stat;
     long IAchievementDefinition.Threshold => threshold;

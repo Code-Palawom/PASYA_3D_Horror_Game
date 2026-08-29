@@ -12,6 +12,7 @@ public class AchievementDefinitionSOEditor : Editor {
     private SerializedProperty _description;
     private SerializedProperty _icon;
     private SerializedProperty _hidden;
+    private SerializedProperty _tier;
     private SerializedProperty _triggerType;
     private SerializedProperty _stat;
     private SerializedProperty _threshold;
@@ -29,6 +30,7 @@ public class AchievementDefinitionSOEditor : Editor {
         _description = serializedObject.FindProperty(nameof(AchievementDefinitionSO.description));
         _icon = serializedObject.FindProperty(nameof(AchievementDefinitionSO.icon));
         _hidden = serializedObject.FindProperty(nameof(AchievementDefinitionSO.hidden));
+        _tier = serializedObject.FindProperty(nameof(AchievementDefinitionSO.tier));
         _triggerType = serializedObject.FindProperty(nameof(AchievementDefinitionSO.triggerType));
         _stat = serializedObject.FindProperty(nameof(AchievementDefinitionSO.stat));
         _threshold = serializedObject.FindProperty(nameof(AchievementDefinitionSO.threshold));
@@ -47,12 +49,13 @@ public class AchievementDefinitionSOEditor : Editor {
         EditorGUILayout.LabelField("Identity", EditorStyles.boldLabel);
         EditorGUILayout.PropertyField(_achievementId);
         if (string.IsNullOrWhiteSpace(_achievementId.stringValue)) {
-            EditorGUILayout.HelpBox("achievementId is empty — this is the stable id stored in PlayerProfile.UnlockedAchievementIds. Set it before shipping.", MessageType.Warning);
+            EditorGUILayout.HelpBox("achievementId is empty — this is the stable id stored in PlayerProfile.UnlockedAchievements. Set it before shipping.", MessageType.Warning);
         }
         EditorGUILayout.PropertyField(_displayName);
         EditorGUILayout.PropertyField(_description);
         EditorGUILayout.PropertyField(_icon);
         EditorGUILayout.PropertyField(_hidden);
+        EditorGUILayout.PropertyField(_tier);
 
         EditorGUILayout.Space();
         EditorGUILayout.LabelField("Trigger", EditorStyles.boldLabel);

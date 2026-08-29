@@ -11,6 +11,10 @@ public interface IAchievementDefinition {
     string Description { get; }
     Sprite Icon { get; }
     bool Hidden { get; }
+
+    // Presentational only (e.g. picks unlock sound/VFX) — not used in evaluation.
+    AchievementTier Tier { get; }
+
     AchievementTriggerType TriggerType { get; }
 
     // StatThreshold

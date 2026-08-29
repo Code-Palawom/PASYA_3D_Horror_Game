@@ -17,6 +17,12 @@ public class RemoteAchievementDefinition : IAchievementDefinition {
     public string DisplayName { get; set; }
     public string Description { get; set; }
     public bool Hidden { get; set; }
+
+    // Defaults to Normal if the Firestore doc doesn't set it — see
+    // RemoteAchievementSyncService for how this gets parsed (e.g. a
+    // "tier": "epic" string field, missing/unrecognized -> Normal).
+    public AchievementTier Tier { get; set; } = AchievementTier.Normal;
+
     public AchievementTriggerType TriggerType { get; set; }
 
     public AchievementStat Stat { get; set; }

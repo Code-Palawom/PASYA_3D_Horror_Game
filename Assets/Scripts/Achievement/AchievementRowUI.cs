@@ -59,4 +59,23 @@ public class AchievementRowUI : MonoBehaviour {
             lockedDimGroup.alpha = progress.IsUnlocked ? 1f : lockedAlpha;
         }
     }
+
+    // For an achievement id the player already has unlocked (see
+    // PlayerProfile.UnlockedAchievements) but that no longer has an active
+    // definition anywhere on the client — removed from a later build (local),
+    // or deleted from config/achievements (remote; RemoteAchievementSyncService's
+    // cache drops it the moment that syncs). There's nothing preserved about
+    // what it used to look like, so this only ever has the bare id to show.
+    public void ShowLegacy(string achievementId) {
+        if (iconImage != null) iconImage.sprite = fallbackIcon;
+        if (nameText != null) nameText.text = $"{achievementId} (Legacy)";
+
+        if (descriptionText != null) descriptionText.gameObject.SetActive(false);
+        if (progressText != null) progressText.gameObject.SetActive(false);
+        if (progressBar != null) progressBar.gameObject.SetActive(false);
+
+        // Always "unlocked" styling — a legacy row only ever exists because
+        // the player already has this id in UnlockedAchievements.
+        if (lockedDimGroup != null) lockedDimGroup.alpha = 1f;
+    }
 }
