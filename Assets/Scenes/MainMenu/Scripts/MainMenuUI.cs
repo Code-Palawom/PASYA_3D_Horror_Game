@@ -4,68 +4,71 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using TMPro;
 using Unity.Cinemachine;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
-using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public enum PanelSlideDirection { Left, Right, Up, Down }
 
-[System.Serializable]
+// NOTE: These are now plain data classes, populated only from code
+// (see BuildPanelAnimConfigs() / BuildContentAnimConfigs() below).
+// They are intentionally no longer [System.Serializable] / Inspector-facing.
 public class PanelAnimConfig {
     public GameObject panel;
-    [Tooltip("If false, this panel just SetActive's instantly — no slide tween.")]
     public bool enableSlide = true;
-    [Tooltip("If false, no opacity fade — panel appears/disappears instantly at alpha 1.")]
     public bool enableFade = true;
     public PanelSlideDirection enterFrom = PanelSlideDirection.Right;
     public PanelSlideDirection exitTo = PanelSlideDirection.Left;
 
-    [Tooltip("Delay before the show animation starts (slide + fade). Not applied on hide.")]
+    // Delay before the show animation starts (slide + fade). Not applied on hide.
     public float showDelay = 0f;
 
-    [Header("Overrides")]
-    [Tooltip("If false, uses the global panelSlideDuration/panelSlideEase/panelFadeDuration/panelFadeEase.")]
-    public bool overrideMotion = false;
+    // Final resolved values (no more overrideMotion flag — just set what you want per panel).
     public float slideDuration = 0.3f;
     public Ease slideEase = Ease.OutQuad;
     public float fadeDuration = 0.2f;
     public Ease fadeEase = Ease.OutQuad;
 }
 
-[System.Serializable]
 public class PanelContentItemConfig {
     public RectTransform item;
-    [Tooltip("If true, this item uses its own moveFrom/moveDistance/duration/ease below instead of the group defaults.")]
-    public bool overrideMotion = false;
     public PanelSlideDirection moveFrom = PanelSlideDirection.Down;
     public float moveDistance = 30f;
     public float duration = 0.3f;
     public Ease ease = Ease.OutBack;
 }
 
-[System.Serializable]
 public class PanelContentAnimConfig {
-    [Tooltip("The panel these items belong to — must match one of the panels in panelAnimConfigs (or mainPanel, etc).")]
+    // The panel these items belong to — must match one of the panels registered
+    // in BuildPanelAnimConfigs() (or mainPanel, etc).
     public GameObject panel;
-    [Tooltip("Items to animate in, in stagger order. Each can optionally override the group's default motion.")]
+    // Items to animate in, in stagger order.
     public List<PanelContentItemConfig> items = new();
-    [Tooltip("Delay before the FIRST item starts animating, e.g. to let the panel's own slide-in finish first.")]
+    // Delay before the FIRST item starts animating, e.g. to let the panel's own slide-in finish first.
     public float initialDelay = 0f;
-    [Tooltip("Seconds between each item's animation start.")]
+    // Seconds between each item's animation start.
     public float staggerDelay = 0.15f;
-    [Tooltip("Default direction/distance/duration/ease for items that don't override.")]
-    public PanelSlideDirection moveFrom = PanelSlideDirection.Down;
-    public float moveDistance = 30f;
-    public float duration = 0.3f;
-    public Ease ease = Ease.OutBack;
+}
+
+// Lets a specific "coming FROM this panel, going TO this panel" transition
+// override the panels' own default enter/exit direction (from PanelAnimConfig).
+// Either from or to can be null, meaning "any panel" — e.g. (null, settingsPanel)
+// matches every transition landing on settingsPanel regardless of where it
+// came from. A more specific (exact from+to) match always wins over a
+// wildcard one. Leaving exitDirection/enterDirection null on a match means
+// "no override for that side" — the panel's own default still applies.
+public class PanelTransitionConfig {
+    public GameObject from;
+    public GameObject to;
+    public PanelSlideDirection? exitDirection;
+    public PanelSlideDirection? enterDirection;
+    public bool? enableSlide;
 }
 
 // Main Menu UI — full navigation tree.
@@ -105,12 +108,16 @@ public class MainMenuUI : MonoBehaviour {
     // ── Main Panel (top-level) ─────────────────────────────
     [Header("Main Panel")]
     [SerializeField] GameObject mainPanel;
+    [SerializeField] GameObject pasyaTitle;
     [SerializeField] Button singlePlayerButton;
     [SerializeField] Button multiplayerButton;
     [SerializeField] Button characterButton;
     [SerializeField] Button settingsButton;
     [SerializeField] Button aboutButton;
     [SerializeField] Button exitButton;
+    [SerializeField] GameObject profileDisplay;
+    [SerializeField] TMP_Text versionDisplay;
+    [SerializeField] TMP_Text versionCheckDisplay;
 
     // ── Multiplayer Panel (Host / Join) ────────────────────
     [Header("Multiplayer Panel")]
@@ -196,7 +203,7 @@ public class MainMenuUI : MonoBehaviour {
     [SerializeField] MMCharacterRandomAnimation characterAnimation;
 
     [Header("Settings Panel")]
-    [SerializeField] SettingsUI settingsPanel;
+    [SerializeField] GameObject settingsPanel;
     [SerializeField] Button settingsBackButton;
 
     [Header("About Panel")]
@@ -217,22 +224,24 @@ public class MainMenuUI : MonoBehaviour {
     [SerializeField] private CinemachineCamera cam;
     [SerializeField] private CinemachineCamera characterCam;
 
-    // ── Panel Slide Animation ───────────────────────────────
-    [Header("Panel Slide Animation")]
-    [Tooltip("Default tween duration for panel slides, unless overridden.")]
+    // ── Panel Slide Animation (global fallback defaults) ───────────────────
+    // These are still Inspector-tunable as "house defaults"; per-panel
+    // configs below can either use them or specify their own values outright.
+    [Header("Panel Slide Animation — Global Defaults")]
     [SerializeField] private float panelSlideDuration = 0.25f;
     [SerializeField] private Ease panelSlideEase = Ease.OutQuad;
     [Tooltip("How far off-screen (in pixels) panels slide to/from.")]
     [SerializeField] private float panelSlideDistance = 900f;
     [SerializeField] private float panelFadeDuration = 0.2f;
     [SerializeField] private Ease panelFadeEase = Ease.OutQuad;
-    [Tooltip("Register mainPanel, joinPanel, levelSelectPanel, quizSelectPanel, characterPanel, and aboutPanel here with a direction each. Uncheck enableSlide on any panel that should just pop instantly. settingsPanel is excluded — it manages its own Show()/Hide().")]
-    [SerializeField] private List<PanelAnimConfig> panelAnimConfigs = new();
 
-    // ── Panel Content Animation (staggered reveal) ──────────
-    [Header("Panel Content Animation")]
-    [Tooltip("Optional per-panel staggered reveal for buttons/content inside a panel (e.g. main panel nav buttons). Each item can override the group's default direction/duration/ease.")]
-    [SerializeField] private List<PanelContentAnimConfig> panelContentAnimConfigs = new();
+    // Panel + content animation configs are now built entirely in code —
+    // see BuildPanelAnimConfigs() / BuildContentAnimConfigs() /
+    // BuildPanelTransitionConfigs() near the bottom of this section.
+    // Nothing here is Inspector-editable anymore.
+    private List<PanelAnimConfig> panelAnimConfigs;
+    private List<PanelContentAnimConfig> panelContentAnimConfigs;
+    private List<PanelTransitionConfig> panelTransitionConfigs;
 
     private class PanelRuntime {
         public RectTransform rect;
@@ -299,9 +308,124 @@ public class MainMenuUI : MonoBehaviour {
 
     private bool isFirstLaunch = true;
 
+    // ─────────────────────────────────────────────────────────
+    // CODE-ONLY ANIMATION CONFIG
+    // ─────────────────────────────────────────────────────────
+    // Everything below replaces what used to be the Inspector lists
+    // "Panel Anim Configs" / "Panel Content Anim Configs". Edit these two
+    // methods directly to change what animates and how — no Inspector
+    // wiring needed anymore.
+    private List<PanelAnimConfig> BuildPanelAnimConfigs() {
+        var configs = new List<PanelAnimConfig>();
+
+        void Add(GameObject panel, PanelSlideDirection enterFrom, PanelSlideDirection exitTo, bool enableSlide = true, bool enableFade = true, float showDelay = 0f, float? slideDuration = null, Ease? slideEase = null, float? fadeDuration = null, Ease? fadeEase = null) {
+            if (panel == null) return;
+            configs.Add(new PanelAnimConfig {
+                panel = panel,
+                enableSlide = enableSlide,
+                enableFade = enableFade,
+                enterFrom = enterFrom,
+                exitTo = exitTo,
+                showDelay = showDelay,
+                slideDuration = slideDuration ?? panelSlideDuration,
+                slideEase = slideEase ?? panelSlideEase,
+                fadeDuration = fadeDuration ?? panelFadeDuration,
+                fadeEase = fadeEase ?? panelFadeEase
+            });
+        }
+
+        Add(mainPanel, PanelSlideDirection.Left, PanelSlideDirection.Left);
+        Add(joinPanel, PanelSlideDirection.Down, PanelSlideDirection.Down);
+        Add(levelSelectPanel, PanelSlideDirection.Down, PanelSlideDirection.Down);
+        Add(subjectSelectPanel, PanelSlideDirection.Up, PanelSlideDirection.Up);
+        Add(quizSelectPanel, PanelSlideDirection.Up, PanelSlideDirection.Up);
+        Add(characterPanel, PanelSlideDirection.Right, PanelSlideDirection.Right);
+        Add(aboutPanel, PanelSlideDirection.Down, PanelSlideDirection.Down);
+        Add(achievementsPanel, PanelSlideDirection.Right, PanelSlideDirection.Right, false);
+        Add(completedQuizPanel, PanelSlideDirection.Right, PanelSlideDirection.Right, false);
+        Add(settingsPanel, PanelSlideDirection.Right, PanelSlideDirection.Right);
+
+        return configs;
+    }
+
+    private List<PanelContentAnimConfig> BuildContentAnimConfigs() {
+        var configs = new List<PanelContentAnimConfig>();
+
+        PanelContentItemConfig Item(RectTransform rect, PanelSlideDirection moveFrom = PanelSlideDirection.Left, float moveDistance = 130f, float duration = 0.3f, Ease ease = Ease.OutBack) {
+            return new PanelContentItemConfig {
+                item = rect,
+                moveFrom = moveFrom,
+                moveDistance = moveDistance,
+                duration = duration,
+                ease = ease
+            };
+        }
+
+        // Main panel content, staggered in on first show — the real 10 items,
+        // in on-screen order.
+        var mainPanelItems = new List<PanelContentItemConfig> {
+            Item(pasyaTitle.GetComponent<RectTransform>()),
+            Item(singlePlayerButton.GetComponent<RectTransform>()),
+            Item(multiplayerButton.GetComponent<RectTransform>()),
+            Item(characterButton.GetComponent<RectTransform>()),
+            Item(settingsButton.GetComponent<RectTransform>()),
+            Item(aboutButton.GetComponent<RectTransform>()),
+            Item(exitButton.GetComponent<RectTransform>()),
+            Item(profileDisplay.GetComponent<RectTransform>(), PanelSlideDirection.Right),
+            Item(versionDisplay.GetComponent<RectTransform>(), PanelSlideDirection.Right),
+            Item(versionCheckDisplay.GetComponent<RectTransform>()),
+        };
+
+        configs.Add(new PanelContentAnimConfig {
+            panel = mainPanel,
+            items = mainPanelItems,
+            initialDelay = 0f,
+            staggerDelay = 0.15f
+        });
+
+        return configs;
+    }
+
+    // Per-(from,to) transition overrides. Use this when a panel needs to
+    // animate differently depending on which panel you're coming FROM —
+    // e.g. MainMenu -> Level Select feels like a forward wizard step, while
+    // MainMenu -> Settings feels more like opening a modal, even though both
+    // start at mainPanel. Without a match here, each panel just uses its own
+    // default enterFrom/exitTo from BuildPanelAnimConfigs().
+    private List<PanelTransitionConfig> BuildPanelTransitionConfigs() {
+        var transitions = new List<PanelTransitionConfig>();
+
+        void AddTransition(GameObject from, GameObject to, PanelSlideDirection? exitDirection = null, PanelSlideDirection? enterDirection = null, bool? enableSlide = null) {
+            transitions.Add(new PanelTransitionConfig {
+                from = from,
+                to = to,
+                exitDirection = exitDirection,
+                enterDirection = enterDirection,
+                enableSlide = enableSlide
+            });
+        }
+
+        AddTransition(mainPanel, levelSelectPanel,
+            exitDirection: PanelSlideDirection.Left, enterDirection: PanelSlideDirection.Right);
+
+        AddTransition(levelSelectPanel, mainPanel,
+            exitDirection: PanelSlideDirection.Right, enterDirection: PanelSlideDirection.Left);
+
+        AddTransition(settingsPanel, achievementsPanel, enableSlide: false);
+        AddTransition(settingsPanel, completedQuizPanel, enableSlide: false);
+        AddTransition(achievementsPanel, settingsPanel, enableSlide: false);
+        AddTransition(completedQuizPanel, settingsPanel, enableSlide: false);
+
+        return transitions;
+    }
+
     private void Awake() {
         cam.Priority = 0;
         characterCam.Priority = 10;
+
+        panelAnimConfigs = BuildPanelAnimConfigs();
+        panelContentAnimConfigs = BuildContentAnimConfigs();
+        panelTransitionConfigs = BuildPanelTransitionConfigs();
 
         foreach (var config in panelAnimConfigs) {
             if (config.panel == null) continue;
@@ -323,10 +447,10 @@ public class MainMenuUI : MonoBehaviour {
                 enterFrom = config.enterFrom,
                 exitTo = config.exitTo,
                 showDelay = config.showDelay,
-                slideDuration = config.overrideMotion ? config.slideDuration : panelSlideDuration,
-                slideEase = config.overrideMotion ? config.slideEase : panelSlideEase,
-                fadeDuration = config.overrideMotion ? config.fadeDuration : panelFadeDuration,
-                fadeEase = config.overrideMotion ? config.fadeEase : panelFadeEase
+                slideDuration = config.slideDuration,
+                slideEase = config.slideEase,
+                fadeDuration = config.fadeDuration,
+                fadeEase = config.fadeEase
             };
         }
 
@@ -348,10 +472,10 @@ public class MainMenuUI : MonoBehaviour {
                     rect = itemConfig.item,
                     group = canvasGroup,
                     restPos = itemConfig.item.anchoredPosition,
-                    moveFrom = itemConfig.overrideMotion ? itemConfig.moveFrom : config.moveFrom,
-                    moveDistance = itemConfig.overrideMotion ? itemConfig.moveDistance : config.moveDistance,
-                    duration = itemConfig.overrideMotion ? itemConfig.duration : config.duration,
-                    ease = itemConfig.overrideMotion ? itemConfig.ease : config.ease
+                    moveFrom = itemConfig.moveFrom,
+                    moveDistance = itemConfig.moveDistance,
+                    duration = itemConfig.duration,
+                    ease = itemConfig.ease
                 });
             }
 
@@ -595,13 +719,13 @@ public class MainMenuUI : MonoBehaviour {
     // place the card's displayed info gets refreshed.
     void HandleMetaUpdated(QuizSetMetaEntry entry) {
         if (entry.setId == "Tutorial") return;
-        
+
         int metaIndex = _allQuizMeta.FindIndex(e => e.setId == entry.setId);
         if (metaIndex >= 0) _allQuizMeta[metaIndex] = entry;
-        
+
         var item = _quizItems.FirstOrDefault(i => i.SetId == entry.setId);
         if (item != null) item.Setup(entry, OnQuizSelected);
-        
+
         RefreshSubjectListIfVisible();
         if (_currentPanel == quizSelectPanel) ApplySubjectFilterAndGating();
     }
@@ -610,19 +734,19 @@ public class MainMenuUI : MonoBehaviour {
     void HandleSetRemoved(string setId) {
         _renderedQuizSetIds.Remove(setId);
         _allQuizMeta.RemoveAll(e => e.setId == setId);
-        
+
         var item = _quizItems.FirstOrDefault(i => i.SetId == setId);
         if (item != null) {
             _quizItems.Remove(item);
             Destroy(item.gameObject);
         }
-        
+
         if (_selectedQuizSetId == setId) {
             _selectedQuizSetId = null;
             _selectedQuizSetName = null;
             startButton.interactable = false;
         }
-        
+
         RefreshSubjectListIfVisible();
         if (_currentPanel == quizSelectPanel) ApplySubjectFilterAndGating();
     }
@@ -657,16 +781,16 @@ public class MainMenuUI : MonoBehaviour {
     // instant SetActive. If a panel has an entry in panelContentAnimConfigs,
     // its content staggers in after the panel finishes appearing (or
     // immediately, if the panel itself has slide disabled).
-    // settingsPanel is a special case: it manages its own Show()/Hide(),
-    // so we defer to that instead of touching its GameObject directly.
+    // Any panel is treated identically here — a panel that needs to react to
+    // being shown/hidden (refresh displayed values, flush pending state, etc.)
+    // does so by implementing IPanelLifecycle on itself; see NotifyPanelShow /
+    // NotifyPanelHide below. No panel gets special-cased in this class.
 
-    private void HideCurrentPanel() {
+    private void HideCurrentPanel(PanelSlideDirection? exitOverride = null, bool? enableSlideOverride = null) {
         if (_currentPanel == null) return;
 
-        if (settingsPanel != null && _currentPanel == settingsPanel.gameObject) {
-            settingsPanel.Hide();
-        } else if (_panelRuntimes.TryGetValue(_currentPanel, out var runtime)) {
-            AnimateHidePanel(_currentPanel, runtime);
+        if (_panelRuntimes.TryGetValue(_currentPanel, out var runtime)) {
+            AnimateHidePanel(_currentPanel, runtime, exitOverride, enableSlideOverride);
         } else {
             _currentPanel.SetActive(false);
         }
@@ -675,11 +799,14 @@ public class MainMenuUI : MonoBehaviour {
     private void SwitchToPanel(GameObject targetPanel) {
         if (_currentPanel == targetPanel) return;
 
-        HideCurrentPanel();
+        GameObject previousPanel = _currentPanel;
+        PanelTransitionConfig transition = FindTransition(previousPanel, targetPanel);
+
+        HideCurrentPanel(transition?.exitDirection, transition?.enableSlide);
         _currentPanel = targetPanel;
 
         if (_panelRuntimes.TryGetValue(targetPanel, out var inRuntime))
-            AnimateShowPanel(targetPanel, inRuntime);
+            AnimateShowPanel(targetPanel, inRuntime, transition?.enterDirection, transition?.enableSlide);
         else {
             targetPanel.SetActive(true);
             if (_contentRuntimes.TryGetValue(targetPanel, out var content))
@@ -687,16 +814,41 @@ public class MainMenuUI : MonoBehaviour {
         }
     }
 
-    private void AnimateShowPanel(GameObject panel, PanelRuntime r) {
+    // Finds the most specific registered transition for this (from, to) pair.
+    // Exact from+to match wins outright; otherwise an "any from -> this to"
+    // wildcard is preferred over a "this from -> any to" wildcard. Returns
+    // null if nothing matches, meaning both panels just use their own
+    // defaults from BuildPanelAnimConfigs().
+    private PanelTransitionConfig FindTransition(GameObject from, GameObject to) {
+        PanelTransitionConfig anyFromMatch = null;
+        PanelTransitionConfig anyToMatch = null;
+
+        foreach (var t in panelTransitionConfigs) {
+            bool fromMatches = t.from == null || t.from == from;
+            bool toMatches = t.to == null || t.to == to;
+            if (!fromMatches || !toMatches) continue;
+
+            if (t.from == from && t.to == to) return t;
+            if (t.from == null && t.to == to) anyFromMatch = t;
+            else if (t.from == from && t.to == null) anyToMatch = t;
+        }
+
+        return anyFromMatch ?? anyToMatch;
+    }
+
+    private void AnimateShowPanel(GameObject panel, PanelRuntime r, PanelSlideDirection? enterOverride = null, bool? enableSlideOverride = null) {
         r.tween.Stop();
         r.fadeTween.Stop();
 
         panel.SetActive(true);
 
-        if (!r.enableSlide) {
+        PanelSlideDirection enterFrom = enterOverride ?? r.enterFrom;
+        bool enableSlide = enableSlideOverride ?? r.enableSlide;
+
+        if (!enableSlide) {
             r.rect.anchoredPosition = r.restPos;
         } else {
-            r.rect.anchoredPosition = r.restPos + GetSlideOffset(r.enterFrom, panelSlideDistance);
+            r.rect.anchoredPosition = r.restPos + GetSlideOffset(enterFrom, panelSlideDistance);
             r.tween = Tween.UIAnchoredPosition(r.rect, r.restPos, r.slideDuration, r.slideEase, startDelay: r.showDelay);
         }
 
@@ -711,14 +863,16 @@ public class MainMenuUI : MonoBehaviour {
             AnimateContentIn(content);
     }
 
-    private void AnimateHidePanel(GameObject panel, PanelRuntime r) {
+    private void AnimateHidePanel(GameObject panel, PanelRuntime r, PanelSlideDirection? exitOverride = null, bool? enableSlideOverride = null) {
         r.tween.Stop();
         r.fadeTween.Stop();
 
         if (_contentRuntimes.TryGetValue(panel, out var content))
             StopContentTweens(content);
 
-        if (!r.enableFade && !r.enableSlide) {
+        bool enableSlide = enableSlideOverride ?? r.enableSlide;
+
+        if (!r.enableFade && !enableSlide) {
             panel.SetActive(false);
             return;
         }
@@ -734,8 +888,9 @@ public class MainMenuUI : MonoBehaviour {
             r.canvasGroup.alpha = 1f;
         }
 
-        if (r.enableSlide) {
-            var slideTween = Tween.UIAnchoredPosition(r.rect, r.restPos + GetSlideOffset(r.exitTo, panelSlideDistance), r.slideDuration, r.slideEase);
+        if (enableSlide) {
+            PanelSlideDirection exitTo = exitOverride ?? r.exitTo;
+            var slideTween = Tween.UIAnchoredPosition(r.rect, r.restPos + GetSlideOffset(exitTo, panelSlideDistance), r.slideDuration, r.slideEase);
 
             if (!r.enableFade) {
                 slideTween.OnComplete(() => {
@@ -747,6 +902,7 @@ public class MainMenuUI : MonoBehaviour {
             r.tween = slideTween;
         }
     }
+
 
     // Staggered content reveal for a panel's inner items (e.g. main panel nav buttons).
     // Each item may have its own direction/distance/duration/ease (see PanelContentItemConfig).
@@ -773,7 +929,9 @@ public class MainMenuUI : MonoBehaviour {
             Vector2 offset = GetSlideOffset(item.moveFrom, item.moveDistance);
             Vector2 fromPos = item.restPos + offset;
             float delay = content.initialDelay + i * content.staggerDelay;
-            if(content.items.Count == 10 && !isFirstLaunch) delay = 0;
+            // Main panel (10 items, see BuildContentAnimConfigs) skips the stagger
+            // delay after first launch — only the very first reveal staggers in.
+            if (content.items.Count == 10 && !isFirstLaunch) delay = 0;
 
             item.moveTween = Tween.UIAnchoredPosition(item.rect, fromPos, item.restPos, item.duration, item.ease, startDelay: delay);
             item.fadeTween = Tween.Alpha(item.group, 0f, 1f, item.duration, Ease.Linear, startDelay: delay);
@@ -843,11 +1001,8 @@ public class MainMenuUI : MonoBehaviour {
     }
 
     void ShowSettingsPanel() {
-        HideCurrentPanel();
-        _currentPanel = settingsPanel.gameObject;
-
         SetMultiplayerTabRowVisible(false);
-        settingsPanel.Show();
+        SwitchToPanel(settingsPanel);
 
         ActionbarToastNotification.Instance.ClearToast();
     }

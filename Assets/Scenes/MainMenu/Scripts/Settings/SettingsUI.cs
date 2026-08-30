@@ -6,7 +6,7 @@ using UnityEngine.UI;
 
 public class SettingsUI : MonoBehaviour {
     [SerializeField] private MainMenuUI mainMenuUI;
-    
+
     [Header("Name")]
     [SerializeField] private TMP_InputField nameField;
     [SerializeField] private TMP_Text nameChangeStatus;
@@ -106,35 +106,38 @@ public class SettingsUI : MonoBehaviour {
         if (SettingsManager.Instance != null)
             Populate(SettingsManager.Instance.Current);
 
-        if(VersionChecker.Instance.IsNotOnLastestVersion && VersionChecker.Instance.DownloadURL != "") {
+        if (VersionChecker.Instance.IsNotOnLastestVersion && VersionChecker.Instance.DownloadURL != "") {
             downloadUpdate.gameObject.SetActive(true);
         }
     }
 
-    // ── Called by your panel manager ─────────────────────────
-    public void Show() {
-        gameObject.SetActive(true);
-        Refresh();
-    }
+    // ── IPanelLifecycle ───────────────────────────────────────
+    // MainMenuUI treats this panel exactly like any other panel — it owns
+    // the active state and show/hide animation (see
+    // MainMenuUI.BuildPanelAnimConfigs / SwitchToPanel) and calls these two
+    // hooks generically via NotifyPanelShow / NotifyPanelHide. Nothing here
+    // is settings-specific from MainMenuUI's point of view.
 
-    public void Hide() {
-        // Flush any debounced frame rate save that hasn't fired yet —
-        // otherwise closing the panel mid-drag kills the coroutine and the value is lost.
-        if (_hasPendingFrameRateSave) {
-            if (_frameRateDebounceRoutine != null) {
-                StopCoroutine(_frameRateDebounceRoutine);
-                _frameRateDebounceRoutine = null;
-            }
-            AutoSave(s => s.targetFrameRate = _targetFrameRate);
-            _hasPendingFrameRateSave = false;
-        }
-
-        gameObject.SetActive(false);
-    }
-
-    public void Refresh() {
+    // Called right before the panel becomes visible, so fields are current
+    // by the time the animation reveals them.
+    void OnEnable() {
         if (SettingsManager.Instance != null)
             Populate(SettingsManager.Instance.Current);
+    }
+
+    // Called right before the panel is hidden. Flushes any debounced save
+    // that hasn't fired yet — otherwise navigating away mid-drag kills
+    // the coroutine (which lives on this now-hidden GameObject) and the
+    // value is lost.
+    void OnDisable() {
+        if (!_hasPendingFrameRateSave) return;
+
+        if (_frameRateDebounceRoutine != null) {
+            StopCoroutine(_frameRateDebounceRoutine);
+            _frameRateDebounceRoutine = null;
+        }
+        AutoSave(s => s.targetFrameRate = _targetFrameRate);
+        _hasPendingFrameRateSave = false;
     }
 
     // ── Quality carousel ─────────────────────────────────────

@@ -9,17 +9,8 @@ using UnityEngine.UI;
 // Minimal UI hookup for the Sign In button.
 // Attach to a Canvas GameObject. Assign the button and label in the Inspector.
 public class UIAuthButton : MonoBehaviour {
-    [Header("References")]
-    [Tooltip("The Sign In button.")]
-    [SerializeField] private Button authButton;
-
-    [SerializeField] private GameObject logoImage;
-
-    [Tooltip("Label on the button (TextMeshPro).")]
-    [SerializeField] private TMP_Text buttonLabel;
-
-    [Tooltip("Optional: a separate label showing the signed-in user's name/email.")]
-    [SerializeField] private TMP_Text userInfoLabel;
+    [SerializeField] private TMP_Text userNameLabel;
+    [SerializeField] private TMP_Text coins3;
 
     [Tooltip("Stats")]
     [SerializeField] private GameObject guestWrapper;
@@ -47,7 +38,6 @@ public class UIAuthButton : MonoBehaviour {
     // ── Lifecycle ─────────────────────────────────────────────────────────
 
     void Start() {
-        authButton.onClick.AddListener(OnAuthButtonClicked);
         signInBtn.onClick.AddListener(OnAuthButtonClicked);
         logoutBtn.onClick.AddListener(OnAuthButtonClicked);
 
@@ -76,19 +66,7 @@ public class UIAuthButton : MonoBehaviour {
     private void OnPlayerStatsLoaded(PlayerProfile user) {
         bool signedIn = AuthManager.Instance.IsSignedIn;
 
-        // Update button label
-        if (buttonLabel != null) {
-            buttonLabel.text = signedIn ? "Sign Out" : "Sign in with Google";
-            logoImage.SetActive(signedIn);
-            authButton.gameObject.SetActive(!signedIn);
-        }
-
-        // Update user info label
-        if (userInfoLabel != null)
-            userInfoLabel.text = signedIn
-                //? $"{user.DisplayName}\n{user.Email}"
-                ? user.DisplayName
-                : string.Empty;
+        userNameLabel.text = signedIn ? user.DisplayName : "Playing as guest";
 
         if (AuthManager.Instance.CurrentProfile != null) UpdateUserStatsUI(AuthManager.Instance.CurrentProfile);
         AuthManager.Instance.OnPlayerStatsLoaded += UpdateUserStatsUI;
@@ -108,13 +86,16 @@ public class UIAuthButton : MonoBehaviour {
         if (AuthManager.Instance.IsSignedIn) email.text = AuthManager.Instance.CurrentUser?.Email ?? "N/A";
         displayName.text = profile.DisplayName;
         //role.text = profile.Role.ToString();
-        coins.text = profile.Coins.ToString();
+        string currentCoins = profile.Coins.ToString();
+
+        coins.text = currentCoins;
         xp.text = profile.Xp.ToString();
         gamesPlayed.text = profile.GamesPlayed.ToString();
         correctAnswers.text = profile.CorrectAnswers.ToString();
         incorrectAnswers.text = profile.IncorrectAnswers.ToString();
 
-        coins2.text = $"Coins: {profile.Coins}";
+        coins2.text = currentCoins;
+        coins3.text = currentCoins;
 
         DateTime creationDate = profile.CreatedAt.ToDateTime();
         TimeSpan ageSpan = DateTime.UtcNow - creationDate;
