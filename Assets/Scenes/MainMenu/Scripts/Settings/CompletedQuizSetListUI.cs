@@ -49,12 +49,12 @@ public class CompletedQuizSetListUI : MonoBehaviour {
         // during grouping/sorting below.
         var entries = completed.Select(kvp => {
             var meta = QuizRepository.Instance != null ? QuizRepository.Instance.GetMetaById(kvp.Key) : null;
-            return (setId: kvp.Key, completedAt: kvp.Value, meta);
+            return (setId: kvp.Key, info: kvp.Value, meta);
         }).ToList();
 
         var groups = entries
             .GroupBy(e => string.IsNullOrEmpty(e.meta?.subject) ? UnknownSubjectGroup : e.meta.subject)
-            .OrderByDescending(g => g.Max(e => e.completedAt.ToDateTime()))
+            .OrderByDescending(g => g.Max(e => e.info.CompletedAt.ToDateTime()))
             .ToList();
 
         int headerIndex = 0;
@@ -62,7 +62,7 @@ public class CompletedQuizSetListUI : MonoBehaviour {
         int siblingIndex = 0;
 
         foreach (var group in groups) {
-            var groupEntries = group.OrderByDescending(e => e.completedAt.ToDateTime()).ToList();
+            var groupEntries = group.OrderByDescending(e => e.info.CompletedAt.ToDateTime()).ToList();
 
             EnsureHeaderCount(headerIndex + 1);
             var header = _spawnedHeaders[headerIndex++];
@@ -75,8 +75,8 @@ public class CompletedQuizSetListUI : MonoBehaviour {
                 var row = _spawnedRows[rowIndex++];
                 row.gameObject.SetActive(true);
 
-                if (entry.meta != null) row.Show(entry.meta, entry.completedAt);
-                else row.ShowUnknown(entry.setId, entry.completedAt);
+                if (entry.meta != null) row.Show(entry.meta, entry.info.CompletedAt, entry.info.Correct, entry.info.Incorrect);
+                else row.ShowUnknown(entry.setId, entry.info.CompletedAt, entry.info.Correct, entry.info.Incorrect);
 
                 row.transform.SetSiblingIndex(siblingIndex++);
             }

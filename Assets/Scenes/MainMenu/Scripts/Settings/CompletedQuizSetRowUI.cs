@@ -15,7 +15,7 @@ public class CompletedQuizSetRowUI : MonoBehaviour {
     // Swap the format string here if you want a different style everywhere.
     private const string DateFormat = "MMM d, yyyy";
 
-    public void Show(QuizSetMetaEntry meta, Timestamp completedAt) {
+    public void Show(QuizSetMetaEntry meta, Timestamp completedAt, int correct, int incorrect) {
         if (nameText != null) nameText.text = meta.name;
 
         //if (subjectText != null) {
@@ -36,7 +36,7 @@ public class CompletedQuizSetRowUI : MonoBehaviour {
     // removed from Firestore's quizSets collection, or a local SO set that's
     // since been removed from the build. Nothing preserved about what it used
     // to look like, so this only ever has the bare id and the completion date.
-    public void ShowUnknown(string setId, Timestamp completedAt) {
+    public void ShowUnknown(string setId, Timestamp completedAt, int correct, int incorrect) {
         if (nameText != null) nameText.text = $"{setId} (Unknown Set)";
         //if (subjectText != null) subjectText.gameObject.SetActive(false);
         if (questionCountText != null) questionCountText.gameObject.SetActive(false);

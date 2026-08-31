@@ -673,7 +673,7 @@ public class MainMenuUI : MonoBehaviour {
         foreach (var item in _subjectItems) Destroy(item.gameObject);
         _subjectItems.Clear();
 
-        var completed = AuthManager.Instance.CurrentProfile?.CompletedQuizSets ?? new Dictionary<string, Timestamp>();
+        var completed = AuthManager.Instance.CurrentProfile?.CompletedQuizSets ?? new Dictionary<string, QuizSetCompletionInfo>();
 
         var subjects = _allQuizMeta
             .Where(e => !string.IsNullOrWhiteSpace(e.subject))
@@ -1121,7 +1121,7 @@ public class MainMenuUI : MonoBehaviour {
     }
 
     void ApplySubjectFilterAndGating() {
-        var completed = AuthManager.Instance.CurrentProfile?.CompletedQuizSets ?? new Dictionary<string, Timestamp>();
+        var completed = AuthManager.Instance.CurrentProfile?.CompletedQuizSets ?? new Dictionary<string, QuizSetCompletionInfo>();
 
         // Show only cards matching the selected subject AND the name filter.
         foreach (var item in _quizItems)
