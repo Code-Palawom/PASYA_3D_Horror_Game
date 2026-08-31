@@ -6,7 +6,8 @@ using UnityEngine;
 // One-time, server-only spawner. At each assigned spawn point, spawns a
 // WorldItem carrying a randomly chosen item from itemPool. Also supports
 // a list of fixed spawns — specific items tied to specific points, always
-// placed, never shuffled.
+// placed, never shuffled — and spawn groups, where a subset of points draws
+// only from its own item pool instead of the global one.
 //
 // This GameObject itself is NOT a NetworkObject — it just calls Spawn() on
 // networked WorldItem instances, which then sync to every client on their own.
@@ -18,6 +19,17 @@ public class WorldItemSpawner : MonoBehaviour {
         public Transform point;
         [Tooltip("The item that always spawns at this point.")]
         public InventoryItem item;
+    }
+
+    [Serializable]
+    private class SpawnGroup {
+        [Tooltip("Optional label for logging/debugging.")]
+        public string groupName;
+        [Tooltip("Points that only draw from this group's own item list.")]
+        public List<Transform> points = new();
+        [Tooltip("Items available to this group's points. Shuffled with no repeats, " +
+                 "same rules as the main pool: extra points are skipped, extra items are left unplaced.")]
+        public List<InventoryItem> items = new();
     }
 
     [Header("Random Spawn Points")]
@@ -34,6 +46,11 @@ public class WorldItemSpawner : MonoBehaviour {
     [Header("Fixed Spawns")]
     [Tooltip("Items that always spawn at their assigned point — not part of the random shuffle.")]
     [SerializeField] private List<FixedSpawn> fixedSpawns = new();
+
+    [Header("Spawn Groups")]
+    [Tooltip("Each group's points only draw from that group's own items — isolated from " +
+             "the main pool and from other groups.")]
+    [SerializeField] private List<SpawnGroup> spawnGroups = new();
 
     [Header("Prefab")]
     [Tooltip("Must have NetworkObject + WorldItem components.")]
@@ -54,7 +71,8 @@ public class WorldItemSpawner : MonoBehaviour {
 
         int spawned = 0;
         spawned += SpawnFixed();
-        spawned += SpawnRandomPool();
+        spawned += SpawnRandomPool(spawnPoints, itemPool, "main pool");
+        spawned += SpawnGroups();
 
         Debug.Log($"[WorldItemSpawner] Spawned {spawned} items total.");
     }
@@ -76,27 +94,40 @@ public class WorldItemSpawner : MonoBehaviour {
         return spawned;
     }
 
-    private int SpawnRandomPool() {
-        if (itemPool.Count == 0) {
-            Debug.LogWarning("[WorldItemSpawner] Item pool is empty — skipping random spawns.");
+    private int SpawnGroups() {
+        int spawned = 0;
+        foreach (var group in spawnGroups) {
+            string label = string.IsNullOrEmpty(group.groupName) ? "unnamed group" : group.groupName;
+            spawned += SpawnRandomPool(group.points, group.items, label);
+        }
+        return spawned;
+    }
+
+    // Shuffles `items` (no repeats) across `points`, one item per point, up to
+    // whichever list is shorter. Shared by the main pool and every spawn group —
+    // each call gets its own isolated shuffle, so groups never draw from each
+    // other's or the main pool's items.
+    private int SpawnRandomPool(List<Transform> points, List<InventoryItem> items, string label) {
+        if (items.Count == 0) {
+            Debug.LogWarning($"[WorldItemSpawner] Item pool for '{label}' is empty — skipping random spawns.");
             return 0;
         }
 
-        if (spawnPoints.Count != itemPool.Count) {
-            Debug.LogWarning($"[WorldItemSpawner] {spawnPoints.Count} spawn points but " +
-                              $"{itemPool.Count} items in pool — " +
-                              (spawnPoints.Count > itemPool.Count
+        if (points.Count != items.Count) {
+            Debug.LogWarning($"[WorldItemSpawner] '{label}': {points.Count} spawn points but " +
+                              $"{items.Count} items — " +
+                              (points.Count > items.Count
                                   ? "some points will be left empty."
                                   : "some items won't be placed."));
         }
 
-        var shuffledItems = new List<InventoryItem>(itemPool);
+        var shuffledItems = new List<InventoryItem>(items);
         Shuffle(shuffledItems);
 
         int spawned = 0;
-        int count = Mathf.Min(spawnPoints.Count, shuffledItems.Count);
+        int count = Mathf.Min(points.Count, shuffledItems.Count);
         for (int i = 0; i < count; i++) {
-            var point = spawnPoints[i];
+            var point = points[i];
             if (point == null) continue;
 
             if (SpawnItemAt(point, shuffledItems[i])) spawned++;
@@ -104,7 +135,7 @@ public class WorldItemSpawner : MonoBehaviour {
         return spawned;
     }
 
-    // Shared spawn path used by both fixed and random spawns.
+    // Shared spawn path used by fixed spawns, the main pool, and every spawn group.
     private bool SpawnItemAt(Transform point, InventoryItem item) {
         var go = Instantiate(worldItemPrefab, point.position, point.rotation);
         if (!go.TryGetComponent<NetworkObject>(out var netObj)) {

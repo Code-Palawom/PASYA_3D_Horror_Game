@@ -11,13 +11,20 @@ using UnityEngine;
 //   2. Every currently-connected player is teleported to its own distinct
 //      podium spot from podiumSet, assigned by connection order (NOT
 //      clientId % count — that can put two players on the same spot).
+//
+// Can also be triggered remotely (e.g. from PlayerHUD) via
+// RequestEndGameRpc(), which shares the same fire-once guard as the
+// physical trigger.
 [RequireComponent(typeof(Collider))]
 public class EndGameTriggerZone : NetworkBehaviour {
     [SerializeField] EndGameTeleportSetSO teleportSet;
 
+    public static EndGameTriggerZone Instance { get; private set; }
+
     bool _hasFired;
 
     void Awake() {
+        Instance = this;
         GetComponent<Collider>().isTrigger = true;
     }
 
@@ -25,6 +32,19 @@ public class EndGameTriggerZone : NetworkBehaviour {
         if (!IsServer || _hasFired) return;
         if (!other.TryGetComponent<Player>(out _)) return; // ignore non-player colliders
 
+        TryFireEndGame();
+    }
+
+    // FOR TESTING: allow the end-game trigger to be fired via a keypress (server only) // SEE TaskListUI.cs for a client-side trigger that calls this via RPC.
+    // Client-callable entry point (e.g. from PlayerHUD). Runs on the
+    // server and shares the same fire-once guard as the physical trigger.
+    [Rpc(SendTo.Server)]
+    public void RequestEndGameRpc() {
+        TryFireEndGame();
+    }
+
+    void TryFireEndGame() {
+        if (_hasFired) return;
         _hasFired = true;
         StartCoroutine(EndGameSequence());
     }

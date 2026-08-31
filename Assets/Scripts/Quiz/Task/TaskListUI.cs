@@ -54,10 +54,7 @@ public class TaskListUI : MonoBehaviour {
         foreach (Transform child in listContainer) Destroy(child.gameObject);
         if (TaskManager.Instance == null) return;
 
-        if (groupTitleText != null)
-            groupTitleText.text = TaskManager.Instance.AllGroupsCompleted
-                ? "All tasks complete"
-                : $"Task: {TaskManager.Instance.CurrentGroupName}";
+        if (groupTitleText != null) groupTitleText.text = TaskManager.Instance.AllGroupsCompleted ? "All tasks complete" : $"Task: {TaskManager.Instance.CurrentGroupName}";
 
         foreach (var (def, progress) in TaskManager.Instance.GetTasksForUI()) {
             var entry = Instantiate(taskEntryPrefab, listContainer);
@@ -74,6 +71,11 @@ public class TaskListUI : MonoBehaviour {
                 string description = def.description;
                 button.onClick.AddListener(() => ActionbarToastNotification.Instance.ShowLocalToast(description));
             }
+        }
+
+        // FOR TESTING: if all tasks are complete, trigger the end game sequence. In a real game, this would be handled by the server or game logic, not the UI.
+        if (TaskManager.Instance.AllGroupsCompleted) {
+            EndGameTriggerZone.Instance.RequestEndGameRpc();
         }
     }
 }
