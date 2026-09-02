@@ -71,6 +71,15 @@ public class TimeManager : NetworkBehaviour {
     [SerializeField] private int nightStartHour = 18;
     [SerializeField] private int nightEndHour = 6;
 
+    [Tooltip("Hour brightening begins (t starts easing from 1 toward 0).")]
+    [SerializeField] private int dawnStartHour = 5;
+    [Tooltip("Hour full daylight is reached (t=0). Holds flat until duskStartHour.")]
+    [SerializeField] private int dayMaxHour = 8;
+    [Tooltip("Hour darkening begins (t starts easing from 0 toward 1).")]
+    [SerializeField] private int duskStartHour = 17;
+    [Tooltip("Hour full darkness is reached (t=1). Holds flat until dawnStartHour (wraps past midnight).")]
+    [SerializeField] private int nightMaxHour = 19;
+
     private ColorAdjustments colorAdjustments;
     private Vignette vignette;
     private Bloom bloom;
@@ -99,7 +108,7 @@ public class TimeManager : NetworkBehaviour {
     // single value there is nothing left to be out of sync with — Hours,
     // Minutes, and Days are all just derived math on the one synced number.
     private readonly NetworkVariable<long> netTotalGameMinutes = new NetworkVariable<long>(
-        8 * 60, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+        18 * 60, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     public int Minutes => (int)(netTotalGameMinutes.Value % 60);
     public int Hours => (int)((netTotalGameMinutes.Value / 60) % 24);
@@ -227,14 +236,35 @@ public class TimeManager : NetworkBehaviour {
         UpdateClockUI();
     }
 
-    // Continuous, phase-aligned day/night: t = 0 at noon (full day),
-    // t = 1 at midnight (full night), smoothly interpolating through
-    // sunrise (~06:00) and sunset (~18:00).
+    // Four explicit control points instead of a single continuous curve:
+    // dawnStartHour -> dayMaxHour   : brightening ramp   (t: 1 -> 0)
+    // dayMaxHour    -> duskStartHour: full-day plateau    (t = 0)
+    // duskStartHour -> nightMaxHour : darkening ramp      (t: 0 -> 1)
+    // nightMaxHour  -> dawnStartHour: full-night plateau  (t = 1, wraps past midnight)
+    // Assumes dawnStartHour < dayMaxHour <= duskStartHour < nightMaxHour within the
+    // same day; only the final night plateau wraps across midnight.
     private void ApplyVisualsForTime(int hour, int minute) {
         float totalMinutes = hour * 60 + minute;
-        float dayFraction = totalMinutes / 1440f; // 0 = midnight, 0.5 = noon
 
-        float t = 0.5f * (1f + Mathf.Cos(dayFraction * 2f * Mathf.PI));
+        float dawnStartMin = dawnStartHour * 60;
+        float dayMaxMin = dayMaxHour * 60;
+        float duskStartMin = duskStartHour * 60;
+        float nightMaxMin = nightMaxHour * 60;
+
+        float t;
+        if (totalMinutes >= dawnStartMin && totalMinutes < dayMaxMin) {
+            float span = dayMaxMin - dawnStartMin;
+            float frac = span > 0f ? (totalMinutes - dawnStartMin) / span : 1f;
+            t = 0.5f * (1f + Mathf.Cos(frac * Mathf.PI)); // 1 -> 0
+        } else if (totalMinutes >= dayMaxMin && totalMinutes < duskStartMin) {
+            t = 0f; // full-day plateau
+        } else if (totalMinutes >= duskStartMin && totalMinutes < nightMaxMin) {
+            float span = nightMaxMin - duskStartMin;
+            float frac = span > 0f ? (totalMinutes - duskStartMin) / span : 1f;
+            t = 0.5f * (1f - Mathf.Cos(frac * Mathf.PI)); // 0 -> 1
+        } else {
+            t = 1f; // full-night plateau: nightMaxHour..24:00 and 00:00..dawnStartHour
+        }
 
         // Single continuous rotation per day (like a real sun), but flipped
         // to its antipodal position whenever it would dip below the horizon.
@@ -243,6 +273,7 @@ public class TimeManager : NetworkBehaviour {
         // midnight, and sets on the other side by dawn — instead of either
         // going below the horizon (kills shadows) or bouncing back to the
         // same point it rose from (previous fix's bug).
+        float dayFraction = totalMinutes / 1440f; // 0 = midnight, 0.5 = noon
         float thetaDeg = dayFraction * 360f - 90f;
         if (Mathf.Sin(thetaDeg * Mathf.Deg2Rad) < 0f) {
             thetaDeg -= 180f; // swap to the antipodal position, now above horizon

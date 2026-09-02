@@ -25,17 +25,26 @@ public class EnemySpawnManager : NetworkBehaviour {
 
     [Header("Spawn Rules")]
     [SerializeField] private int maxActiveEnemies = 1;
-    [SerializeField] private float minSpawnPointSeparation = 5f; // avoid spawning right on top of a player-visible point twice in a row
+    [SerializeField] private float minSpawnPointSeparation = 5f;
 
-    [Header("Time-of-day schedule")]
-    [Tooltip("Hour (0-23) enemies start spawning, e.g. 22 for 10 PM.")]
-    [SerializeField] private int nightStartHour = 22;
-    [Tooltip("Hour (0-23) enemies despawn, e.g. 6 for 6 AM. Can be earlier than start (wraps past midnight).")]
-    [SerializeField] private int nightEndHour = 6;
+    [Header("Schedule — Night Window")]
+    [Tooltip("Hour enemies spawn, e.g. 22 = 10 PM. Enemies spawn once when the clock enters the window (> this hour).")]
+    [SerializeField] private int spawnHour = 22;
+    [Tooltip("Minute threshold. Enemies spawn once when clock is past this minute on the spawn hour, e.g. 30 = spawns after 10:30 PM.")]
+    [SerializeField] private int spawnMinute = 30;
+    [Tooltip("Hour enemies despawn, e.g. 6 = 6 AM. Enemies despawn when clock exits the window (< this hour).")]
+    [SerializeField] private int despawnHour = 6;
+    [Tooltip("Minute threshold. Enemies despawn once when clock is before this minute on the despawn hour, e.g. 30 = despawns before 6:30 AM.")]
+    [SerializeField] private int despawnMinute = 30;
 
     private readonly List<NetworkObject> activeEnemies = new List<NetworkObject>();
     private EnemySpawnPointData lastSpawnPoint;
-    private bool isNight;
+    private bool spawnedTonight;
+
+    // Tracks the previous clock state to detect window crossings without
+    // needing TimeManager to tell us about admin skips.
+    private int prevHour = -1;
+    private int prevMinute = -1;
 
     private TimeManager subscribedTimeManager;
 
@@ -67,28 +76,51 @@ public class EnemySpawnManager : NetworkBehaviour {
         subscribedTimeManager = tm;
         tm.OnTimeUpdated += OnTimeUpdated;
 
-        // catch up in case we hook mid-scene-load during an active night
-        EvaluateHour(tm.Hours, forceEvaluate: true);
+        // Initialize prev state to the current time so we don't get a
+        // false window-crossing on the very first EvaluateTime call.
+        prevHour = tm.Hours;
+        prevMinute = tm.Minutes;
     }
 
     private void OnTimeUpdated() {
         if (subscribedTimeManager == null) return;
-        EvaluateHour(subscribedTimeManager.Hours, forceEvaluate: false);
+        EvaluateTime(subscribedTimeManager.Hours, subscribedTimeManager.Minutes);
     }
 
-    private void EvaluateHour(int hour, bool forceEvaluate) {
-        bool shouldBeNight = nightStartHour <= nightEndHour
-            ? hour >= nightStartHour && hour < nightEndHour          // e.g. 8 -> 18, same-day window
-            : hour >= nightStartHour || hour < nightEndHour;         // e.g. 22 -> 6, wraps past midnight
+    private void EvaluateTime(int hour, int minute) {
+        bool wasInWindow = IsInNightWindow(prevHour, prevMinute);
+        bool isInWindow = IsInNightWindow(hour, minute);
 
-        if (shouldBeNight == isNight && !forceEvaluate) return;
-
-        isNight = shouldBeNight;
-
-        if (isNight)
+        Debug.Log($"EnemySpawnManager: EvaluateTime {hour:00}:{minute:00} (wasInWindow={wasInWindow}, isInWindow={isInWindow}, spawnedTonight={spawnedTonight})");
+        // ---- Entered the night window ----
+        if (isInWindow && !wasInWindow && !spawnedTonight) {
             SpawnWave();
-        else
+            spawnedTonight = true;
+        }
+
+        // ---- Exited the night window ----
+        if (wasInWindow && !isInWindow) {
             DespawnAllEnemies();
+            spawnedTonight = false;
+        }
+
+        prevHour = hour;
+        prevMinute = minute;
+    }
+
+    // True when the clock is inside the night window: >=spawnHour:spawnMinute
+    // up to but not including despawnHour:despawnMinute, wrapping past midnight.
+    // E.g. with spawn=22:30, despawn=6:30: true at 22:30, false at 06:30+.
+    private bool IsInNightWindow(int hour, int minute) {
+        int t = hour * 60 + minute;
+        int spawnMark = spawnHour * 60 + spawnMinute;       // 22:30 = 1350
+        int despawnMark = despawnHour * 60 + despawnMinute; // 06:30 = 390
+
+        Debug.Log($"{hour} {minute} {t}");
+        // The window always wraps midnight in this design (22:30 → 6:30).
+        // t >= spawnMark: inside the window on the "late" side of midnight (>=22:30)
+        // t < despawnMark: before the despawn mark on the "early" side (<6:30)
+        return t >= spawnMark || t < despawnMark;
     }
 
     private void DespawnAllEnemies() {
