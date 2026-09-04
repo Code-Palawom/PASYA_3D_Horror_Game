@@ -206,17 +206,27 @@ public class MainMenuUI : MonoBehaviour {
     [SerializeField] GameObject settingsPanel;
     [SerializeField] Button settingsBackButton;
 
-    [Header("About Panel")]
-    [SerializeField] GameObject aboutPanel;
-    [SerializeField] Button aboutBackButton;
+    [SerializeField] Button profileButton;
+    [SerializeField] GameObject profilePanel;
+
+    [SerializeField] Button videoSettingsButton;
+    [SerializeField] GameObject videoSettingsPanel;
 
     [SerializeField] Button achievementsButton;
     [SerializeField] GameObject achievementsPanel;
-    [SerializeField] Button achievementsBackButton;
 
     [SerializeField] Button completedQuizButton;
     [SerializeField] GameObject completedQuizPanel;
-    [SerializeField] Button completedQuizBackButton;
+
+    private RectTransform settingsPanelRect;
+    private CanvasGroup settingsPanelCanvasGroup;
+    private Vector2 settingsPanelRestPos;
+    private Tween settingsSlideTween;
+    private Tween settingsFadeTween;
+
+    [Header("About Panel")]
+    [SerializeField] GameObject aboutPanel;
+    [SerializeField] Button aboutBackButton;
 
     [SerializeField] GameObject TutorialPanel;
 
@@ -341,9 +351,10 @@ public class MainMenuUI : MonoBehaviour {
         Add(quizSelectPanel, PanelSlideDirection.Up, PanelSlideDirection.Up);
         Add(characterPanel, PanelSlideDirection.Right, PanelSlideDirection.Right);
         Add(aboutPanel, PanelSlideDirection.Down, PanelSlideDirection.Down);
-        Add(achievementsPanel, PanelSlideDirection.Right, PanelSlideDirection.Right, false);
-        Add(completedQuizPanel, PanelSlideDirection.Right, PanelSlideDirection.Right, false);
-        Add(settingsPanel, PanelSlideDirection.Right, PanelSlideDirection.Right);
+        Add(profilePanel, PanelSlideDirection.Right, PanelSlideDirection.Right);
+        Add(videoSettingsPanel, PanelSlideDirection.Right, PanelSlideDirection.Right);
+        Add(achievementsPanel, PanelSlideDirection.Right, PanelSlideDirection.Right);
+        Add(completedQuizPanel, PanelSlideDirection.Right, PanelSlideDirection.Right);
 
         return configs;
     }
@@ -411,11 +422,6 @@ public class MainMenuUI : MonoBehaviour {
         AddTransition(levelSelectPanel, mainPanel,
             exitDirection: PanelSlideDirection.Right, enterDirection: PanelSlideDirection.Left);
 
-        AddTransition(settingsPanel, achievementsPanel, enableSlide: false);
-        AddTransition(settingsPanel, completedQuizPanel, enableSlide: false);
-        AddTransition(achievementsPanel, settingsPanel, enableSlide: false);
-        AddTransition(completedQuizPanel, settingsPanel, enableSlide: false);
-
         return transitions;
     }
 
@@ -481,6 +487,13 @@ public class MainMenuUI : MonoBehaviour {
 
             _contentRuntimes[config.panel] = group;
         }
+
+        if (settingsPanel != null) {
+            settingsPanelRect = settingsPanel.GetComponent<RectTransform>();
+            settingsPanelCanvasGroup = settingsPanel.GetComponent<CanvasGroup>();
+            if (settingsPanelCanvasGroup == null) settingsPanelCanvasGroup = settingsPanel.AddComponent<CanvasGroup>();
+            settingsPanelRestPos = settingsPanelRect.anchoredPosition;
+        }
     }
 
     // ─────────────────────────────────────────────────────────
@@ -507,6 +520,9 @@ public class MainMenuUI : MonoBehaviour {
 
         foreach (var content in _contentRuntimes.Values)
             StopContentTweens(content);
+
+        settingsSlideTween.Stop();
+        settingsFadeTween.Stop();
     }
 
     // Called once when Firebase finishes initializing.
@@ -538,10 +554,12 @@ public class MainMenuUI : MonoBehaviour {
         singlePlayerButton.onClick.AddListener(() => EnterWizard(GameMode.SinglePlayer));
         multiplayerButton.onClick.AddListener(ShowMultiplayerPanel);
         characterButton.onClick.AddListener(ShowCharacterPanel);
-        settingsButton.onClick.AddListener(ShowSettingsPanel);
+        settingsButton.onClick.AddListener(() => SetSettingsPanelVisible(true));
         aboutButton.onClick.AddListener(ShowAboutPanel);
         exitButton.onClick.AddListener(OnExitClicked);
 
+        profileButton.onClick.AddListener(ShowProfilePanel);
+        videoSettingsButton.onClick.AddListener(ShowVideoSettingsPanel);
         achievementsButton.onClick.AddListener(ShowAchievementsPanel);
         completedQuizButton.onClick.AddListener(ShowCompletedQuizPanel);
 
@@ -580,9 +598,6 @@ public class MainMenuUI : MonoBehaviour {
         characterBackButton.onClick.AddListener(() => HideCharacterPanel(false));
         settingsBackButton.onClick.AddListener(ShowMainPanel);
         aboutBackButton.onClick.AddListener(ShowMainPanel);
-        achievementsBackButton.onClick.AddListener(ShowSettingsPanel);
-        completedQuizBackButton.onClick.AddListener(ShowSettingsPanel);
-
 
         characterAppearance.ApplySkin(database.GetById(SkinSaveSystem.Load()) ?? (database.skins.Length > 0 ? database.skins[0] : null));
 
@@ -621,6 +636,7 @@ public class MainMenuUI : MonoBehaviour {
             yield return new WaitForSeconds(1f);
 
             SetMultiplayerTabRowVisible(false);
+            SetSettingsPanelVisible(false);
             SwitchToPanel(TutorialPanel);
         }
     }
@@ -660,6 +676,7 @@ public class MainMenuUI : MonoBehaviour {
         bool isHostFlow = _pendingMode == GameMode.Host;
         subjectNextButton.interactable = false;
         SetMultiplayerTabRowVisible(isHostFlow);
+        SetSettingsPanelVisible(false);
 
         _subjectNameFilter = "";
         if (subjectFilterInput != null) subjectFilterInput.SetTextWithoutNotify("");
@@ -959,12 +976,38 @@ public class MainMenuUI : MonoBehaviour {
 
     void SetMultiplayerTabRowVisible(bool visible) => multiplayerPanel.SetActive(visible);
 
+    void SetSettingsPanelVisible(bool visible) {
+        if (settingsPanel.activeSelf == visible) return; // already in requested state — nothing to animate
+
+        settingsSlideTween.Stop();
+        settingsFadeTween.Stop();
+
+        if (visible) {
+            settingsPanel.SetActive(true);
+            settingsPanelRect.anchoredPosition = settingsPanelRestPos + GetSlideOffset(PanelSlideDirection.Up, panelSlideDistance);
+            settingsPanelCanvasGroup.alpha = 0f;
+
+            settingsSlideTween = Tween.UIAnchoredPosition(settingsPanelRect, settingsPanelRestPos, panelSlideDuration, panelSlideEase);
+            settingsFadeTween = Tween.Alpha(settingsPanelCanvasGroup, 1f, panelFadeDuration, panelFadeEase);
+
+            SwitchToPanel(profilePanel); // default tab, only needed when opening
+        } else {
+            settingsSlideTween = Tween.UIAnchoredPosition(settingsPanelRect, settingsPanelRestPos + GetSlideOffset(PanelSlideDirection.Up, panelSlideDistance), panelSlideDuration, panelSlideEase);
+            settingsFadeTween = Tween.Alpha(settingsPanelCanvasGroup, 0f, panelFadeDuration, panelFadeEase)
+                .OnComplete(() => {
+                    settingsPanel.SetActive(false);
+                    settingsPanelRect.anchoredPosition = settingsPanelRestPos;
+                });
+        }
+    }
+
     void ShowMainPanel() {
         cam.Priority = 10;
         characterCam.Priority = 0;
 
         _pendingMode = GameMode.None;
         SetMultiplayerTabRowVisible(false);
+        SetSettingsPanelVisible(false);
         SwitchToPanel(mainPanel);
     }
 
@@ -980,6 +1023,7 @@ public class MainMenuUI : MonoBehaviour {
         characterCam.Priority = 10;
 
         SetMultiplayerTabRowVisible(false);
+        SetSettingsPanelVisible(false);
         characterAnimation.SetIsCustomizing(true);
         SwitchToPanel(characterPanel);
 
@@ -994,22 +1038,29 @@ public class MainMenuUI : MonoBehaviour {
 
         _pendingMode = GameMode.None;
         SetMultiplayerTabRowVisible(false);
+        SetSettingsPanelVisible(false);
         characterAnimation.SetAnimationState("idle");
         characterRotator.ResetRotation();
         characterAnimation.SetIsCustomizing(false);
         SwitchToPanel(mainPanel);
     }
 
-    void ShowSettingsPanel() {
+    void ShowAboutPanel() {
         SetMultiplayerTabRowVisible(false);
-        SwitchToPanel(settingsPanel);
-
+        SetSettingsPanelVisible(false);
+        SwitchToPanel(aboutPanel);
         ActionbarToastNotification.Instance.ClearToast();
     }
 
-    void ShowAboutPanel() {
+    void ShowProfilePanel() {
         SetMultiplayerTabRowVisible(false);
-        SwitchToPanel(aboutPanel);
+        SwitchToPanel(profilePanel);
+        ActionbarToastNotification.Instance.ClearToast();
+    }
+
+    void ShowVideoSettingsPanel() {
+        SetMultiplayerTabRowVisible(false);
+        SwitchToPanel(videoSettingsPanel);
         ActionbarToastNotification.Instance.ClearToast();
     }
 
@@ -1090,6 +1141,7 @@ public class MainMenuUI : MonoBehaviour {
         // Tab row stays visible only when this is the Host flow —
         // Single Player never shows Host/Join tabs at all.
         SetMultiplayerTabRowVisible(isHostFlow);
+        SetSettingsPanelVisible(false);
 
         // When the tab row's own Back button is already visible (Host flow),
         // this panel's own Back button would be a redundant duplicate —
@@ -1108,6 +1160,7 @@ public class MainMenuUI : MonoBehaviour {
 
     void ShowQuizSelectPanel() {
         SetMultiplayerTabRowVisible(false);
+        SetSettingsPanelVisible(false);
 
         _quizNameFilter = "";
         if (quizFilterInput != null) quizFilterInput.SetTextWithoutNotify("");
