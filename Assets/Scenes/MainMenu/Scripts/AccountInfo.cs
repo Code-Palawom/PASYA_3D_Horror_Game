@@ -1,3 +1,4 @@
+using Firebase.Auth;
 using System;
 using TMPro;
 using UnityEngine;
@@ -8,12 +9,16 @@ using UnityEngine.UI;
 public class AccountInfo : MonoBehaviour {
     [SerializeField] private TMP_Text userNameLabel;
     [SerializeField] private TMP_Text coins;
+    [SerializeField] private TMP_Text coinsForCharacterCustomization;
 
     [Header("Multiplayer Button")]
     [SerializeField] private GameObject hostModeWrapper;
 
     void Start() {
         AuthManager.Instance.OnPlayerStatsLoaded += OnPlayerStatsLoaded;
+        AuthManager.Instance.OnAuthStateChanged += (FirebaseUser s) => {
+            Debug.Log("[AccountInfo] Auth state changed: " + (s != null ? s.DisplayName : "null"));
+        };
 
         // Reflect whatever state auth is already in (e.g. cached session)
         OnPlayerStatsLoaded(AuthManager.Instance.CurrentProfile);
@@ -37,5 +42,6 @@ public class AccountInfo : MonoBehaviour {
 
     private void UpdateUserStatsUI(PlayerProfile profile) {
         coins.text = profile.Coins.ToString();
+        coinsForCharacterCustomization.text = profile.Coins.ToString();
     }
 }

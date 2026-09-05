@@ -10,15 +10,28 @@ public class SkinButtonUI : MonoBehaviour {
     [SerializeField] private Image selectedOutline; // now an Image so we can drive alpha
     [SerializeField] private Button selectButton;
     [SerializeField] private TMP_Text selectButtonLabel;
-    [SerializeField] private GameObject lockedOverlay; // grayed-out / lock icon
+    [SerializeField] private CanvasGroup canvasGroup; // drives overall button opacity by ownership/availability tier
+
+    [Header("Select Button Colors")]
+    [SerializeField] private Color normalButtonTextColor = new Color(1f, 1f, 1f);
+    [SerializeField] private Color selectedButtonTextColor = new Color(1f, 1f, 1f);
+    [SerializeField] private Color lockedButtonTextColor = new Color(1f, 1f, 1f);
+    [SerializeField] private Color buyButtonTextColor = new Color(1f, 1f, 1f);
+    [SerializeField] private Color timeLimitedButtonTextColor = new Color(1f, 1f, 1f);
 
     [Header("Outline Alpha")]
     [SerializeField] private float previewAlpha = 0.1f;
-    [SerializeField] private float equippedAlpha = 0.3f;
+    [SerializeField] private float equippedAlpha = 0.25f;
+    [SerializeField] private float timeLimitedAlpha = 0.5f;
 
-    [Header("Affordability")]
-    [SerializeField] private Color affordableColor = Color.white;
-    [SerializeField] private Color insufficientColor = new Color(1f, 0.4f, 0.4f);
+    [Header("Object Opacity")]
+    [SerializeField] private float ownedAlpha = 1f;
+    [SerializeField] private float purchasableAlpha = 0.7f;
+    [SerializeField] private float lockedOrExpiredAlpha = 0.4f;
+
+    //[Header("Affordability")]
+    //[SerializeField] private Color affordableColor = Color.white;
+    //[SerializeField] private Color insufficientColor = new Color(1f, 0.4f, 0.4f);
 
     public CharacterSkinSO Skin => skin;
 
@@ -51,13 +64,15 @@ public class SkinButtonUI : MonoBehaviour {
         selectButton.onClick.RemoveAllListeners();
         selectButton.onClick.AddListener(HandleSelectButtonClicked);
 
-        SetOutlineAlpha(0f);
+        SetOutlineAlpha(0.2f);
     }
 
     // Called by SkinSelectUI once the Firestore availability sync completes.
     public void SetAvailability(SkinAvailabilityStatus availability) {
         this.availability = availability;
         UpdateSelectButtonState();
+        RefreshOutline();
+        UpdateOverlayOpacity();
     }
 
     // Called by SkinSelectUI whenever the player's Coins balance (or this skin's
@@ -79,8 +94,8 @@ public class SkinButtonUI : MonoBehaviour {
     public void SetOwned(bool owned) {
         isOwned = owned;
 
-        if (lockedOverlay != null) lockedOverlay.SetActive(!owned);
         UpdateSelectButtonState();
+        UpdateOverlayOpacity();
     }
 
     // Called by SkinSelectUI when this skin is the one currently being previewed (dim outline).
@@ -106,9 +121,21 @@ public class SkinButtonUI : MonoBehaviour {
         bool needsAffordabilityCheck = !isOwned && purchasableNow && skin.paywallType == SkinPaywallType.Currency;
         bool cannotAfford = needsAffordabilityCheck && !isAffordable;
 
+        string buttonLabel = GetSelectButtonLabel();
         selectButton.interactable = !(isOwned && isEquipped) && !locked && !cannotAfford;
-        selectButtonLabel.text = GetSelectButtonLabel();
-        selectButtonLabel.color = cannotAfford ? insufficientColor : affordableColor;
+        selectButtonLabel.text = buttonLabel;
+
+        if (buttonLabel == "Time Limited") {
+            selectButtonLabel.color = timeLimitedButtonTextColor;
+        } else if (buttonLabel == "Locked") {
+            selectButtonLabel.color = lockedButtonTextColor;
+        } else if (buttonLabel == "Select") {
+            selectButtonLabel.color = selectedButtonTextColor;
+        } else if (buttonLabel == "Selected") {
+            selectButtonLabel.color = normalButtonTextColor;
+        } else {
+            selectButtonLabel.color = buyButtonTextColor;
+        }
     }
 
     private string GetSelectButtonLabel() {
@@ -129,7 +156,9 @@ public class SkinButtonUI : MonoBehaviour {
     }
 
     private void RefreshOutline() {
-        float alpha = isEquipped ? equippedAlpha : (isPreviewed ? previewAlpha : 0f);
+        float alpha = availability == SkinAvailabilityStatus.Expired
+            ? timeLimitedAlpha
+            : isEquipped ? equippedAlpha : (isPreviewed ? previewAlpha : 0.2f);
         SetOutlineAlpha(alpha);
     }
 
@@ -138,6 +167,23 @@ public class SkinButtonUI : MonoBehaviour {
         var c = selectedOutline.color;
         c.a = a;
         selectedOutline.color = c;
-        selectedOutline.gameObject.SetActive(a > 0f);
+        //selectedOutline.gameObject.SetActive(a > 0f);
+    }
+
+    // Drives the whole button's opacity by tier: fully visible if owned, dimmed if
+    // purchasable-but-unowned, dimmed further if expired/not-yet-purchasable/loading.
+    private void UpdateOverlayOpacity() {
+        if (canvasGroup == null) return;
+
+        float alpha;
+        if (isOwned) {
+            alpha = ownedAlpha;
+        } else if (availability == SkinAvailabilityStatus.Available) {
+            alpha = purchasableAlpha; // purchasable-but-unowned
+        } else {
+            alpha = lockedOrExpiredAlpha; // expired (time limited), loading, or not-yet-available
+        }
+
+        canvasGroup.alpha = alpha;
     }
 }

@@ -218,6 +218,16 @@ public class MainMenuUI : MonoBehaviour {
     [SerializeField] Button completedQuizButton;
     [SerializeField] GameObject completedQuizPanel;
 
+    [Header("Settings Tab Underlines")]
+    [SerializeField] RectTransform profileUnderline;
+    [SerializeField] RectTransform videoSettingsUnderline;
+    [SerializeField] RectTransform achievementsUnderline;
+    [SerializeField] RectTransform completedQuizUnderline;
+
+    private List<RectTransform> _tabUnderlines;
+    private readonly Dictionary<RectTransform, Tween> _underlineTweens = new();
+    private readonly Dictionary<RectTransform, float> _underlineFullWidth = new();
+
     private RectTransform settingsPanelRect;
     private CanvasGroup settingsPanelCanvasGroup;
     private Vector2 settingsPanelRestPos;
@@ -493,6 +503,12 @@ public class MainMenuUI : MonoBehaviour {
             settingsPanelCanvasGroup = settingsPanel.GetComponent<CanvasGroup>();
             if (settingsPanelCanvasGroup == null) settingsPanelCanvasGroup = settingsPanel.AddComponent<CanvasGroup>();
             settingsPanelRestPos = settingsPanelRect.anchoredPosition;
+
+            _tabUnderlines = new List<RectTransform> { profileUnderline, videoSettingsUnderline, achievementsUnderline, completedQuizUnderline };
+            foreach (var u in _tabUnderlines) {
+                if (u == null) continue;
+                _underlineFullWidth[u] = u.sizeDelta.x;
+            }
         }
     }
 
@@ -523,6 +539,8 @@ public class MainMenuUI : MonoBehaviour {
 
         settingsSlideTween.Stop();
         settingsFadeTween.Stop();
+
+        foreach (var t in _underlineTweens.Values) t.Stop();
     }
 
     // Called once when Firebase finishes initializing.
@@ -991,6 +1009,7 @@ public class MainMenuUI : MonoBehaviour {
             settingsFadeTween = Tween.Alpha(settingsPanelCanvasGroup, 1f, panelFadeDuration, panelFadeEase);
 
             SwitchToPanel(profilePanel); // default tab, only needed when opening
+            SetActiveTabUnderline(profileUnderline, instant: true);
         } else {
             settingsSlideTween = Tween.UIAnchoredPosition(settingsPanelRect, settingsPanelRestPos + GetSlideOffset(PanelSlideDirection.Up, panelSlideDistance), panelSlideDuration, panelSlideEase);
             settingsFadeTween = Tween.Alpha(settingsPanelCanvasGroup, 0f, panelFadeDuration, panelFadeEase)
@@ -998,6 +1017,30 @@ public class MainMenuUI : MonoBehaviour {
                     settingsPanel.SetActive(false);
                     settingsPanelRect.anchoredPosition = settingsPanelRestPos;
                 });
+        }
+    }
+
+    private void SetActiveTabUnderline(RectTransform active, bool instant = false) {
+        foreach (var u in _tabUnderlines) {
+            if (u == null) continue;
+
+            if (_underlineTweens.TryGetValue(u, out var existing)) existing.Stop();
+
+            float targetWidth = (u == active) ? _underlineFullWidth[u] : 0f;
+
+            if (instant) {
+                var sd = u.sizeDelta;
+                sd.x = targetWidth;
+                u.sizeDelta = sd;
+                continue;
+            }
+
+            float startWidth = u.sizeDelta.x;
+            _underlineTweens[u] = Tween.Custom(startWidth, targetWidth, panelSlideDuration, w => {
+                var sd = u.sizeDelta;
+                sd.x = w;
+                u.sizeDelta = sd;
+            }, panelSlideEase);
         }
     }
 
@@ -1055,24 +1098,28 @@ public class MainMenuUI : MonoBehaviour {
     void ShowProfilePanel() {
         SetMultiplayerTabRowVisible(false);
         SwitchToPanel(profilePanel);
+        SetActiveTabUnderline(profileUnderline);
         ActionbarToastNotification.Instance.ClearToast();
     }
 
     void ShowVideoSettingsPanel() {
         SetMultiplayerTabRowVisible(false);
         SwitchToPanel(videoSettingsPanel);
+        SetActiveTabUnderline(videoSettingsUnderline);
         ActionbarToastNotification.Instance.ClearToast();
     }
 
     void ShowAchievementsPanel() {
         SetMultiplayerTabRowVisible(false);
         SwitchToPanel(achievementsPanel);
+        SetActiveTabUnderline(achievementsUnderline);
         ActionbarToastNotification.Instance.ClearToast();
     }
 
     void ShowCompletedQuizPanel() {
         SetMultiplayerTabRowVisible(false);
         SwitchToPanel(completedQuizPanel);
+        SetActiveTabUnderline(completedQuizUnderline);
         ActionbarToastNotification.Instance.ClearToast();
     }
 
