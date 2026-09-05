@@ -136,6 +136,7 @@ public class SelectSkinUI : MonoBehaviour {
 
     private void OnSkinPreview(CharacterSkinSO skin) {
         if (previewSkin == skin) return; // ownership no longer gates preview
+        SfxManager.Play(SfxId.TrySkin);
         AnimateLabelChange(skin.name);
         previewSkin = skin;
         appearance.ApplySkin(skin); // live preview, not saved yet — even for unowned skins
@@ -145,6 +146,7 @@ public class SelectSkinUI : MonoBehaviour {
     private void OnSkinSelected(CharacterSkinSO skin) {
         if (selectedSkin == skin || !Profile.OwnsSkin(skin)) return; // ownership still required to equip
 
+        SfxManager.Play(SfxId.EquipSkin);
         selectedSkin = skin;
         previewSkin = skin;
         appearance.ApplySkin(skin);
@@ -158,6 +160,7 @@ public class SelectSkinUI : MonoBehaviour {
 
     private void OnSkinPurchase(CharacterSkinSO skin) {
         if (skin.GetAvailabilityStatus(DateTime.UtcNow) != SkinAvailabilityStatus.Available) return; // loading/expired — shouldn't be reachable via UI, but guard anyway
+        SfxManager.Play(SfxId.Tap);
         purchasePopup.Show(skin, () => HandlePurchaseSuccess(skin));
     }
 

@@ -67,6 +67,7 @@ public class LobbyListItemUI : MonoBehaviour {
     }
 
     public void SetSelected(bool selected) {
+        if (selected) SfxManager.Play(SfxId.Tap);
         if (background != null)
             background.color = selected ? selectedColor : normalColor;
     }

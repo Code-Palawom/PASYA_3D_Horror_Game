@@ -54,6 +54,7 @@ public class SkinPurchasePopupUI : MonoBehaviour {
         confirmButton.interactable = false; // prevent a tap during the exit animation window
         animSequence.Stop();
 
+        SfxManager.Play(SfxId.UICancel);
         animSequence = Sequence.Create()
             .Group(Tween.Alpha(canvasGroup, endValue: 0f, duration: animDuration, ease: hideEase))
             .Group(Tween.Scale(panelRect, endValue: Vector3.one * 0.85f, duration: animDuration, ease: hideEase))
@@ -75,6 +76,7 @@ public class SkinPurchasePopupUI : MonoBehaviour {
         if (pendingSkin == null) return;
 
         confirmButton.interactable = false;
+        SfxManager.Play(SfxId.UIConfirm);
 
         SkinPurchaseResult result = pendingSkin.paywallType switch {
             SkinPaywallType.Currency => await PurchaseManager.PurchaseWithCurrency(pendingSkin),
@@ -85,15 +87,19 @@ public class SkinPurchasePopupUI : MonoBehaviour {
         confirmButton.interactable = true;
 
         if (result == SkinPurchaseResult.Success || result == SkinPurchaseResult.AlreadyOwned) {
+            SfxManager.Play(SfxId.PurchaseSuccess);
             onPurchaseSuccess?.Invoke();
             ActionbarToastNotification.Instance.ShowLocalToast($"You purchased {pendingSkin.displayName}!", ToastType.Success);
             Hide();
         } else if (result == SkinPurchaseResult.OfferExpired) {
+            SfxManager.Play(SfxId.PurchaseFail);
             ActionbarToastNotification.Instance.ShowLocalToast("This offer has ended.", ToastType.Error);
             priceLabel.text = "Expired";
         } else if (result == SkinPurchaseResult.Offline) {
+            SfxManager.Play(SfxId.PurchaseFail);
             ActionbarToastNotification.Instance.ShowLocalToast("No internet connection.", ToastType.Error);
         } else {
+            SfxManager.Play(SfxId.PurchaseFail);
             ActionbarToastNotification.Instance.ShowLocalToast("Skin purchase failed", ToastType.Error);
             Debug.LogWarning($"Skin purchase failed: {result}");
         }

@@ -212,6 +212,9 @@ public class MainMenuUI : MonoBehaviour {
     [SerializeField] Button videoSettingsButton;
     [SerializeField] GameObject videoSettingsPanel;
 
+    [SerializeField] Button audioSettingsButton;
+    [SerializeField] GameObject audioSettingsPanel;
+
     [SerializeField] Button achievementsButton;
     [SerializeField] GameObject achievementsPanel;
 
@@ -221,6 +224,7 @@ public class MainMenuUI : MonoBehaviour {
     [Header("Settings Tab Underlines")]
     [SerializeField] RectTransform profileUnderline;
     [SerializeField] RectTransform videoSettingsUnderline;
+    [SerializeField] RectTransform audioSettingsUnderline;
     [SerializeField] RectTransform achievementsUnderline;
     [SerializeField] RectTransform completedQuizUnderline;
 
@@ -363,6 +367,7 @@ public class MainMenuUI : MonoBehaviour {
         Add(aboutPanel, PanelSlideDirection.Down, PanelSlideDirection.Down);
         Add(profilePanel, PanelSlideDirection.Right, PanelSlideDirection.Right);
         Add(videoSettingsPanel, PanelSlideDirection.Right, PanelSlideDirection.Right);
+        Add(audioSettingsPanel, PanelSlideDirection.Right, PanelSlideDirection.Right);
         Add(achievementsPanel, PanelSlideDirection.Right, PanelSlideDirection.Right);
         Add(completedQuizPanel, PanelSlideDirection.Right, PanelSlideDirection.Right);
 
@@ -504,7 +509,7 @@ public class MainMenuUI : MonoBehaviour {
             if (settingsPanelCanvasGroup == null) settingsPanelCanvasGroup = settingsPanel.AddComponent<CanvasGroup>();
             settingsPanelRestPos = settingsPanelRect.anchoredPosition;
 
-            _tabUnderlines = new List<RectTransform> { profileUnderline, videoSettingsUnderline, achievementsUnderline, completedQuizUnderline };
+            _tabUnderlines = new List<RectTransform> { profileUnderline, videoSettingsUnderline, audioSettingsUnderline, achievementsUnderline, completedQuizUnderline };
             foreach (var u in _tabUnderlines) {
                 if (u == null) continue;
                 _underlineFullWidth[u] = u.sizeDelta.x;
@@ -519,6 +524,8 @@ public class MainMenuUI : MonoBehaviour {
         QuizFetcher.Instance.OnMetaUpdated += HandleMetaUpdated;
         QuizFetcher.Instance.OnSetRemoved += HandleSetRemoved;
         QuizFetcher.Instance.OnLocalPlayCountSynced += HandleLocalPlayCountSynced;
+
+        BGMManager.Instance.PlayRandomTrack();
     }
 
     void OnDisable() {
@@ -541,6 +548,7 @@ public class MainMenuUI : MonoBehaviour {
         settingsFadeTween.Stop();
 
         foreach (var t in _underlineTweens.Values) t.Stop();
+        BGMManager.Instance.Stop();
     }
 
     // Called once when Firebase finishes initializing.
@@ -578,13 +586,14 @@ public class MainMenuUI : MonoBehaviour {
 
         profileButton.onClick.AddListener(ShowProfilePanel);
         videoSettingsButton.onClick.AddListener(ShowVideoSettingsPanel);
+        audioSettingsButton.onClick.AddListener(ShowAudioSettingsPanel);
         achievementsButton.onClick.AddListener(ShowAchievementsPanel);
         completedQuizButton.onClick.AddListener(ShowCompletedQuizPanel);
 
         // Multiplayer panel
         hostButton.onClick.AddListener(() => EnterWizard(GameMode.Host));
         multiplayerJoinButton.onClick.AddListener(OnMultiplayerJoinClicked);
-        multiplayerBackButton.onClick.AddListener(ShowMainPanel);
+        multiplayerBackButton.onClick.AddListener(() => ShowMainPanel());
 
         // Level select
         levelNextButton.onClick.AddListener(ShowSubjectSelectPanel);
@@ -614,8 +623,8 @@ public class MainMenuUI : MonoBehaviour {
         // Online join panel — public session discovery
         // Placeholder panels
         characterBackButton.onClick.AddListener(() => HideCharacterPanel(false));
-        settingsBackButton.onClick.AddListener(ShowMainPanel);
-        aboutBackButton.onClick.AddListener(ShowMainPanel);
+        settingsBackButton.onClick.AddListener(() => ShowMainPanel());
+        aboutBackButton.onClick.AddListener(() => ShowMainPanel());
 
         characterAppearance.ApplySkin(database.GetById(SkinSaveSystem.Load()) ?? (database.skins.Length > 0 ? database.skins[0] : null));
 
@@ -648,7 +657,8 @@ public class MainMenuUI : MonoBehaviour {
 
     IEnumerator ShowMainPanelCourotine() {
         yield return new WaitForSeconds(0.1f);
-        ShowMainPanel();
+        ShowMainPanel(AudioSettingsManager.Instance.isFirstLaunch);
+        AudioSettingsManager.Instance.isFirstLaunch = false;
 
         if (SettingsManager.Instance != null && !SettingsManager.Instance.Current.completedTutorial) {
             yield return new WaitForSeconds(1f);
@@ -700,6 +710,7 @@ public class MainMenuUI : MonoBehaviour {
         if (subjectFilterInput != null) subjectFilterInput.SetTextWithoutNotify("");
 
         SwitchToPanel(subjectSelectPanel);
+        SfxManager.Play(SfxId.UINavigate);
         PopulateSubjectList();
         ApplySubjectNameFilter(); // no-op with empty filter, but keeps state consistent
     }
@@ -1018,6 +1029,8 @@ public class MainMenuUI : MonoBehaviour {
                     settingsPanelRect.anchoredPosition = settingsPanelRestPos;
                 });
         }
+
+        SfxManager.Play(SfxId.UINavigate);
     }
 
     private void SetActiveTabUnderline(RectTransform active, bool instant = false) {
@@ -1044,7 +1057,7 @@ public class MainMenuUI : MonoBehaviour {
         }
     }
 
-    void ShowMainPanel() {
+    void ShowMainPanel(bool playSfx = true) {
         cam.Priority = 10;
         characterCam.Priority = 0;
 
@@ -1052,6 +1065,7 @@ public class MainMenuUI : MonoBehaviour {
         SetMultiplayerTabRowVisible(false);
         SetSettingsPanelVisible(false);
         SwitchToPanel(mainPanel);
+        if(playSfx) SfxManager.Play(SfxId.UINavigateBack);
     }
 
     void ShowMultiplayerPanel() {
@@ -1059,6 +1073,7 @@ public class MainMenuUI : MonoBehaviour {
         _activeConnectionMode = ConnectionMode.LAN;
         if (publicSessionToggle != null) publicSessionToggle.SetIsOnWithoutNotify(false);
         EnterWizard(GameMode.Host);
+        SfxManager.Play(SfxId.UINavigate);
     }
 
     void ShowCharacterPanel() {
@@ -1069,6 +1084,7 @@ public class MainMenuUI : MonoBehaviour {
         SetSettingsPanelVisible(false);
         characterAnimation.SetIsCustomizing(true);
         SwitchToPanel(characterPanel);
+        SfxManager.Play(SfxId.UINavigate);
 
         ActionbarToastNotification.Instance.ClearToast();
     }
@@ -1086,18 +1102,21 @@ public class MainMenuUI : MonoBehaviour {
         characterRotator.ResetRotation();
         characterAnimation.SetIsCustomizing(false);
         SwitchToPanel(mainPanel);
+        SfxManager.Play(SfxId.UINavigateBack);
     }
 
     void ShowAboutPanel() {
         SetMultiplayerTabRowVisible(false);
         SetSettingsPanelVisible(false);
         SwitchToPanel(aboutPanel);
+        SfxManager.Play(SfxId.UINavigate);
         ActionbarToastNotification.Instance.ClearToast();
     }
 
     void ShowProfilePanel() {
         SetMultiplayerTabRowVisible(false);
         SwitchToPanel(profilePanel);
+        SfxManager.Play(SfxId.UINavigate);
         SetActiveTabUnderline(profileUnderline);
         ActionbarToastNotification.Instance.ClearToast();
     }
@@ -1105,13 +1124,23 @@ public class MainMenuUI : MonoBehaviour {
     void ShowVideoSettingsPanel() {
         SetMultiplayerTabRowVisible(false);
         SwitchToPanel(videoSettingsPanel);
+        SfxManager.Play(SfxId.UINavigate);
         SetActiveTabUnderline(videoSettingsUnderline);
+        ActionbarToastNotification.Instance.ClearToast();
+    }
+
+    void ShowAudioSettingsPanel() {
+        SetMultiplayerTabRowVisible(false);
+        SwitchToPanel(audioSettingsPanel);
+        SfxManager.Play(SfxId.UINavigate);
+        SetActiveTabUnderline(audioSettingsUnderline);
         ActionbarToastNotification.Instance.ClearToast();
     }
 
     void ShowAchievementsPanel() {
         SetMultiplayerTabRowVisible(false);
         SwitchToPanel(achievementsPanel);
+        SfxManager.Play(SfxId.UINavigate);
         SetActiveTabUnderline(achievementsUnderline);
         ActionbarToastNotification.Instance.ClearToast();
     }
@@ -1119,6 +1148,7 @@ public class MainMenuUI : MonoBehaviour {
     void ShowCompletedQuizPanel() {
         SetMultiplayerTabRowVisible(false);
         SwitchToPanel(completedQuizPanel);
+        SfxManager.Play(SfxId.UINavigate);
         SetActiveTabUnderline(completedQuizUnderline);
         ActionbarToastNotification.Instance.ClearToast();
     }
@@ -1138,6 +1168,7 @@ public class MainMenuUI : MonoBehaviour {
         multiplayerJoinButton.image.color = Color.orange;
         hostButton.image.color = Color.white;
         SwitchToPanel(joinPanel);
+        SfxManager.Play(SfxId.UINavigate);
         roomDetailPanel.ShowEmpty();
         joinButton.interactable = false;
         if (onlineJoinCodeInput != null) onlineJoinCodeInput.text = "";
@@ -1151,6 +1182,8 @@ public class MainMenuUI : MonoBehaviour {
     // Switches between LAN and Online modes — only affects host-side options.
     // Join always shows the same unified panel.
     void SetConnectionModeTab() {
+        SfxManager.Play(SfxId.Tap);
+
         if (_activeConnectionMode == ConnectionMode.LAN) {
             _activeConnectionMode = ConnectionMode.Relay;
             hostModeButton.GetComponentInChildren<TMP_Text>().text = "Switch to LAN";
@@ -1169,6 +1202,7 @@ public class MainMenuUI : MonoBehaviour {
         _selectedQuizSetName = null;
         _selectedQuizSetId = null;
         ShowLevelSelectPanel();
+        SfxManager.Play(SfxId.Tap);
 
         if (mode == GameMode.SinglePlayer) {
             hostModeButton.gameObject.SetActive(false);
@@ -1196,6 +1230,7 @@ public class MainMenuUI : MonoBehaviour {
         levelBackButton.gameObject.SetActive(!isHostFlow);
 
         SwitchToPanel(levelSelectPanel);
+        SfxManager.Play(SfxId.UINavigate);
 
         PopulateLevelList();
         levelNextButton.interactable = !string.IsNullOrEmpty(_selectedLevelSceneName);
@@ -1213,6 +1248,7 @@ public class MainMenuUI : MonoBehaviour {
         if (quizFilterInput != null) quizFilterInput.SetTextWithoutNotify("");
 
         SwitchToPanel(quizSelectPanel);
+        SfxManager.Play(SfxId.UINavigate);
         startButtonLabel.text = _pendingMode == GameMode.Host ? "Create Lobby" : "Start Game";
         startButton.interactable = false; // nothing selected yet after entering this panel
         statusText.text = "";
@@ -1309,6 +1345,7 @@ public class MainMenuUI : MonoBehaviour {
     void OnStartClicked() {
         ConnectionApprovalHandler.Instance.Register();
 
+        SfxManager.Play(SfxId.Play);
         if (_pendingMode == GameMode.Host)
             StartAsHost();
         else if (_pendingMode == GameMode.SinglePlayer)
@@ -1455,6 +1492,7 @@ public class MainMenuUI : MonoBehaviour {
         roomDetailPanel.ShowEmpty();
 
         if (AuthManager.Instance.CurrentUser == null) return;
+        SfxManager.Play(SfxId.Tap);
         // Both run concurrently — LAN via UDP broadcast, online via Lobby query
         LanDiscovery.Instance.StartClientDiscovery(OnHostDiscovered, duration: 4f);
         _ = QueryOnlineSessionsAsync();
@@ -1532,6 +1570,8 @@ public class MainMenuUI : MonoBehaviour {
         // Join code takes priority — lets the player override a selected LAN
         // session by typing a relay code without deselecting the list item.
         string code = onlineJoinCodeInput != null ? onlineJoinCodeInput.text.Trim().ToUpper() : "";
+        SfxManager.Play(SfxId.Play);
+
         if (_selectedHost != null)
             JoinGame();
         else if (_selectedOnlineSession != null)
@@ -1739,6 +1779,7 @@ public class MainMenuUI : MonoBehaviour {
         var session = go.GetComponent<GameSessionManager>();
         session.SetSelectedQuizSet(quizSetId, quizSetName);
         session.SetSelectedLevel(levelSceneName);
+        BGMManager.Instance.Stop();
     }
 
     void SpawnChatManager() {

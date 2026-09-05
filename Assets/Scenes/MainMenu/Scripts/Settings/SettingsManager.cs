@@ -75,5 +75,10 @@ public class SettingsManager : MonoBehaviour {
         QualitySettings.SetQualityLevel(s.qualityLevel, true);
         // POV is read by camera/character via:
         // SettingsManager.Instance.Current.isFirstPerson
+
+        if (AudioSettingsManager.Instance != null) {
+            AudioSettingsManager.Instance.SetBgmVolume(s.bgmVolume);
+            AudioSettingsManager.Instance.SetSfxVolume(s.sfxVolume);
+        }
     }
 }

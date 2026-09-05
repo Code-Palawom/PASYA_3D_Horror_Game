@@ -29,6 +29,12 @@ public class DefaultSettingsConfig : ScriptableObject {
 
     public bool completedTutorial = false;
 
+    [Header("Audio")]
+    [Range(0f, 1f)]
+    public float bgmVolume = 1f;
+    [Range(0f, 1f)]
+    public float sfxVolume = 1f;
+
     // Converts this config into a GameSettings instance.
     public GameSettings ToGameSettings() => new GameSettings {
         playerName = playerName,
@@ -38,6 +44,8 @@ public class DefaultSettingsConfig : ScriptableObject {
         vsyncEnabled = vsyncEnabled == 1,
         showNameTags = showNameTags,
         showDebugOverlay = showDebug,
-        completedTutorial = completedTutorial
+        completedTutorial = completedTutorial,
+        bgmVolume = Mathf.Clamp01(bgmVolume),
+        sfxVolume = Mathf.Clamp01(sfxVolume)
     };
 }

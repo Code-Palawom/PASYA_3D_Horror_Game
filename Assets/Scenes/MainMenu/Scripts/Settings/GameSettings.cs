@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
+using UnityEngine;
 
 [Serializable]
 public class GameSettings {
@@ -13,6 +14,8 @@ public class GameSettings {
     public bool vsyncEnabled = false;
     public int targetFrameRate = 60;
     public bool completedTutorial = false;
+    public float bgmVolume = 1f;   // linear 0-1
+    public float sfxVolume = 1f;   // linear 0-1
 
     // elementId -> saved offset/scale for a CustomizableUIElement
     public Dictionary<string, ButtonLayoutEntry> buttonLayouts = new Dictionary<string, ButtonLayoutEntry>();
@@ -32,6 +35,8 @@ public class GameSettings {
         sb.Append("vsyncEnabled|").Append(vsyncEnabled ? 1 : 0).Append('\n');
         sb.Append("targetFrameRate|").Append(targetFrameRate).Append('\n');
         sb.Append("completedTutorial|").Append(completedTutorial ? 1 : 0).Append('\n');
+        sb.Append("bgmVolume|").Append(bgmVolume.ToString(CultureInfo.InvariantCulture)).Append('\n');
+        sb.Append("sfxVolume|").Append(sfxVolume.ToString(CultureInfo.InvariantCulture)).Append('\n');
 
         foreach (var kvp in buttonLayouts) {
             sb.Append("layout|").Append(kvp.Key).Append('|')
@@ -88,6 +93,14 @@ public class GameSettings {
                     break;
                 case "completedTutorial":
                     settings.completedTutorial = value == "1";
+                    break;
+                case "bgmVolume":
+                    if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out float bgmVol))
+                        settings.bgmVolume = Mathf.Clamp01(bgmVol);
+                    break;
+                case "sfxVolume":
+                    if (float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out float sfxVol))
+                        settings.sfxVolume = Mathf.Clamp01(sfxVol);
                     break;
                 case "layout":
                     // value is "elementId|x|y|scale" — only the outer split (on the first '|')
