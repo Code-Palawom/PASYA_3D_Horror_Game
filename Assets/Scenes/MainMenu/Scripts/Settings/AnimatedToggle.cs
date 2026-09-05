@@ -13,7 +13,10 @@ public class AnimatedToggle : MonoBehaviour {
     public float duration = 0.15f;
 
     void Start() {
-        SetState(toggle.isOn);
+        // Set instantly, no animation, no warning
+        knob.anchoredPosition = new Vector2(toggle.isOn ? onX : offX, knob.anchoredPosition.y);
+        background.color = toggle.isOn ? onColor : offColor;
+
         toggle.onValueChanged.AddListener(SetState);
     }
 

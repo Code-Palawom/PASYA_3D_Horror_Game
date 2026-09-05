@@ -123,6 +123,30 @@ public class QuizManager : MonoBehaviour {
         _activeCanvas = null;
     }
 
+    // Force-closes the active session as a wrong answer without invoking
+    // the gate's onWrong callback — used when the player is jumpscared
+    // mid-answer. Scoring/stats are recorded as a miss, but the gate's
+    // wrong-answer side effects, chat message, and cooldown are skipped
+    // since the jumpscare itself is already the consequence.
+    public void ForceCloseAsWrong(GameObject interactor) {
+        if (!_isActive || _session == null || _session.interactor != interactor) return;
+
+        GameSessionManager.Instance?.RecordAnswerRpc(false, 0);
+
+        _activeCanvas?.Hide();
+        GameManager.Instance.SetPlayerInputEnabled(true);
+
+        _isActive = false;
+        OnQuizEnded?.Invoke(false);
+
+        // Deliberately NOT calling _session.onWrong — that's the gate's
+        // side-effect-applying callback (ApplyWrongSideEffectsToAllRpc,
+        // cooldown, chat message). Jumpscare is a separate outcome path.
+        _session = null;
+        _currentGate = null;
+        _activeCanvas = null;
+    }
+
     int CalculateScore(QuestionRuntime question, float timeTaken) {
         float timeRatio = Mathf.Clamp01(1f - (timeTaken / question.timeLimit));
         int timeBonus = Mathf.RoundToInt(question.pointValue * 0.5f * timeRatio);

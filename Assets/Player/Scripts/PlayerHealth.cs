@@ -82,6 +82,11 @@ public class PlayerHealth : NetworkBehaviour {
     private IEnumerator JumpscareSequence(string enemyType) {
         isInSequence = true;
 
+        // If this player had a quiz open, it's an instant wrong answer —
+        // no side effects (handled separately from the jumpscare's own
+        // consequences), just the scoring/stat miss.
+        if (IsOwner) QuizManager.Instance?.ForceCloseAsWrong(gameObject);
+
         // Phase 1: jumpscare + death message (owner only), player vanishes
         // for everyone the moment the hit lands.
         jumpscareUI.TriggerJumpscareRpc(enemyType);
@@ -110,7 +115,7 @@ public class PlayerHealth : NetworkBehaviour {
         isInSequence = false;
     }
 
-    private async void Eliminate() {
+    private void Eliminate() {
         heartsUI.heartsChanged(currentHearts, 0);
         currentHearts = 0;
         IsEliminated = true;
@@ -125,8 +130,7 @@ public class PlayerHealth : NetworkBehaviour {
             if (obj != null) obj.SetActive(false);
         CycleSpectateTarget(1); // picks the first alive player
 
-        RecordEliminationRpc(); // let the server flag it too, for other players / results screen
-        await AuthManager.Instance.RecordEliminationAsync();
+        RecordEliminationRpc(); // server flags it + sends back this player's stats for the one Firestore write
     }
 
     // Cycles this (eliminated, local) player's spectate target among
