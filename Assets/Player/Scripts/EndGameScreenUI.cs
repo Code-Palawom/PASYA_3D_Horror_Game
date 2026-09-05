@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using TMPro;
 using Unity.Netcode;
 using UnityEngine;
@@ -22,7 +23,8 @@ public class EndGameScreenUI : MonoBehaviour {
     [SerializeField] GameObject gameUi;
     [SerializeField] GameObject screenRoot;      // whole panel, toggled on/off
     [SerializeField] TMP_Text titleText;         // big header, e.g. "Game Ended"
-    [SerializeField] string titleString = "Game Ended";
+    [SerializeField] string titleString = "Game Ended";       // shown during the countdown, and as the results title when NOT everyone was eliminated (e.g. someone survived / triggered it manually)
+    [SerializeField] string allEliminatedTitleString = "Game Over"; // results title when every non-disconnected player was eliminated
     [SerializeField] TMP_Text subtitleText;      // small text, e.g. "Ending in 7 seconds"
     [SerializeField] Transform cardContainer;
     [SerializeField] EndGamePlayerCardUI cardPrefab;
@@ -43,7 +45,10 @@ public class EndGameScreenUI : MonoBehaviour {
     // Called by EndGameTriggerZone's countdown RPC, every second, on every
     // client. Brings the panel up early with the title + a live countdown;
     // no cards yet since results haven't been sent. HandleResults() below
-    // takes over (populates cards, hides the subtitle) once it fires.
+    // takes over (populates cards, hides the subtitle) once it fires. The
+    // reason the game is ending isn't known yet at this point, so this
+    // always shows the generic titleString — HandleResults swaps it for
+    // the eliminated-specific one once results say whether that's the case.
     public void ShowCountdown(int secondsRemaining) {
         if (screenRoot != null) screenRoot.SetActive(true);
         if (titleText != null) titleText.text = titleString;
@@ -89,11 +94,20 @@ public class EndGameScreenUI : MonoBehaviour {
         }
 
         if (screenRoot != null) screenRoot.SetActive(true);
-        if (titleText != null) titleText.text = titleString;
+        if (titleText != null) titleText.text = AllPlayersWereEliminated(results) ? allEliminatedTitleString : titleString;
         if (subtitleText != null) subtitleText.gameObject.SetActive(false);
 
         if (localCard != null && localStats != null && !localStats.Disconnected)
             StartCoroutine(CountUpLocalXp(localCard, localStats.Score));
+    }
+
+    // True only if every player who was still connected when the game
+    // ended had actually been eliminated — as opposed to a normal
+    // trigger-zone/manual end where at least one player was still alive.
+    // Disconnected players are excluded either way (they already left).
+    static bool AllPlayersWereEliminated(GameSessionManager.PlayerSessionStats[] results) {
+        var stillConnected = results.Where(s => !s.Disconnected).ToArray();
+        return stillConnected.Length > 0 && stillConnected.All(s => s.Eliminated);
     }
 
     IEnumerator CountUpLocalXp(EndGamePlayerCardUI card, int scoreGained) {

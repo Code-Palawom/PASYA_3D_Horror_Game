@@ -13,8 +13,9 @@ using UnityEngine;
 //      clientId % count — that can put two players on the same spot).
 //
 // Can also be triggered remotely (e.g. from PlayerHUD) via
-// RequestEndGameRpc(), which shares the same fire-once guard as the
-// physical trigger.
+// RequestEndGameRpc(), or from GameSessionManager.CheckAllPlayersEliminated()
+// once every remaining player is out — both share the same fire-once guard
+// as the physical trigger.
 [RequireComponent(typeof(Collider))]
 public class EndGameTriggerZone : NetworkBehaviour {
     [SerializeField] EndGameTeleportSetSO teleportSet;
@@ -43,8 +44,12 @@ public class EndGameTriggerZone : NetworkBehaviour {
         TryFireEndGame();
     }
 
-    void TryFireEndGame() {
-        if (_hasFired) return;
+    // Public so server-side systems other than this trigger (e.g.
+    // GameSessionManager, once every player is eliminated) can end the
+    // game the same way a player walking into the volume does. Still
+    // server-only and still fire-once, same guard as everywhere else.
+    public void TryFireEndGame() {
+        if (!IsServer || _hasFired) return;
         _hasFired = true;
         StartCoroutine(EndGameSequence());
     }

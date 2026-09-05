@@ -32,6 +32,17 @@ public class Player : NetworkBehaviour {
     [SerializeField] private FirstPersonCameraLook firstPersonLook;
     [SerializeField] private Transform cameraFollow;
 
+    // Exposed so PlayerHealth's spectator system can find these without a
+    // second set of duplicate inspector references.
+    public CinemachineCamera FirstPersonPOV => firstPersonPOV;
+    public CinemachineCamera ThirdPersonPOV => thirdPersonPOV;
+
+    // Synced so an eliminated spectator can mirror whichever POV this
+    // player currently has active, and follow it live if they toggle.
+    // Written only in the two places isFirstPerson itself changes below.
+    public NetworkVariable<bool> IsFirstPersonActive = new(
+        true, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+
     [Header("Player Setup")]
     [SerializeField] private UnityEngine.InputSystem.PlayerInput inputComponent;
     [SerializeField] private Camera playerCamera;
@@ -157,6 +168,7 @@ public class Player : NetworkBehaviour {
                 ? SettingsManager.Instance.Current.isFirstPerson
                 : true;
             SetCamera(isFirstPerson);
+            IsFirstPersonActive.Value = isFirstPerson;
             appearance.OnModelSwapped += HandleModelSwapped;
         } else {
             // Remote instances on this machine: disable camera, audio, and UI
@@ -268,6 +280,7 @@ public class Player : NetworkBehaviour {
         }
 
         SetCamera(isFirstPerson);
+        IsFirstPersonActive.Value = isFirstPerson;
         //Debug.Log($"POV Switch is First Person: {isFirstPerson}");
     }
 
@@ -309,6 +322,7 @@ public class Player : NetworkBehaviour {
         if (SettingsManager.Instance == null) return;
         isFirstPerson = SettingsManager.Instance.Current.isFirstPerson;
         SetCamera(isFirstPerson);
+        IsFirstPersonActive.Value = isFirstPerson;
     }
 
     void Update() {
@@ -500,6 +514,28 @@ public class Player : NetworkBehaviour {
         isJumpscared = jumpscared;
     }
 
+    // Called by PlayerHealth.Eliminate() once hearts hit 0. Disables local
+    // movement/input the same way a remote (non-owner) instance already is
+    // in OnNetworkSpawn's else branch, but leaves playerCamera/audioListener
+    // alone — those stay on, since the spectator system re-prioritizes
+    // vcams on this same active Camera rather than swapping cameras.
+    public void SetSpectator(bool isSpectator) {
+        if (!IsOwner) return;
+
+        if (controller != null) controller.enabled = !isSpectator;
+        inputComponent.enabled = !isSpectator;
+
+        if (isSpectator) {
+            playerInput.Movements.Disable();
+            playerInput.Interactions.Disable();
+            playerInput.POV.Disable();
+        } else {
+            playerInput.Movements.Enable();
+            playerInput.Interactions.Enable();
+            playerInput.POV.Enable();
+        }
+    }
+
     [ClientRpc]
     public void TeleportClientRpc(Vector3 position, Quaternion rotation) {
         var cc = GetComponent<CharacterController>();
@@ -515,7 +551,7 @@ public class Player : NetworkBehaviour {
                 _onVivoxLoggedInHandler = () => JoinPositionalChannel(GameSessionManager.Instance.SessionId.Value.ToString());
                 VivoxManager.Instance.OnVivoxLoggedIn += _onVivoxLoggedInHandler;
             }
-        }else if(!string.IsNullOrEmpty(VivoxManager.Instance.CurrentChannelName)) {
+        } else if (!string.IsNullOrEmpty(VivoxManager.Instance.CurrentChannelName)) {
             RegisterVivoxTransform();
         }
     }
@@ -547,7 +583,7 @@ public class Player : NetworkBehaviour {
 
         micPermission.RequestMicThenJoin(
             onGranted: async () => {
-                if(SceneManager.GetActiveScene().name == "Lobby") ActionbarToastNotification.Instance.ShowLocalToast("Initializing voice chat.");
+                if (SceneManager.GetActiveScene().name == "Lobby") ActionbarToastNotification.Instance.ShowLocalToast("Initializing voice chat.");
                 Debug.Log($"Initializing voice chat: ${id}");
 
                 //await VivoxService.Instance.JoinEchoChannelAsync($"Channel_{id}", ChatCapability.AudioOnly);

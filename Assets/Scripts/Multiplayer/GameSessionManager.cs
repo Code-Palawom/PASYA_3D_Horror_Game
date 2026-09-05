@@ -53,6 +53,7 @@ public class GameSessionManager : NetworkBehaviour {
         public int QuestionsCorrect;
         public int SideEffectsReceived;
         public bool Disconnected;        // true = left early
+        public bool Eliminated;          // true = hearts hit 0, out for the rest of the round
         public string SkinId;            // cached from NetworkCharacterAppearance at spawn — survives disconnect
     }
 
@@ -148,6 +149,7 @@ public class GameSessionManager : NetworkBehaviour {
             _stats.Remove(clientId);
             Debug.Log($"[GameSessionManager] '{stats.PlayerName}' disconnected — stats frozen.");
             ChatManager.Instance.SendSystemMessage($"<b>{stats.PlayerName}</b> left the game.");
+            CheckAllPlayersEliminated(); // remaining live players might already all be eliminated
         }
 
         UpdateLobby();
@@ -193,6 +195,57 @@ public class GameSessionManager : NetworkBehaviour {
         if (!IsServer) return;
         if (!_stats.TryGetValue(clientId, out var stats)) return;
         stats.SideEffectsReceived++;
+    }
+
+    // Called by PlayerHealth.Eliminate() via RecordEliminationRpc when a
+    // player's hearts hit 0. Flags them for the results screen — the
+    // immediate Firestore write (AuthManager.RecordEliminationAsync) is
+    // separate and owner-local, this is just the server-side session record.
+    // Called by PlayerHealth.Eliminate() via RecordEliminationRpc when a
+    // player's hearts hit 0. Flags them for the results screen, then sends
+    // their own final stats straight back to them so PlayerStatsRecorder
+    // can record the full game-end write immediately — rather than waiting
+    // for SendResults() at the true end of the round. The immediate write
+    // and the eventual SendResults()-driven one share PlayerStatsRecorder's
+    // _lastRecordedSessionId dedupe (keyed per session, not per trigger),
+    // so this player's game-end stats never get recorded twice.
+    public void RecordElimination(ulong clientId) {
+        if (!IsServer) return;
+        if (!_stats.TryGetValue(clientId, out var stats)) return;
+        stats.Eliminated = true;
+
+        int incorrect = stats.QuestionsAnswered - stats.QuestionsCorrect;
+        var sendParams = new RpcParams {
+            Send = new RpcSendParams { Target = RpcTarget.Single(clientId, RpcTargetUse.Temp) }
+        };
+        ReceiveEliminationStatsRpc(SelectedQuizSetId.Value, stats.QuestionsCorrect, incorrect, stats.Score, sendParams);
+
+        CheckAllPlayersEliminated();
+    }
+
+    // Fired locally (this client only) once ReceiveEliminationStatsRpc
+    // arrives — PlayerStatsRecorder listens for this the same way it
+    // listens to OnResultsReceived, but for the immediate elimination-time write.
+    public static event Action<string, int, int, int> OnEliminationStatsReceived; // setId, correct, incorrect, score
+
+    [Rpc(SendTo.SpecifiedInParams)]
+    void ReceiveEliminationStatsRpc(FixedString64Bytes setId, int correct, int incorrect, int score, RpcParams rpcParams = default) {
+        OnEliminationStatsReceived?.Invoke(setId.ToString(), correct, incorrect, score);
+    }
+
+    // A player is "out" once either eliminated (flagged above) or
+    // disconnected (already removed from _stats and moved to
+    // _disconnectedPlayers by OnClientDisconnected — so once that's
+    // happened they no longer count against this check at all). Fires the
+    // same end-game sequence a player walking into EndGameTriggerZone
+    // would. _stats.Count == 0 guard avoids firing on an empty/just-started
+    // session (vacuous truth on an empty list otherwise).
+    void CheckAllPlayersEliminated() {
+        if (!IsServer) return;
+        if (_stats.Count == 0) return;
+        if (!_stats.Values.All(s => s.Eliminated)) return;
+
+        EndGameTriggerZone.Instance?.TryFireEndGame();
     }
 
     // Called once by NetworkCharacterAppearance right after it sets its
@@ -249,17 +302,18 @@ public class GameSessionManager : NetworkBehaviour {
         var questionsCorrect = all.Select(s => s.QuestionsCorrect).ToArray();
         var sideEffects = all.Select(s => s.SideEffectsReceived).ToArray();
         var disconnected = all.Select(s => s.Disconnected).ToArray();
+        var eliminated = all.Select(s => s.Eliminated).ToArray();
         var skinIds = all.Select(s => new FixedString32Bytes(s.SkinId ?? "")).ToArray();
 
         ReceiveResultsRpc(clientIds, playerNames, scores,
                           questionsAnswered, questionsCorrect,
-                          sideEffects, disconnected, skinIds);
+                          sideEffects, disconnected, eliminated, skinIds);
     }
 
     [Rpc(SendTo.Everyone)]
     void ReceiveResultsRpc(ulong[] clientIds, FixedString64Bytes[] playerNames, int[] scores,
                            int[] questionsAnswered, int[] questionsCorrect,
-                           int[] sideEffects, bool[] disconnected, FixedString32Bytes[] skinIds) {
+                           int[] sideEffects, bool[] disconnected, bool[] eliminated, FixedString32Bytes[] skinIds) {
         Debug.Log("[RPC][Everyone] ReceiveResults");
         int count = clientIds.Length;
         var results = new PlayerSessionStats[count];
@@ -273,6 +327,7 @@ public class GameSessionManager : NetworkBehaviour {
                 QuestionsCorrect = questionsCorrect[i],
                 SideEffectsReceived = sideEffects[i],
                 Disconnected = disconnected[i],
+                Eliminated = eliminated[i],
                 SkinId = skinIds[i].ToString()
             };
         }
