@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using TMPro;
 using Unity.Netcode;
 using UnityEngine;
+#if UNITY_EDITOR
 using UnityEngine.InputSystem;
+#endif
 using UnityEngine.UI;
 using PrimeTween;
 
@@ -41,6 +43,47 @@ public class ChatUI : NetworkBehaviour {
     [SerializeField] private float badgePopDuration = 0.25f;
     [SerializeField] private float badgePopScale = 1.25f;
 
+    [Header("Position Follow")]
+    [Tooltip("The RectTransform of the icon the chat panel should snap next to each time it opens. " +
+             "Default attach point is the icon's bottom-left corner (panel sits below-left of the icon); " +
+             "if that would push the panel off-screen, the attach corner flips horizontally and/or " +
+             "vertically (e.g. bottom-right, top-left, top-right) so it stays fully on screen.")]
+    [SerializeField] private RectTransform followIcon;
+    [SerializeField] private Canvas parentCanvas;
+
+    // ─── Keyboard Avoidance (mobile) ────────────────────────────
+    // A separate overlay row that sits above the on-screen keyboard, shown only while this
+    // ChatUI's own `inputField` is the field that opened the keyboard. The chat panel itself
+    // never moves — the overlay's own input field becomes the active typing field instead,
+    // mirroring/replacing the real one for the duration the keyboard is up.
+    [Header("Keyboard Avoider — Overlay Row")]
+    [Tooltip("RectTransform of the overlay row that should appear above the keyboard while " +
+             "this ChatUI's inputField is focused.")]
+    [SerializeField] private RectTransform keyboardAvoiderTarget;
+
+    [Header("Keyboard Avoider — Overlay Input Field")]
+    [Tooltip("The input field living inside the overlay row. It's activated and takes over typing " +
+             "while the keyboard is shown, then hands text back to the real inputField once closed.")]
+    [SerializeField] private TMP_InputField overlayInputField;
+    [Tooltip("Optional. Send button that lives next to the overlay input field.")]
+    [SerializeField] private Button overlaySendButton;
+
+    private bool _kaWasKeyboardVisible = false;
+    private RectTransform _kaCanvasRect;
+
+    private bool _kaShowOverlay;
+    private bool _kaDebugKeyboardVisible;
+    private float _kaDebugKeyboardHeightPx;
+    private float _kaDebugKbHeightInCanvas;
+    private float _kaDebugCanvasHeight;
+
+#if UNITY_EDITOR
+    [Header("Keyboard Avoider — Editor Testing (Play Mode)")]
+    [SerializeField] private Key kaToggleFakeKeyboardKey = Key.K;
+    [SerializeField] private float kaFakeKeyboardHeight = 300f;
+    private bool _kaFakeKeyboardVisible = false;
+#endif
+
     private RectTransform _chatRect;
     private RectTransform _badgeRect;
     private Tween _scaleTween;
@@ -58,6 +101,17 @@ public class ChatUI : NetworkBehaviour {
 
         sendButton.onClick.AddListener(OnSend);
         inputField.onSubmit.AddListener(_ => OnSend());
+
+        if (overlayInputField != null) {
+            overlayInputField.onSubmit.AddListener(_ => OnSend());
+            overlayInputField.onValueChanged.AddListener(OnOverlayValueChanged);
+        }
+        if (overlaySendButton != null) {
+            overlaySendButton.onClick.AddListener(OnSend);
+        }
+
+        // Overlay row starts hidden — only shown while the keyboard is up for this field.
+        if (keyboardAvoiderTarget != null) keyboardAvoiderTarget.gameObject.SetActive(false);
 
 #if UNITY_EDITOR || UNITY_STANDALONE
         inputField.onSelect.AddListener(_ => GameManager.Instance.SetPlayerInputEnabled(false));
@@ -95,6 +149,12 @@ public class ChatUI : NetworkBehaviour {
         inputField.onSelect.RemoveAllListeners();
         inputField.onDeselect.RemoveAllListeners();
 
+        if (overlayInputField != null) {
+            overlayInputField.onSubmit.RemoveAllListeners();
+            overlayInputField.onValueChanged.RemoveListener(OnOverlayValueChanged);
+        }
+        if (overlaySendButton != null) overlaySendButton.onClick.RemoveListener(OnSend);
+
         if (ChatManager.Instance != null) {
             ChatManager.Instance.OnMessageReceived.RemoveListener(OnNewMessage);
             ChatManager.Instance.OnChatCleared.RemoveListener(OnChatCleared);
@@ -106,6 +166,13 @@ public class ChatUI : NetworkBehaviour {
         if (_scaleTween.isAlive) _scaleTween.Stop();
         if (_fadeTween.isAlive) _fadeTween.Stop();
         if (_badgePopTween.isAlive) _badgePopTween.Stop();
+    }
+
+    // ─── Update ───────────────────────────────────────────────
+
+    void Update() {
+        if (!IsOwner) return;
+        UpdateKeyboardAvoider();
     }
 
     // ─── Init ─────────────────────────────────────────────────
@@ -131,6 +198,9 @@ public class ChatUI : NetworkBehaviour {
         if (GameManager.Instance != null && GameManager.Instance.IsControlFrozen) return;
 
         isChatActive = !isChatActive;
+
+        if (isChatActive && followIcon != null) SnapToIcon(); // snap into place each time it opens
+
         AnimateChatPanel(isChatActive);
 
         if (isChatActive) {
@@ -181,10 +251,21 @@ public class ChatUI : NetworkBehaviour {
     }
 
     void OnSend() {
-        if (string.IsNullOrWhiteSpace(inputField.text)) return;
-        ChatManager.Instance.SendChatMessage(inputField.text);
+        // While the keyboard overlay is up, the overlay field holds the live text;
+        // otherwise the real inputField does.
+        bool usingOverlay = _kaWasKeyboardVisible && overlayInputField != null;
+        string textToSend = usingOverlay ? overlayInputField.text : inputField.text;
+
+        if (string.IsNullOrWhiteSpace(textToSend)) return;
+        ChatManager.Instance.SendChatMessage(textToSend);
+
         inputField.text = "";
-        inputField.ActivateInputField();
+        if (overlayInputField != null) overlayInputField.text = "";
+
+        if (usingOverlay)
+            overlayInputField.ActivateInputField();
+        else
+            inputField.ActivateInputField();
     }
 
     void OnNewMessage(ChatMessage msg) {
@@ -248,5 +329,153 @@ public class ChatUI : NetworkBehaviour {
             notificationBadge.SetActive(false);
             if (_badgeRect != null) _badgeRect.localScale = Vector3.one; // reset so next pop-in starts clean
         }
+    }
+
+    // ─── Position Follow ──────────────────────────────────────
+
+    void SnapToIcon() {
+        if (parentCanvas == null) return;
+
+        var canvasRect = (RectTransform)parentCanvas.transform;
+        var cam = parentCanvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : parentCanvas.worldCamera;
+        RectTransform panelParent = (RectTransform)_chatRect.parent;
+
+        // World corners of the icon: [0]=bottom-left, [1]=top-left, [2]=top-right, [3]=bottom-right
+        Vector3[] iconCorners = new Vector3[4];
+        followIcon.GetWorldCorners(iconCorners);
+
+        Vector2 iconBL = WorldToLocalInParent(iconCorners[0], cam, panelParent);
+        Vector2 iconTR = WorldToLocalInParent(iconCorners[2], cam, panelParent);
+
+        float iconLeftX = iconBL.x;
+        float iconRightX = iconTR.x;
+        float iconBottomY = iconBL.y;
+        float iconTopY = iconTR.y;
+
+        Vector2 size = _chatRect.rect.size;
+
+        // Canvas bounds in panelParent local space (assumes panelParent shares the canvas rect, centered pivot).
+        float halfW = canvasRect.rect.width * 0.5f;
+        float halfH = canvasRect.rect.height * 0.5f;
+        float minX = -halfW;
+        float maxX = halfW;
+        float minY = -halfH;
+        float maxY = halfH;
+
+        // chatUI's pivot is (1,1), so anchoredPosition is always the panel's top-right corner,
+        // and the panel body extends left/down from that point.
+        //
+        // Default (below-left of icon): anchorX = icon's left edge, anchorY = icon's bottom edge.
+        // If the panel's opposite edge would land off-screen, flip that axis to attach to the
+        // icon's other edge instead (right edge for X, top edge for Y).
+
+        bool leftFits = (iconLeftX - size.x) >= minX;
+        float anchorX = leftFits ? iconLeftX : iconRightX + size.x;
+        // If flipping to the right side would itself overflow the right bound, fall back to
+        // whichever side clips less by clamping afterward (ClampToCanvas handles that safety net).
+        if (!leftFits && anchorX > maxX) anchorX = iconLeftX;
+
+        bool belowFits = (iconBottomY - size.y) >= minY;
+        float anchorY = belowFits ? iconBottomY : iconTopY + size.y;
+        if (!belowFits && anchorY > maxY) anchorY = iconBottomY;
+
+        _chatRect.anchoredPosition = new Vector2(anchorX, anchorY);
+        ClampToCanvas(canvasRect); // final safety net for icons near a corner or a screen smaller than the panel
+    }
+
+    Vector2 WorldToLocalInParent(Vector3 worldPoint, Camera cam, RectTransform parent) {
+        Vector2 screenPoint = RectTransformUtility.WorldToScreenPoint(cam, worldPoint);
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, screenPoint, cam, out Vector2 localPoint);
+        return localPoint;
+    }
+
+    void ClampToCanvas(RectTransform canvasRect) {
+        Vector2 size = _chatRect.rect.size;
+        Vector2 pivot = _chatRect.pivot;
+        float halfW = canvasRect.rect.width * 0.5f;
+        float halfH = canvasRect.rect.height * 0.5f;
+
+        Vector2 pos = _chatRect.anchoredPosition;
+        pos.x = Mathf.Clamp(pos.x, -halfW + size.x * pivot.x, halfW - size.x * (1f - pivot.x));
+        pos.y = Mathf.Clamp(pos.y, -halfH + size.y * pivot.y, halfH - size.y * (1f - pivot.y));
+        _chatRect.anchoredPosition = pos;
+    }
+
+    // ─── Keyboard Avoider (overlay input field above the on-screen keyboard) ─────────
+
+    void UpdateKeyboardAvoider() {
+        if (keyboardAvoiderTarget == null) return;
+
+        bool keyboardVisible;
+        float keyboardHeightPx;
+
+#if UNITY_EDITOR
+        if (Keyboard.current != null && Keyboard.current[kaToggleFakeKeyboardKey].wasPressedThisFrame)
+            _kaFakeKeyboardVisible = !_kaFakeKeyboardVisible;
+        keyboardVisible = _kaFakeKeyboardVisible;
+        keyboardHeightPx = _kaFakeKeyboardVisible ? kaFakeKeyboardHeight : 0f;
+#elif UNITY_ANDROID
+        // TouchScreenKeyboard.area.height is unreliable on Android (often 0 or full-screen
+        // depending on OEM keyboard/Android version). Use the decor view visible frame instead.
+        keyboardHeightPx = AndroidKeyboardHeight.GetHeightPx();
+        keyboardVisible = keyboardHeightPx > 0f;
+#else
+        keyboardVisible = TouchScreenKeyboard.visible;
+        keyboardHeightPx = TouchScreenKeyboard.area.height;
+#endif
+
+        // This overlay only cares about the keyboard when it was THIS ChatUI's own inputField
+        // (or the overlay field it hands off to) that's focused — ignore the keyboard being
+        // open for any other reason.
+        bool ownsFocus = inputField.isFocused || (overlayInputField != null && overlayInputField.isFocused);
+        if (!ownsFocus) keyboardVisible = false;
+
+        // Cache for debug overlay
+        _kaDebugKeyboardVisible = keyboardVisible;
+        _kaDebugKeyboardHeightPx = keyboardHeightPx;
+        _kaDebugKbHeightInCanvas = 0f;
+        _kaDebugCanvasHeight = _kaCanvasRect != null ? _kaCanvasRect.rect.height : Screen.height;
+
+        if (keyboardVisible != _kaWasKeyboardVisible) {
+            HandleKeyboardOverlayTransition(keyboardVisible);
+            _kaWasKeyboardVisible = keyboardVisible;
+        }
+    }
+
+    void OnOverlayValueChanged(string newText) {
+        // Keep the real inputField's text in sync on every keystroke typed into the
+        // overlay field, not just at the moment the keyboard opens/closes.
+        if (inputField.text != newText) inputField.text = newText;
+    }
+
+    void HandleKeyboardOverlayTransition(bool keyboardVisible) {
+        if (keyboardAvoiderTarget != null) keyboardAvoiderTarget.gameObject.SetActive(keyboardVisible);
+
+        if (overlayInputField == null) return;
+
+        if (keyboardVisible) {
+            // Hand typing off to the overlay field: carry the current text and caret over, then focus it.
+            overlayInputField.text = inputField.text;
+            overlayInputField.ActivateInputField();
+            overlayInputField.caretPosition = overlayInputField.text.Length;
+        } else {
+            // Hand text back to the real field and release the overlay's focus.
+            inputField.text = overlayInputField.text;
+            overlayInputField.DeactivateInputField();
+        }
+    }
+
+    public void RefreshKeyboardAvoiderDebugMode() {
+        if (SettingsManager.Instance == null) {
+            Debug.LogWarning("[ChatUI/KeyboardAvoider] SettingsManager not ready yet.");
+            return;
+        }
+        _kaShowOverlay = SettingsManager.Instance.Current.showDebugOverlay;
+    }
+
+    private void OnGUI() {
+        if (!_kaShowOverlay) return;
+        GUI.Label(new Rect(10, 110, 420, 20), $"[KB] Visible : {_kaDebugKeyboardVisible}");
+        GUI.Label(new Rect(10, 130, 420, 20), $"[KB] Height px : {_kaDebugKeyboardHeightPx:F0}  (Screen.height={Screen.height})");
     }
 }

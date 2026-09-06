@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,9 +30,25 @@ public class PlayerHealth : NetworkBehaviour {
     // outside that range so a spectated vcam can never tie with a normal one.
     private const int SpectateActivePriority = 100;
     private const int SpectateInactivePriority = -10;
+    // Must beat both SpectateActivePriority and the jumpscare cam's own
+    // self-set 99 (from JumpscareUI.TriggerJumpscareRpc) so the spectator
+    // sees the jumpscare framing regardless of what the target's own
+    // client already did to that vcam's priority.
+    private const int SpectateJumpscarePriority = 110;
 
     public int currentHearts;
     public bool IsEliminated { get; private set; }
+
+    // Fired when this player's own jumpscare sequence starts/ends, so an
+    // eliminated spectator watching this player can react (skip away to
+    // another target, or show the jumpscare cam angle if no one else is
+    // left to spectate).
+    public event Action<PlayerHealth> JumpscareStarted;
+    public event Action<PlayerHealth> JumpscareEnded;
+
+    // Exposed so spectators can show the same jumpscare cam angle this
+    // player's own client is seeing, without duplicating a reference.
+    public CinemachineCamera JumpscareCam => jumpscareUI != null ? jumpscareUI.JumpscareCam : null;
 
     private bool isInSequence;
     private SkinnedMeshRenderer[] renderersToHide;
@@ -81,6 +98,7 @@ public class PlayerHealth : NetworkBehaviour {
 
     private IEnumerator JumpscareSequence(string enemyType) {
         isInSequence = true;
+        JumpscareStarted?.Invoke(this);
 
         // If this player had a quiz open, it's an instant wrong answer —
         // no side effects (handled separately from the jumpscare's own
@@ -113,12 +131,18 @@ public class PlayerHealth : NetworkBehaviour {
         heartsUI.heartsChanged(currentHearts, currentHearts - 1);
         currentHearts--;
         isInSequence = false;
+        JumpscareEnded?.Invoke(this);
     }
 
     private void Eliminate() {
         heartsUI.heartsChanged(currentHearts, 0);
         currentHearts = 0;
         IsEliminated = true;
+
+        // Clean up this player's own jumpscare visuals (overlay + cam)
+        // without restoring gameplay UI/input/visibility, since Eliminate()
+        // below immediately puts this player into spectator state instead.
+        jumpscareUI.EndJumpscareForElimination();
 
         player.SetSpectator(true); // TODO: point this at whatever disables movement/input on your Player script
 
@@ -168,12 +192,29 @@ public class PlayerHealth : NetworkBehaviour {
     private void StartSpectating(PlayerHealth target) {
         ApplySpectateCamera(target, target.player.IsFirstPersonActive.Value);
         target.player.IsFirstPersonActive.OnValueChanged += OnSpectateTargetViewChanged;
+        target.JumpscareStarted += OnTargetJumpscareStarted;
+        target.JumpscareEnded += OnTargetJumpscareEnded;
     }
 
     private void StopSpectating(PlayerHealth target) {
         target.player.IsFirstPersonActive.OnValueChanged -= OnSpectateTargetViewChanged;
-        if (target.player.FirstPersonPOV != null) target.player.FirstPersonPOV.Priority = SpectateInactivePriority;
-        if (target.player.ThirdPersonPOV != null) target.player.ThirdPersonPOV.Priority = SpectateInactivePriority;
+        target.JumpscareStarted -= OnTargetJumpscareStarted;
+        target.JumpscareEnded -= OnTargetJumpscareEnded;
+
+        // Remote vcams are disabled by default (NetworkSetup) — restore
+        // that invariant when we stop spectating this target, not just
+        // deprioritize, since a disabled vcam never competes for the brain
+        // anyway but an enabled one left at a low priority is still a
+        // dangling exception to how every other remote vcam behaves.
+        if (target.player.FirstPersonPOV != null) {
+            target.player.FirstPersonPOV.Priority = SpectateInactivePriority;
+            target.player.FirstPersonPOV.enabled = false;
+        }
+        if (target.player.ThirdPersonPOV != null) {
+            target.player.ThirdPersonPOV.Priority = SpectateInactivePriority;
+            target.player.ThirdPersonPOV.enabled = false;
+        }
+        HideJumpscareCam(target); // in case we stopped spectating mid jumpscare-cam view
     }
 
     // Target switched their own first/third view mid-spectate — follow it.
@@ -181,11 +222,65 @@ public class PlayerHealth : NetworkBehaviour {
         if (_currentSpectateTarget != null) ApplySpectateCamera(_currentSpectateTarget, current);
     }
 
+    // Target we're currently watching just got jumpscared. If there's
+    // another eligible player to spectate instead, hop to them so we don't
+    // sit through someone else's jumpscare; if this is the only player
+    // left, show their jumpscare cam angle instead of a frozen/blank view.
+    private void OnTargetJumpscareStarted(PlayerHealth target) {
+        if (target != _currentSpectateTarget) return;
+
+        bool hasOtherTarget = AllPlayers.Any(p => p != this && p != target && !p.IsEliminated
+            && p.player != null && (p.player.FirstPersonPOV != null || p.player.ThirdPersonPOV != null));
+
+        if (hasOtherTarget) CycleSpectateTarget(1);
+        else ShowJumpscareCam(target);
+    }
+
+    // Target's jumpscare finished (they survived it) — if we're still
+    // watching them (i.e. we showed their jumpscare cam rather than
+    // cycling away), drop back to their normal POV vcam.
+    private void OnTargetJumpscareEnded(PlayerHealth target) {
+        if (target != _currentSpectateTarget) return;
+        HideJumpscareCam(target);
+        ApplySpectateCamera(target, target.player.IsFirstPersonActive.Value);
+    }
+
+    private void ShowJumpscareCam(PlayerHealth target) {
+        var cam = target.JumpscareCam;
+        if (cam == null) return;
+
+        if (target.player.FirstPersonPOV != null) target.player.FirstPersonPOV.enabled = false;
+        if (target.player.ThirdPersonPOV != null) target.player.ThirdPersonPOV.enabled = false;
+
+        cam.enabled = true;
+        cam.Priority = SpectateJumpscarePriority;
+    }
+
+    private void HideJumpscareCam(PlayerHealth target) {
+        var cam = target.JumpscareCam;
+        if (cam == null) return;
+
+        cam.Priority = SpectateInactivePriority;
+        cam.enabled = false;
+    }
+
     private void ApplySpectateCamera(PlayerHealth target, bool firstPerson) {
         var active = firstPerson ? target.player.FirstPersonPOV : target.player.ThirdPersonPOV;
         var inactive = firstPerson ? target.player.ThirdPersonPOV : target.player.FirstPersonPOV;
-        if (active != null) active.Priority = SpectateActivePriority;
-        if (inactive != null) inactive.Priority = SpectateInactivePriority;
+
+        // Remote vcams start disabled (see NetworkSetup) — a disabled
+        // CinemachineCamera never registers with the brain at all, so it
+        // must be re-enabled here before raising its priority, and the
+        // one we're switching away from disabled again to restore the
+        // normal remote-player invariant.
+        if (active != null) {
+            active.enabled = true;
+            active.Priority = SpectateActivePriority;
+        }
+        if (inactive != null) {
+            inactive.Priority = SpectateInactivePriority;
+            inactive.enabled = false;
+        }
     }
 
     [Rpc(SendTo.Server)]

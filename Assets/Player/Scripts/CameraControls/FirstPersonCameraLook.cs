@@ -19,6 +19,8 @@ public class FirstPersonCameraLook : MonoBehaviour {
     [SerializeField] private float verticalSensitivity = 0.18f;
     [SerializeField] private bool invertVertical = true;
 
+    [SerializeField] private Player player; // add this reference in the inspector
+
     private bool showOverlay;
     private Finger lookFinger;
     private CinemachineInputAxisController inputAxisController;
@@ -31,10 +33,10 @@ public class FirstPersonCameraLook : MonoBehaviour {
 
     void Start() {
         inputAxisController = GetComponent<CinemachineInputAxisController>();
-        if (!Application.isMobilePlatform) {
-            inputAxisController.enabled = true;
-            this.enabled = false;
-        }
+
+        bool isOwner = player != null && player.IsOwner;
+        inputAxisController.enabled = isOwner && !Application.isMobilePlatform;
+        this.enabled = isOwner; // fully disables Update() (and OnGUI) for non-owners
         RefreshDebugMode();
     }
 

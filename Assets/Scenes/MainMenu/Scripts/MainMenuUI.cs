@@ -1069,9 +1069,9 @@ public class MainMenuUI : MonoBehaviour {
     }
 
     void ShowMultiplayerPanel() {
-        // Reset connection mode to LAN on each fresh entry into the multiplayer flow
-        _activeConnectionMode = ConnectionMode.LAN;
-        if (publicSessionToggle != null) publicSessionToggle.SetIsOnWithoutNotify(false);
+        // Reset connection mode to Relay on each fresh entry into the multiplayer flow
+        _activeConnectionMode = ConnectionMode.Relay;
+        if (publicSessionToggle != null) publicSessionToggle.SetIsOnWithoutNotify(true);
         EnterWizard(GameMode.Host);
         SfxManager.Play(SfxId.UINavigate);
     }
@@ -1206,8 +1206,10 @@ public class MainMenuUI : MonoBehaviour {
 
         if (mode == GameMode.SinglePlayer) {
             hostModeButton.gameObject.SetActive(false);
+            publicSessionToggle.gameObject.SetActive(false);
         } else {
             hostModeButton.gameObject.SetActive(true);
+            publicSessionToggle.gameObject.SetActive(true);
         }
 
         hostButton.image.color = Color.orange;
@@ -1785,6 +1787,7 @@ public class MainMenuUI : MonoBehaviour {
     void SpawnChatManager() {
         if (ChatManager.Instance != null) return;
 
+        BGMManager.Instance.Stop();
         var go = Instantiate(chatManagerPrefab);
         go.GetComponent<NetworkObject>().Spawn();
         ChatManager.Instance.SendSystemMessage(

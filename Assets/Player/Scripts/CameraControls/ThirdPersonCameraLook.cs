@@ -25,6 +25,8 @@ public class ThirdPersonCameraLook : MonoBehaviour {
     [SerializeField] private float maxRadius = 15f;
     [SerializeField] private float zoomSmoothSpeed = 10f;
 
+    [SerializeField] private Player player; // add this reference in the inspector
+
     private bool showOverlay;
     private Finger lookFinger;
     private Finger pinchFinger1;
@@ -42,15 +44,14 @@ public class ThirdPersonCameraLook : MonoBehaviour {
         ReleasePinch();
     }
 
-    private void Start() {
+    void Start() {
         inputAxisController = GetComponent<CinemachineInputAxisController>();
         cameraController = GetComponent<CameraControls>();
 
-        if (!Application.isMobilePlatform) {
-            inputAxisController.enabled = true;
-            cameraController.enabled = true;
-            this.enabled = false;
-        }
+        bool isOwner = player != null && player.IsOwner;
+        inputAxisController.enabled = isOwner && !Application.isMobilePlatform;
+        cameraController.enabled = isOwner && !Application.isMobilePlatform;
+        this.enabled = isOwner;
 
         if (orbitalFollow != null) targetRadius = orbitalFollow.Radius;
         RefreshDebugMode();

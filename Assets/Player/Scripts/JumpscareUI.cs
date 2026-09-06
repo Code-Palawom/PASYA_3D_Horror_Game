@@ -17,6 +17,11 @@ public class JumpscareUI : MonoBehaviour {
     [SerializeField] private CinemachineCamera thirdPersonCam;
     [SerializeField] private CinemachineCamera jumpscareCam;
 
+    // Exposed so PlayerHealth's spectator system can show the same
+    // jumpscare cam angle this player's own client is seeing, without
+    // duplicating a second inspector reference.
+    public CinemachineCamera JumpscareCam => jumpscareCam;
+
     [Header("Cinemachine Look")]
     [SerializeField] private CinemachinePanTilt panTilt;
     [SerializeField] private Transform fpYawTarget;
@@ -82,17 +87,34 @@ public class JumpscareUI : MonoBehaviour {
         deathMessageText.text = "";
         countdownText.text = "";
 
-        EndJumpscare();
-        jumpscareCam.Priority = 0;
+        EndJumpscare(restorePlayerState: true);
     }
 
-    private void EndJumpscare() {
+    // Called when the player survives the jumpscare and respawns — fully
+    // restores gameplay UI, input, visibility, and player state.
+    // restorePlayerState is false when called from the elimination path
+    // (see EndJumpscareForElimination), since PlayerHealth.Eliminate()
+    // immediately takes over with its own spectator-mode UI/input/visibility
+    // handling right after this returns — restoring gameplay state here
+    // would just get overwritten a moment later.
+    private void EndJumpscare(bool restorePlayerState) {
         Tween.Alpha(overlayGroup, 0f, 0.25f, Ease.OutQuad)
             .OnComplete(() => overlayGroup.gameObject.SetActive(false));
+        jumpscareCam.Priority = 0;
+
         if (gameplayUI != null) gameplayUI.SetActive(true);
-        SetInputLocked(false);
-        player.IsJumpscared(false);
-        playerHealth.RestoreVisibility();
+        if (restorePlayerState) {
+            SetInputLocked(false);
+            player.IsJumpscared(false);
+            playerHealth.RestoreVisibility();
+        }
+    }
+
+    // Public entry point for PlayerHealth.Eliminate() — cleans up the
+    // jumpscare overlay/cam without restoring gameplay UI, input, or
+    // visibility, all of which Eliminate() intentionally keeps hidden.
+    public void EndJumpscareForElimination() {
+        EndJumpscare(restorePlayerState: false);
     }
 
     private void SetInputLocked(bool locked) {

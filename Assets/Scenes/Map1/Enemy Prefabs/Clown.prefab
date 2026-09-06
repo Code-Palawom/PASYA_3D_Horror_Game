@@ -865,7 +865,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 4216889863
+  GlobalObjectIdHash: 1073892967
   InScenePlacedSourceGlobalObjectIdHash: 1073892967
   DeferredDespawnTick: 0
   Ownership: 1
@@ -967,7 +967,7 @@ MonoBehaviour:
   huntSpeed: 4
   patrolSpeed: 2
   investigateSpeed: 3
-  attackRange: 1.5
+  attackRange: 2.5
   attackStateTimeout: 5
   searchInitialRadius: 4
   searchRadiusGrowthPerCycle: 3
@@ -987,7 +987,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 31757baa88f3d9145a05e120dee0ae46, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyPerception
-  viewRadius: 12
+  viewRadius: 32
   viewAngle: 90
   playerMask:
     serializedVersion: 2
@@ -995,6 +995,8 @@ MonoBehaviour:
   obstacleMask:
     serializedVersion: 2
     m_Bits: 1
+  showGizmos: 1
+  eyeHeight: 1.5
 --- !u!1 &5991390672528728258
 GameObject:
   m_ObjectHideFlags: 0

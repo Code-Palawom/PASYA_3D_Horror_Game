@@ -1,4 +1,5 @@
 using Firebase.Firestore;
+using PrimeTween;
 using System;
 using TMPro;
 using UnityEngine;
@@ -8,6 +9,9 @@ public class SettingsUI : MonoBehaviour {
     [SerializeField] private MainMenuUI mainMenuUI;
 
     [Header("Name")]
+    [SerializeField] private CanvasGroup nameChangePanel;
+    [SerializeField] private Button openNameChangePanel;
+    [SerializeField] private Button closeNameChangePanel;
     [SerializeField] private TMP_InputField nameField;
     [SerializeField] private TMP_Text nameChangeStatus;
     [SerializeField] private Color canCangeNameColor;
@@ -18,10 +22,19 @@ public class SettingsUI : MonoBehaviour {
     [SerializeField] private Button customizeControls;
     [SerializeField] private GameObject customizeControlsPanel;
 
+    private RectTransform _nameChangePanelRect;
+    private Tween _scaleTween;
+    private Tween _fadeTween;
+
     void Start() {
         customizeControls.onClick.AddListener(() => customizeControlsPanel.SetActive(true));
         playTutorial.onClick.AddListener(() => mainMenuUI.StartTutorial());
         nameSaveButton.onClick.AddListener(() => ChangeName());
+        openNameChangePanel.onClick.AddListener(() => AnimateNameChangePanel(true));
+        closeNameChangePanel.onClick.AddListener(() => AnimateNameChangePanel(false));
+
+        _nameChangePanelRect = nameChangePanel.GetComponent<RectTransform>();
+        _nameChangePanelRect.localScale = Vector3.zero;
 
         AuthManager.Instance.OnPlayerStatsLoaded += RefreshName;
         AuthManager.Instance.OnAuthStateChanged += (user) => {
@@ -30,6 +43,7 @@ public class SettingsUI : MonoBehaviour {
                 nameChangeStatus.text = "";
                 nameChangeStatus.color = canCangeNameColor;
                 nameSaveButton.interactable = true;
+                openNameChangePanel.interactable = true;
                 nameField.interactable = true;
             }
         };
@@ -58,6 +72,7 @@ public class SettingsUI : MonoBehaviour {
                     nameChangeStatus.color = canCangeNameColor;
                     nameChangeStatus.text = "Name change available";
                     nameSaveButton.interactable = true;
+                    openNameChangePanel.interactable = true;
                     nameField.interactable = true;
                 } else {
                     double daysLeft = 14 - elapsed.TotalDays;
@@ -68,6 +83,7 @@ public class SettingsUI : MonoBehaviour {
                 nameChangeStatus.color = canCangeNameColor;
                 nameChangeStatus.text = "Name change available";
                 nameSaveButton.interactable = true;
+                openNameChangePanel.interactable = true;
                 nameField.interactable = true;
             }
         } else {
@@ -75,6 +91,7 @@ public class SettingsUI : MonoBehaviour {
             nameChangeStatus.text = "";
             nameChangeStatus.color = canCangeNameColor;
             nameSaveButton.interactable = true;
+            openNameChangePanel.interactable = true;
             nameField.interactable = true;
         }
     }
@@ -89,6 +106,7 @@ public class SettingsUI : MonoBehaviour {
                     nameChangeStatus.color = canCangeNameColor;
                     nameChangeStatus.text = "Name change available";
                     nameSaveButton.interactable = true;
+                    openNameChangePanel.interactable = true;
                     nameField.interactable = true;
                 } else {
                     double daysLeft = 14 - elapsed.TotalDays;
@@ -99,6 +117,7 @@ public class SettingsUI : MonoBehaviour {
                 nameChangeStatus.color = canCangeNameColor;
                 nameChangeStatus.text = "Name change available";
                 nameSaveButton.interactable = true;
+                openNameChangePanel.interactable = true;
                 nameField.interactable = true;
             }
         } else {
@@ -117,7 +136,9 @@ public class SettingsUI : MonoBehaviour {
             return;
         }
 
+        AnimateNameChangePanel(false);
         nameSaveButton.interactable = false; // prevent double-taps while the request is in flight
+        openNameChangePanel.interactable = false;
         nameField.interactable = false;
         nameChangeStatus.text = "Changing name...";
 
@@ -125,6 +146,7 @@ public class SettingsUI : MonoBehaviour {
 
         nameField.interactable = true;
         nameSaveButton.interactable = true;
+        openNameChangePanel.interactable = true;
         switch (result) {
             case NameChangeResult.Success:
                 nameChangeStatus.text = "Name changed!";
@@ -133,6 +155,7 @@ public class SettingsUI : MonoBehaviour {
                 if (AuthManager.Instance.IsSignedIn) {
                     nameField.interactable = false;
                     nameSaveButton.interactable = false;
+                    openNameChangePanel.interactable = false;
                 } else {
                     SettingsManager.Instance.Save(s => s.playerName = newName);
                 }
@@ -144,6 +167,7 @@ public class SettingsUI : MonoBehaviour {
             case NameChangeResult.OnCooldown:
                 nameField.interactable = false;
                 nameSaveButton.interactable = false;
+                openNameChangePanel.interactable = false;
                 nameChangeStatus.text = "You can only change your name once every 14 days.";
                 break;
 
@@ -159,6 +183,27 @@ public class SettingsUI : MonoBehaviour {
             case NameChangeResult.Offline:
                 nameChangeStatus.text = "You're offline. Try again when you have an internet connection.";
                 break;
+        }
+    }
+
+    private void AnimateNameChangePanel(bool open) {
+        if (_scaleTween.isAlive) _scaleTween.Stop();
+        if (_fadeTween.isAlive) _fadeTween.Stop();
+
+        // Block interaction immediately either way — closing shouldn't be
+        // clickable mid-shrink, and opening only becomes interactable once
+        // the pop settles (below).
+        nameChangePanel.interactable = false;
+
+        if (open) {
+            nameChangePanel.blocksRaycasts = true; // let it start catching input right away as it grows in
+            _scaleTween = Tween.Scale(_nameChangePanelRect, endValue: Vector3.one, duration: 0.5f, ease: Ease.OutBack)
+                .OnComplete(() => nameChangePanel.interactable = true);
+            _fadeTween = Tween.Alpha(nameChangePanel, endValue: 1f, duration: 0.5f * 0.6f);
+        } else {
+            _scaleTween = Tween.Scale(_nameChangePanelRect, endValue: Vector3.zero, duration: 0.5f, ease: Ease.OutBack)
+                .OnComplete(() => nameChangePanel.blocksRaycasts = false);
+            _fadeTween = Tween.Alpha(nameChangePanel, endValue: 0f, duration: 0.5f * 0.8f);
         }
     }
 }
