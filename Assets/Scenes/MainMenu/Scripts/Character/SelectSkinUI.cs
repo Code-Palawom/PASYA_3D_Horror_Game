@@ -47,7 +47,7 @@ public class SelectSkinUI : MonoBehaviour {
         selectedSkin = previewSkin; // whatever was saved is currently equipped
         appearance.ApplySkin(previewSkin);
 
-        characterLabel.text = previewSkin != null ? previewSkin.name : string.Empty;
+        characterLabel.text = previewSkin != null ? previewSkin.displayName : string.Empty;
 
         labelSequence.Stop();
         SetLabelAlpha(0f);
@@ -137,7 +137,7 @@ public class SelectSkinUI : MonoBehaviour {
     private void OnSkinPreview(CharacterSkinSO skin) {
         if (previewSkin == skin) return; // ownership no longer gates preview
         SfxManager.Play(SfxId.TrySkin);
-        AnimateLabelChange(skin.name);
+        AnimateLabelChange(skin.displayName);
         previewSkin = skin;
         appearance.ApplySkin(skin); // live preview, not saved yet — even for unowned skins
         RefreshHighlight();
@@ -152,8 +152,8 @@ public class SelectSkinUI : MonoBehaviour {
         appearance.ApplySkin(skin);
         SkinSaveSystem.Save(skin.skinId);
 
-        if (characterLabel.text != skin.name)
-            AnimateLabelChange(skin.name);
+        if (characterLabel.text != skin.displayName)
+            AnimateLabelChange(skin.displayName);
 
         RefreshHighlight();
     }

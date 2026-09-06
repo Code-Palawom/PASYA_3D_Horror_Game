@@ -100,7 +100,7 @@ public class AchievementToastItemUI : MonoBehaviour {
 
         if (!string.IsNullOrEmpty(def.RewardSkinId)) {
             var skin = skinDatabase != null ? skinDatabase.GetById(def.RewardSkinId) : null;
-            parts.Add(skin != null ? $"New Skin: {skin.name}" : "New Skin");
+            parts.Add(skin != null ? $"New Skin: {skin.displayName}" : "New Skin");
         }
 
         return string.Join("   ", parts);
