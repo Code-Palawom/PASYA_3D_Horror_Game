@@ -1755,6 +1755,18 @@ MonoBehaviour:
   thirdPersonLook: {fileID: 7927800081545042535}
   firstPersonLook: {fileID: 4960347632880926090}
   cameraFollow: {fileID: 5405706583826919811}
+  panTilt: {fileID: 5240064665015112383}
+  orbitalFollow: {fileID: 2769187261544237235}
+  LookPan:
+    UpdateTraits:
+      MinSecondsBetweenUpdates: 0
+      MaxSecondsBetweenUpdates: 0
+    m_InternalValue: 0
+  LookTilt:
+    UpdateTraits:
+      MinSecondsBetweenUpdates: 0
+      MaxSecondsBetweenUpdates: 0
+    m_InternalValue: 0
   IsFirstPersonActive:
     UpdateTraits:
       MinSecondsBetweenUpdates: 0
@@ -4260,7 +4272,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 82.82333, y: -40}
+  m_AnchoredPosition: {x: 83.333336, y: -40}
   m_SizeDelta: {x: 150, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &6954841051195145170
@@ -5648,8 +5660,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -173.47, y: -425}
-  m_SizeDelta: {x: 646.94, y: 80}
+  m_AnchoredPosition: {x: 0, y: -425}
+  m_SizeDelta: {x: 650, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &7215901143494500376
 MonoBehaviour:
@@ -6109,7 +6121,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!224 &4499441622212301287
 RectTransform:
   m_ObjectHideFlags: 0
@@ -6126,10 +6138,10 @@ RectTransform:
   - {fileID: 5827907686451694946}
   m_Father: {fileID: 40699330411050086}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0.5}
-  m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 70}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 0}
+  m_AnchoredPosition: {x: 0, y: 40}
+  m_SizeDelta: {x: 0, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2265959198531365119
 MonoBehaviour:
@@ -6192,10 +6204,10 @@ RectTransform:
   - {fileID: 2033370773927529846}
   m_Father: {fileID: 4499441622212301287}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 921.13574, y: -35}
-  m_SizeDelta: {x: 1714.2715, y: 70}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7777370330380064132
 CanvasRenderer:
@@ -17129,7 +17141,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 564.1167, y: -40}
+  m_AnchoredPosition: {x: 566.6666, y: -40}
   m_SizeDelta: {x: 150, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &4835654429976493329
@@ -20151,6 +20163,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 53f015d0cd5dc2746baf5ff7cad93c7b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FirstPersonCameraLook
+  player: {fileID: 2036994067828019122}
   moveBoundaryRects:
   - {fileID: 8483428311324765706}
   - {fileID: 3292754945129017186}
@@ -20166,7 +20179,6 @@ MonoBehaviour:
   horizontalSensitivity: 0.25
   verticalSensitivity: 0.18
   invertVertical: 1
-  player: {fileID: 0}
 --- !u!114 &4741344464008231056
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -22381,7 +22393,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 323.47, y: -40}
+  m_AnchoredPosition: {x: 325, y: -40}
   m_SizeDelta: {x: 300, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &7530774378607306040
@@ -22724,6 +22736,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f45b198bf9a93954da4b1170e1b5b06d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ThirdPersonCameraLook
+  player: {fileID: 2036994067828019122}
   moveBoundaryRects:
   - {fileID: 8483428311324765706}
   - {fileID: 3292754945129017186}
@@ -22742,7 +22755,6 @@ MonoBehaviour:
   minRadius: 0.75
   maxRadius: 2
   zoomSmoothSpeed: 10
-  player: {fileID: 0}
 --- !u!114 &2727915099051819189
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -34014,10 +34026,10 @@ RectTransform:
   - {fileID: 6777950308424046547}
   m_Father: {fileID: 4499441622212301287}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 1}
-  m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 1903.2715, y: -35}
-  m_SizeDelta: {x: 250, y: 70}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5673413583637224630
 CanvasRenderer:

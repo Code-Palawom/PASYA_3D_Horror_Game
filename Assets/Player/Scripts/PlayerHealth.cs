@@ -86,8 +86,39 @@ public class PlayerHealth : NetworkBehaviour {
         if (!IsOwner || !IsEliminated) return;
 
         // Target died too while we were watching them — move on automatically.
-        if (_currentSpectateTarget != null && _currentSpectateTarget.IsEliminated)
+        if (_currentSpectateTarget != null && _currentSpectateTarget.IsEliminated) {
             CycleSpectateTarget(1);
+            return;
+        }
+
+        // Drive the target's PanTilt/OrbitalFollow from their synced look
+        // values every frame — local input on those components is now
+        // fully owner-gated (see FirstPersonCameraLook/ThirdPersonCameraLook),
+        // so nothing else will move them on a spectator's client.
+        if (_currentSpectateTarget != null) ApplySpectateLook(_currentSpectateTarget);
+    }
+
+    // Mirrors the target's real look rotation onto their PanTilt/OrbitalFollow
+    // component on this (spectating) client. Follows whichever axis pattern
+    // the original look scripts used per-component: PanTilt's fields are
+    // mutated directly, OrbitalFollow's VerticalAxis needs a copy-modify-set
+    // since it's a property rather than a field.
+    private void ApplySpectateLook(PlayerHealth target) {
+        bool firstPerson = target.player.IsFirstPersonActive.Value;
+
+        if (firstPerson) {
+            var pt = target.player.PanTilt;
+            if (pt == null) return;
+            pt.PanAxis.Value = target.player.LookPan.Value;
+            pt.TiltAxis.Value = target.player.LookTilt.Value;
+        } else {
+            var of = target.player.OrbitalFollow;
+            if (of == null) return;
+            of.HorizontalAxis.Value = target.player.LookPan.Value;
+            var vAxis = of.VerticalAxis;
+            vAxis.Value = target.player.LookTilt.Value;
+            of.VerticalAxis = vAxis;
+        }
     }
 
     public void ApplyJumpscareHit(string enemyType) {
@@ -107,7 +138,13 @@ public class PlayerHealth : NetworkBehaviour {
 
         // Phase 1: jumpscare + death message (owner only), player vanishes
         // for everyone the moment the hit lands.
-        jumpscareUI.TriggerJumpscareRpc(enemyType);
+        // jumpscareUI lives under playerCanvas, which is inactive on every
+        // non-owner client (see NetworkSetup.OnNetworkSpawn) — the whole
+        // jumpscare visual (overlay, camera swap, prop trigger) is only
+        // ever meant to be seen by the victim, so only the owner drives it.
+        if (IsOwner) jumpscareUI.TriggerJumpscareRpc(enemyType);
+        if (IsOwner) SfxManager.Play(SfxId.Play, 1f);
+
         SetVisibilityClientRpc(false);
         yield return new WaitForSeconds(3f);
 
@@ -116,7 +153,6 @@ public class PlayerHealth : NetworkBehaviour {
         if (willBeEliminated) {
             // Same pacing as the respawn-location beat, but no respawn —
             // the player goes straight to spectating instead.
-            yield return new WaitForSeconds(3f);
             Eliminate();
             yield break; // isInSequence intentionally left true — no re-entry via ApplyJumpscareHit
         }
@@ -124,25 +160,39 @@ public class PlayerHealth : NetworkBehaviour {
         // Phase 2: teleport via the existing client-authoritative Player
         // RPC, then reveal — player becomes visible again at the new spot
         // for everyone right as the respawn-location countdown starts.
-        Vector3 respawnPos = RespawnManager.Instance.GetRandomRespawnPoint(out Quaternion respawnRot);
-        jumpscareUI.ShowRespawnLocationRpc(respawnPos, respawnRot);
+        if (IsOwner) {
+            Vector3 respawnPos = RespawnManager.Instance.GetRandomRespawnPoint(out Quaternion respawnRot);
+            jumpscareUI.ShowRespawnLocationRpc(respawnPos, respawnRot);
+        }
 
         yield return new WaitForSeconds(3f);
-        heartsUI.heartsChanged(currentHearts, currentHearts - 1);
+
+        // heartsUI is a per-player HUD (Screen Space Overlay) that only ever
+        // runs Start() / initializes its icon caches on the owning client —
+        // on every other client this player's playerCanvas is inactive from
+        // spawn, so heartsUI on those instances is never fully set up.
+        // Since JumpscareSequence runs identically on every client to keep
+        // currentHearts in sync, only the owner should actually touch its
+        // HeartsUI; everyone else just updates the shared int.
         currentHearts--;
+        if (IsOwner) heartsUI.heartsChanged(currentHearts + 1, currentHearts);
+
         isInSequence = false;
         JumpscareEnded?.Invoke(this);
     }
 
     private void Eliminate() {
-        heartsUI.heartsChanged(currentHearts, 0);
+        // Same reasoning as above — only animate/update the HUD on the
+        // client that actually owns (and renders) it.
+        if (IsOwner) heartsUI.heartsChanged(currentHearts, 0);
         currentHearts = 0;
         IsEliminated = true;
 
         // Clean up this player's own jumpscare visuals (overlay + cam)
         // without restoring gameplay UI/input/visibility, since Eliminate()
         // below immediately puts this player into spectator state instead.
-        jumpscareUI.EndJumpscareForElimination();
+        // Owner-only, same reasoning as the calls above.
+        if (IsOwner) jumpscareUI.EndJumpscareForElimination();
 
         player.SetSpectator(true); // TODO: point this at whatever disables movement/input on your Player script
 
@@ -214,6 +264,7 @@ public class PlayerHealth : NetworkBehaviour {
             target.player.ThirdPersonPOV.Priority = SpectateInactivePriority;
             target.player.ThirdPersonPOV.enabled = false;
         }
+        target.player.SetSpectatorHidden(false); // undo any forced first-person hide
         HideJumpscareCam(target); // in case we stopped spectating mid jumpscare-cam view
     }
 
@@ -281,6 +332,12 @@ public class PlayerHealth : NetworkBehaviour {
             inactive.Priority = SpectateInactivePriority;
             inactive.enabled = false;
         }
+
+        // Watching through the target's first-person vcam would otherwise
+        // show their own head/body blocking the view — hide it the same
+        // way Player.SetCharacterVisibility hides it for the real owner.
+        // Client-local only; doesn't affect what the target or anyone else sees.
+        target.player.SetSpectatorHidden(firstPerson);
     }
 
     [Rpc(SendTo.Server)]

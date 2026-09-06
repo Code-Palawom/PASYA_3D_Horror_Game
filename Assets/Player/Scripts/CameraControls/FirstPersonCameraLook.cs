@@ -6,6 +6,7 @@ using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 
 [RequireComponent(typeof(CinemachineInputAxisController))]
 public class FirstPersonCameraLook : MonoBehaviour {
+    [SerializeField] private Player player; // used to gate input to the true owner only
     [SerializeField] private RectTransform[] moveBoundaryRects;
     [SerializeField] private ChatUI chatUi;
     [SerializeField] private RectTransform chatBoundaryRect;
@@ -18,8 +19,6 @@ public class FirstPersonCameraLook : MonoBehaviour {
     [SerializeField] private float horizontalSensitivity = 0.25f;
     [SerializeField] private float verticalSensitivity = 0.18f;
     [SerializeField] private bool invertVertical = true;
-
-    [SerializeField] private Player player; // add this reference in the inspector
 
     private bool showOverlay;
     private Finger lookFinger;
@@ -34,9 +33,21 @@ public class FirstPersonCameraLook : MonoBehaviour {
     void Start() {
         inputAxisController = GetComponent<CinemachineInputAxisController>();
 
+        // Only the true owner should ever drive this player's look axes.
+        // Without this, CinemachineInputAxisController reads raw hardware
+        // input for whatever object it's attached to regardless of whose
+        // player it is — on desktop every instance in the scene was
+        // enabling its own input axis controller, so one client's mouse
+        // was silently steering every player's first-person look.
         bool isOwner = player != null && player.IsOwner;
-        inputAxisController.enabled = isOwner && !Application.isMobilePlatform;
-        this.enabled = isOwner; // fully disables Update() (and OnGUI) for non-owners
+
+        if (!Application.isMobilePlatform) {
+            inputAxisController.enabled = isOwner;
+            this.enabled = isOwner;
+        } else {
+            this.enabled = isOwner;
+        }
+
         RefreshDebugMode();
     }
 

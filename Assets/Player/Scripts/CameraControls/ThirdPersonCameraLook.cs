@@ -7,6 +7,7 @@ using TouchPhase = UnityEngine.InputSystem.TouchPhase;
 [RequireComponent(typeof(CinemachineInputAxisController))]
 [RequireComponent(typeof(CameraControls))]
 public class ThirdPersonCameraLook : MonoBehaviour {
+    [SerializeField] private Player player; // used to gate input to the true owner only
     [SerializeField] private RectTransform[] moveBoundaryRects;
     [SerializeField] private ChatUI chatUi;
     [SerializeField] private RectTransform chatBoundaryRect;
@@ -25,8 +26,6 @@ public class ThirdPersonCameraLook : MonoBehaviour {
     [SerializeField] private float maxRadius = 15f;
     [SerializeField] private float zoomSmoothSpeed = 10f;
 
-    [SerializeField] private Player player; // add this reference in the inspector
-
     private bool showOverlay;
     private Finger lookFinger;
     private Finger pinchFinger1;
@@ -44,14 +43,25 @@ public class ThirdPersonCameraLook : MonoBehaviour {
         ReleasePinch();
     }
 
-    void Start() {
+    private void Start() {
         inputAxisController = GetComponent<CinemachineInputAxisController>();
         cameraController = GetComponent<CameraControls>();
 
+        // Only the true owner should ever drive this player's look axes.
+        // Without this, CinemachineInputAxisController/CameraControls read
+        // raw hardware input for whatever object they're attached to
+        // regardless of whose player it is — on desktop every instance in
+        // the scene was enabling its own controllers, so one client's mouse
+        // was silently steering every player's third-person orbit/zoom.
         bool isOwner = player != null && player.IsOwner;
-        inputAxisController.enabled = isOwner && !Application.isMobilePlatform;
-        cameraController.enabled = isOwner && !Application.isMobilePlatform;
-        this.enabled = isOwner;
+
+        if (!Application.isMobilePlatform) {
+            inputAxisController.enabled = isOwner;
+            cameraController.enabled = isOwner;
+            this.enabled = isOwner;
+        } else {
+            this.enabled = isOwner;
+        }
 
         if (orbitalFollow != null) targetRadius = orbitalFollow.Radius;
         RefreshDebugMode();

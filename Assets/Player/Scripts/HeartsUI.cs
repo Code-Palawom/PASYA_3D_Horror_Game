@@ -28,6 +28,11 @@ public class HeartsUI : MonoBehaviour {
     }
 
     public void heartsChanged(int previous, int current) {
+        // Guards against instances that never ran Start() (e.g. this
+        // GameObject/Canvas was inactive at spawn on a non-owner client) —
+        // there's nothing to animate on this client, so just no-op safely.
+        if (heartIcons == null || heartIcons.Length == 0) return;
+
         if (current < previous) {
             // Animate every heart lost this change (normally just one, but
             // covers multi-hit edge cases without skipping icons).
@@ -40,8 +45,21 @@ public class HeartsUI : MonoBehaviour {
     }
 
     private void AnimateHeartLoss(int index) {
+        if (index < 0 || index >= heartIcons.Length) return;
+
         var icon = heartIcons[index];
-        var rect = heartRects[index];
+        if (icon == null) return; // slot not assigned in the Inspector — skip, don't throw
+
+        // Fall back gracefully if Start() hasn't populated the caches yet
+        // (shouldn't normally happen once heartsChanged is owner-gated, but
+        // keeps this method safe to call from anywhere).
+        RectTransform rect = (heartRects != null && index < heartRects.Length && heartRects[index] != null)
+            ? heartRects[index]
+            : icon.rectTransform;
+
+        Vector2 originalPos = (originalPositions != null && index < originalPositions.Length)
+            ? originalPositions[index]
+            : rect.anchoredPosition;
 
         icon.enabled = true; // make sure it's visible for the animation
         Color startColor = icon.color;
@@ -49,7 +67,7 @@ public class HeartsUI : MonoBehaviour {
         icon.color = startColor;
 
         Sequence.Create()
-            .Group(Tween.Custom(rect.anchoredPosition, originalPositions[index] + new Vector2(0f, -fallDistance),
+            .Group(Tween.Custom(rect.anchoredPosition, originalPos + new Vector2(0f, -fallDistance),
                 fallDuration, onValueChange: v => rect.anchoredPosition = v, ease: fallEase))
             .Group(Tween.Custom(0f, fallRotation, fallDuration,
                 onValueChange: z => rect.localRotation = Quaternion.Euler(0f, 0f, z), ease: fallEase))
@@ -58,7 +76,7 @@ public class HeartsUI : MonoBehaviour {
                 icon.enabled = false;
                 // reset transform/alpha so the icon is ready to reappear cleanly
                 // if hearts are ever restored (heal pickup, round reset, etc).
-                rect.anchoredPosition = originalPositions[index];
+                rect.anchoredPosition = originalPos;
                 rect.localRotation = Quaternion.identity;
                 Color c = icon.color;
                 c.a = 1f;
@@ -67,10 +85,20 @@ public class HeartsUI : MonoBehaviour {
     }
 
     private void SnapTo(int hearts) {
+        if (heartIcons == null) return;
+
         for (int i = 0; i < heartIcons.Length; i++) {
+            if (heartIcons[i] == null) continue;
+
             heartIcons[i].enabled = i < hearts;
-            heartRects[i].anchoredPosition = originalPositions[i];
-            heartRects[i].localRotation = Quaternion.identity;
+
+            if (heartRects != null && i < heartRects.Length && heartRects[i] != null) {
+                heartRects[i].anchoredPosition = (originalPositions != null && i < originalPositions.Length)
+                    ? originalPositions[i]
+                    : heartRects[i].anchoredPosition;
+                heartRects[i].localRotation = Quaternion.identity;
+            }
+
             Color c = heartIcons[i].color;
             c.a = 1f;
             heartIcons[i].color = c;

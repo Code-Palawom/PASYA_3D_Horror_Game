@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using TMPro;
 using Unity.Netcode;
 using UnityEngine;
-#if UNITY_EDITOR
 using UnityEngine.InputSystem;
-#endif
 using UnityEngine.UI;
 using PrimeTween;
 
@@ -56,9 +54,15 @@ public class ChatUI : NetworkBehaviour {
     // ChatUI's own `inputField` is the field that opened the keyboard. The chat panel itself
     // never moves — the overlay's own input field becomes the active typing field instead,
     // mirroring/replacing the real one for the duration the keyboard is up.
+    //
+    // The target's anchors (and its horizontal anchoredPosition/offsets) are never touched —
+    // whatever full-width stretch you've authored in the Inspector stays exactly as-is. The
+    // only thing this code moves is anchoredPosition.y, to sit the row's bottom edge flush
+    // against the top of the keyboard.
     [Header("Keyboard Avoider — Overlay Row")]
     [Tooltip("RectTransform of the overlay row that should appear above the keyboard while " +
-             "this ChatUI's inputField is focused.")]
+             "this ChatUI's inputField is focused. Its anchors/horizontal layout are left exactly " +
+             "as authored — only its vertical anchoredPosition is adjusted.")]
     [SerializeField] private RectTransform keyboardAvoiderTarget;
 
     [Header("Keyboard Avoider — Overlay Input Field")]
@@ -68,8 +72,10 @@ public class ChatUI : NetworkBehaviour {
     [Tooltip("Optional. Send button that lives next to the overlay input field.")]
     [SerializeField] private Button overlaySendButton;
 
+    private bool _kaInitialized = false;
     private bool _kaWasKeyboardVisible = false;
     private RectTransform _kaCanvasRect;
+    private Vector2 _kaDefaultAnchoredPosition;
 
     private bool _kaShowOverlay;
     private bool _kaDebugKeyboardVisible;
@@ -104,7 +110,6 @@ public class ChatUI : NetworkBehaviour {
 
         if (overlayInputField != null) {
             overlayInputField.onSubmit.AddListener(_ => OnSend());
-            overlayInputField.onValueChanged.AddListener(OnOverlayValueChanged);
         }
         if (overlaySendButton != null) {
             overlaySendButton.onClick.AddListener(OnSend);
@@ -149,10 +154,7 @@ public class ChatUI : NetworkBehaviour {
         inputField.onSelect.RemoveAllListeners();
         inputField.onDeselect.RemoveAllListeners();
 
-        if (overlayInputField != null) {
-            overlayInputField.onSubmit.RemoveAllListeners();
-            overlayInputField.onValueChanged.RemoveListener(OnOverlayValueChanged);
-        }
+        if (overlayInputField != null) overlayInputField.onSubmit.RemoveAllListeners();
         if (overlaySendButton != null) overlaySendButton.onClick.RemoveListener(OnSend);
 
         if (ChatManager.Instance != null) {
@@ -403,8 +405,21 @@ public class ChatUI : NetworkBehaviour {
 
     // ─── Keyboard Avoider (overlay input field above the on-screen keyboard) ─────────
 
+    void InitKeyboardAvoider() {
+        if (_kaInitialized || keyboardAvoiderTarget == null) return;
+
+        _kaCanvasRect = parentCanvas != null ? (RectTransform)parentCanvas.transform : null;
+
+        // Only the vertical anchoredPosition is ever touched, so that's all we need to remember
+        // to restore it once the keyboard closes. Anchors and horizontal layout are never changed.
+        _kaDefaultAnchoredPosition = keyboardAvoiderTarget.anchoredPosition;
+
+        _kaInitialized = true;
+    }
+
     void UpdateKeyboardAvoider() {
         if (keyboardAvoiderTarget == null) return;
+        InitKeyboardAvoider();
 
         bool keyboardVisible;
         float keyboardHeightPx;
@@ -430,22 +445,41 @@ public class ChatUI : NetworkBehaviour {
         bool ownsFocus = inputField.isFocused || (overlayInputField != null && overlayInputField.isFocused);
         if (!ownsFocus) keyboardVisible = false;
 
-        // Cache for debug overlay
+        // Debug-overlay-only figure (canvas-relative estimate); NOT used for positioning anymore.
+        float canvasHeight = _kaCanvasRect != null ? _kaCanvasRect.rect.height : Screen.height;
+        float kbHeightInCanvas = (keyboardHeightPx / Screen.height) * canvasHeight;
+
         _kaDebugKeyboardVisible = keyboardVisible;
         _kaDebugKeyboardHeightPx = keyboardHeightPx;
-        _kaDebugKbHeightInCanvas = 0f;
-        _kaDebugCanvasHeight = _kaCanvasRect != null ? _kaCanvasRect.rect.height : Screen.height;
+        _kaDebugKbHeightInCanvas = kbHeightInCanvas;
+        _kaDebugCanvasHeight = canvasHeight;
+
+        if (keyboardVisible) {
+            RectTransform targetParent = (RectTransform)keyboardAvoiderTarget.parent;
+            Camera cam = (parentCanvas != null && parentCanvas.renderMode != RenderMode.ScreenSpaceOverlay)
+                ? parentCanvas.worldCamera
+                : null;
+
+            // Convert the keyboard's screen-space top edge into targetParent's local space, then
+            // into a "distance from targetParent's bottom edge" figure. With the target anchored
+            // at the bottom of its parent (as authored), that figure is exactly the anchoredPosition.y
+            // that puts the row's bottom edge flush against the top of the keyboard.
+            Vector2 screenPoint = new Vector2(Screen.width * 0.5f, keyboardHeightPx);
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(targetParent, screenPoint, cam, out Vector2 localPoint);
+            float distanceFromParentBottom = localPoint.y - targetParent.rect.yMin;
+
+            Vector2 pos = keyboardAvoiderTarget.anchoredPosition;
+            pos.y = distanceFromParentBottom + 40f;
+            keyboardAvoiderTarget.anchoredPosition = pos; // x untouched — horizontal stretch stays exactly as authored
+        } else if (_kaWasKeyboardVisible) {
+            // Restore original vertical position (only needs doing once, right as it closes)
+            keyboardAvoiderTarget.anchoredPosition = _kaDefaultAnchoredPosition;
+        }
 
         if (keyboardVisible != _kaWasKeyboardVisible) {
             HandleKeyboardOverlayTransition(keyboardVisible);
             _kaWasKeyboardVisible = keyboardVisible;
         }
-    }
-
-    void OnOverlayValueChanged(string newText) {
-        // Keep the real inputField's text in sync on every keystroke typed into the
-        // overlay field, not just at the moment the keyboard opens/closes.
-        if (inputField.text != newText) inputField.text = newText;
     }
 
     void HandleKeyboardOverlayTransition(bool keyboardVisible) {
@@ -477,5 +511,6 @@ public class ChatUI : NetworkBehaviour {
         if (!_kaShowOverlay) return;
         GUI.Label(new Rect(10, 110, 420, 20), $"[KB] Visible : {_kaDebugKeyboardVisible}");
         GUI.Label(new Rect(10, 130, 420, 20), $"[KB] Height px : {_kaDebugKeyboardHeightPx:F0}  (Screen.height={Screen.height})");
+        GUI.Label(new Rect(10, 150, 420, 20), $"[KB] Height in canvas : {_kaDebugKbHeightInCanvas:F1}  (canvasHeight={_kaDebugCanvasHeight:F0})");
     }
 }

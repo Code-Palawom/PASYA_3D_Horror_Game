@@ -37,6 +37,26 @@ public class Player : NetworkBehaviour {
     public CinemachineCamera FirstPersonPOV => firstPersonPOV;
     public CinemachineCamera ThirdPersonPOV => thirdPersonPOV;
 
+    [Header("Look Sync (for spectating)")]
+    // Same PanTilt/OrbitalFollow instances FirstPersonCameraLook /
+    // ThirdPersonCameraLook already drive — referenced here too so the
+    // owner can broadcast them and a spectator can apply them directly.
+    [SerializeField] private CinemachinePanTilt panTilt;
+    [SerializeField] private CinemachineOrbitalFollow orbitalFollow;
+
+    public CinemachinePanTilt PanTilt => panTilt;
+    public CinemachineOrbitalFollow OrbitalFollow => orbitalFollow;
+
+    // Written by the owner every frame from whichever look rig is
+    // currently active (see PushLookSync in Update). Read by a spectator's
+    // PlayerHealth to drive this player's PanTilt/OrbitalFollow directly on
+    // their client, since local input on those components is now fully
+    // owner-gated and nothing else will move them for a non-owner.
+    public NetworkVariable<float> LookPan = new(
+        0f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+    public NetworkVariable<float> LookTilt = new(
+        0f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+
     // Synced so an eliminated spectator can mirror whichever POV this
     // player currently has active, and follow it live if they toggle.
     // Written only in the two places isFirstPerson itself changes below.
@@ -126,6 +146,12 @@ public class Player : NetworkBehaviour {
 
         if (noiseEmitter == null) noiseEmitter = GetComponent<PlayerNoiseEmitter>();
         if (flashlightController == null) flashlightController = GetComponent<FlashlightController>();
+
+        // Populated for every instance, not just the owner — a spectating
+        // client needs this on the target's (non-owner, from their point of
+        // view) copy of Player to be able to hide that character locally
+        // via SetSpectatorHidden.
+        renderers = GetComponentsInChildren<SkinnedMeshRenderer>();
     }
 
     // Replaces owner-specific Start() logic; guaranteed IsOwner is valid here
@@ -142,8 +168,6 @@ public class Player : NetworkBehaviour {
             playerCanvas.renderMode = RenderMode.ScreenSpaceOverlay;
             playerCanvas.worldCamera = playerCamera;
             playerCanvas.gameObject.SetActive(true);
-
-            renderers = GetComponentsInChildren<SkinnedMeshRenderer>();
 
             var inventory = GetComponent<PlayerInventory>();
             if (inventoryUI != null && inventory != null) {
@@ -309,6 +333,23 @@ public class Player : NetworkBehaviour {
             r.shadowCastingMode = mode;
     }
 
+    // Called by a spectator's PlayerHealth (on their own client only, no RPC
+    // needed) to hide this player's mesh while being watched through their
+    // first-person vcam — mirrors the same near-camera trick SetCharacterVisibility
+    // uses for the real owner, so a spectator doesn't see the target's own
+    // head/body blocking the first-person view. Third-person spectating (or
+    // no longer spectating) calls this with false to restore normal visibility.
+    // This only ever touches the local renderer state on whichever client
+    // calls it — every client already keeps its own independent copy of
+    // Player, so this can't affect what the target or anyone else sees.
+    public void SetSpectatorHidden(bool hidden) {
+        if (renderers == null) return;
+
+        ShadowCastingMode mode = hidden ? ShadowCastingMode.ShadowsOnly : ShadowCastingMode.On;
+        foreach (var r in renderers)
+            if (r != null) r.shadowCastingMode = mode;
+    }
+
     private void HandleModelSwapped(GameObject newModel) {
         renderers = newModel.GetComponentsInChildren<SkinnedMeshRenderer>();
         ShadowCastingMode mode = isVisible ? ShadowCastingMode.On : ShadowCastingMode.ShadowsOnly;
@@ -323,6 +364,22 @@ public class Player : NetworkBehaviour {
         isFirstPerson = SettingsManager.Instance.Current.isFirstPerson;
         SetCamera(isFirstPerson);
         IsFirstPersonActive.Value = isFirstPerson;
+    }
+
+    // Broadcasts the owner's current look rotation so an eliminated
+    // spectator can drive this player's PanTilt/OrbitalFollow directly on
+    // their own client — those components aren't otherwise networked, and
+    // local input on them is fully disabled for non-owners.
+    private void PushLookSync() {
+        if (isFirstPerson) {
+            if (panTilt == null) return;
+            LookPan.Value = panTilt.PanAxis.Value;
+            LookTilt.Value = panTilt.TiltAxis.Value;
+        } else {
+            if (orbitalFollow == null) return;
+            LookPan.Value = orbitalFollow.HorizontalAxis.Value;
+            LookTilt.Value = orbitalFollow.VerticalAxis.Value;
+        }
     }
 
     void Update() {
@@ -403,6 +460,7 @@ public class Player : NetworkBehaviour {
         UpdateMovementState();
         UpdateControllerCollider();
         HandleNoiseEmission();
+        PushLookSync();
     }
 
     // ---------------- Noise (horror enemy hearing) ----------------
