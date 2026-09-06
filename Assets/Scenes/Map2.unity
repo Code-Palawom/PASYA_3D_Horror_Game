@@ -119,6 +119,97 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &979135
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 979138}
+  - component: {fileID: 979137}
+  - component: {fileID: 979136}
+  m_Layer: 0
+  m_Name: Mesh
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!23 &979136
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 979135}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 760ea8238d6219c42b2739f693d4c834, type: 2}
+  - {fileID: 2100000, guid: 760ea8238d6219c42b2739f693d4c834, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &979137
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 979135}
+  m_Mesh: {fileID: 4303498, guid: 9b8fc966f95ea9c4194dc091fc40b478, type: 3}
+--- !u!4 &979138
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 979135}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 398.0394, y: 3.09, z: 1726.27}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &4488155
 GameObject:
   m_ObjectHideFlags: 0
@@ -231,13 +322,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemySpawnManager
   ShowTopMostFoldoutHeaderGroup: 1
-  enemyPrefab: {fileID: 5162942595896354685, guid: 52e3515bb61332e4abdfb7c26ae51c75, type: 3}
+  enemyTypes: []
   spawnData: {fileID: 11400000, guid: dc269cbd718454f4381d13a31c8bf7df, type: 2}
   patrolData: {fileID: 11400000, guid: bcc3451ab937ad5458469b0c9462e8dd, type: 2}
   maxActiveEnemies: 1
   minSpawnPointSeparation: 5
-  nightStartHour: 18
-  nightEndHour: 6
+  spawnHour: 22
+  spawnMinute: 30
+  despawnHour: 6
+  despawnMinute: 30
 --- !u!114 &404036987
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -344,34 +437,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TimeManager
   ShowTopMostFoldoutHeaderGroup: 1
   globalLight: {fileID: 2077532160}
-  skyboxMat: {fileID: 2100000, guid: cb879a436a7692845a0f2ed7883aa098, type: 2}
-  day: {r: 0.53, g: 0.81, b: 0.98, a: 1}
-  dayHorizon: {r: 0.73, g: 0.89, b: 1, a: 1}
   dayIntensity: 1
   dayLightColor: {r: 1, g: 1, b: 1, a: 1}
-  night: {r: 0.01, g: 0.01, b: 0.07, a: 1}
-  nightHorizon: {r: 0.01, g: 0.01, b: 0.05, a: 1}
   nightIntensity: 0.05
   moonLightColor: {r: 0.65, g: 0.08, b: 0.08, a: 1}
-  sunSize: 0.05
-  sunHaze: 0.1
-  moonTexture: {fileID: 2800000, guid: 16ef5f435c3ec004ab32a8a2cefb19ed, type: 3}
-  moonSize: 0.075
-  nightThreshold: 0.5
-  cloudTintDay: {r: 1, g: 1, b: 1, a: 1}
-  cloudTintNight: {r: 0.6, g: 0.65, b: 0.8, a: 1}
-  skyExposureDay: 1
-  skyExposureNight: 0.2
-  skySaturationDay: 1
-  skySaturationNight: 0.5
-  groundColorDay: {r: 1, g: 1, b: 1, a: 1}
-  groundColorNight: {r: 0.03, g: 0.01, b: 0.01, a: 1}
-  horizonFogColorDay: {r: 1, g: 1, b: 1, a: 1}
-  horizonFogColorNight: {r: 0.1, g: 0.03, b: 0.03, a: 1}
-  horizonFogDensityDay: 0.25
-  horizonFogDensityNight: 0.4
-  starIntensityMin: 0.1
-  starIntensityMax: 0.4
+  skyboxNight: {fileID: 0}
+  skyboxSunrise: {fileID: 0}
+  skyboxDay: {fileID: 0}
+  skyboxSunset: {fileID: 0}
+  skyboxSunriseHour: 6
+  skyboxDayHour: 8
+  skyboxDuskHour: 18
+  skyboxNightHour: 22
+  skyboxTransitionInGameMinutes: 120
   ambientSkyDay: {r: 0.5, g: 0.7, b: 1, a: 1}
   ambientEquatorDay: {r: 0.7, g: 0.75, b: 0.75, a: 1}
   ambientGroundDay: {r: 0.4, g: 0.4, b: 0.35, a: 1}
@@ -398,6 +476,10 @@ MonoBehaviour:
   nightBloomThreshold: 0.6
   nightStartHour: 18
   nightEndHour: 6
+  dawnStartHour: 5
+  dayMaxHour: 8
+  duskStartHour: 17
+  nightMaxHour: 19
   dayLengthInRealMinutes: 24
   clockText: {fileID: 0}
 --- !u!114 &500984259
@@ -645,6 +727,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WorldItemSpawner
   spawnPoints: []
   itemPool: []
+  skipQuizCount: 0
+  fixedSpawns: []
+  fixedSpawnSkipQuizCount: 0
+  spawnGroups: []
   worldItemPrefab: {fileID: 3080619183193447558, guid: 68c6a7cf86fba764287618df08e28b63, type: 3}
 --- !u!114 &1640824057
 MonoBehaviour:
@@ -961,3 +1047,4 @@ SceneRoots:
   - {fileID: 4488158}
   - {fileID: 1154594720}
   - {fileID: 1416694154}
+  - {fileID: 979138}
