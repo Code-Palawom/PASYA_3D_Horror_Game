@@ -21,7 +21,7 @@ public class AnimatedToggle : MonoBehaviour {
     }
 
     void SetState(bool isOn) {
-        Tween.UIAnchoredPositionX(knob, isOn ? onX : offX, duration, Ease.OutQuad);
-        Tween.Color(background, isOn ? onColor : offColor, duration, Ease.OutQuad);
+        Tween.UIAnchoredPositionX(knob, isOn ? onX : offX, duration, Ease.OutQuad, useUnscaledTime: true);
+        Tween.Color(background, isOn ? onColor : offColor, duration, Ease.OutQuad, useUnscaledTime: true);
     }
 }

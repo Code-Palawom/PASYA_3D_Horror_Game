@@ -40,7 +40,6 @@ public class SettingsManager : MonoBehaviour {
 
         if (SceneManager.GetActiveScene().name == "Tutorial") return;
 
-        ActionbarToastNotification.Instance.ShowLocalToast("Settings Saved.", ToastType.Success);
         Debug.Log("[SettingsManager] Saved.");
     }
 
